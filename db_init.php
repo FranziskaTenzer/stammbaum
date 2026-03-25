@@ -1,0 +1,3 @@
+<?php
+\n// Database initialization script\n// Created on 2026-03-25 16:12:24 UTC\n\n// SQL to create 'ehe' table\n\nCREATE TABLE IF NOT EXISTS ehe (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    person1_id INT NOT NULL,\n    person2_id INT NOT NULL,\n    start_date DATETIME NOT NULL,\n    end_date DATETIME,\n    FOREIGN KEY (person1_id) REFERENCES person(id),\n    FOREIGN KEY (person2_id) REFERENCES person(id)\n);\n\n// SQL to create 'person' table\n\nCREATE TABLE IF NOT EXISTS person (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(255) NOT NULL,\n    birth_date DATE NOT NULL,\n    death_date DATE\n);\n
+?>
