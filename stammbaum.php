@@ -22,45 +22,41 @@ if ($vorname != null or $Nachname != null) {
 </head>
 <body>
 <br />
-<form action="/deletedb.php" method="post">
+<form action="db_init.php" method="post">
 <button type="submit"><h4 style='color:red'>Datenbank neu erstellen</h4></button>
 </form>
 <br/>
-<form action="/KI-validierung.php" method="post">
-<button type="submit"><h4 style='color:blue'>Validierung</h4></button>
-</form>
-<br/>
-<form action="/stammbaum-familien.php" method="post">
+
+<form action="stammbaum-familien.php" method="post">
 <button type="submit"><h3> Stammbaum Suche</h3></button>
 </form>
 
 <h1>KI Daten importieren (Thierbach):<h1/>
-<form  action="/KI-importThierbach.php" method="post">
+<form  action="KI-importThierbach.php" method="post">
 <textarea id="daten_import" name="daten_import" rows="5" cols="150" >
-<?php include("Trauungen-Thierbach-komplett.txt");?>
+<?php include("../stammbaum-daten/Thierbach-komplett.txt");?>
+
 </textarea>
 <br />
 <br />
 <button type="submit">Thierbach Importieren</button>
 </form>
 
-<h1>Daten Import KI :<h1/>
-<form  action="/KI-import.php" method="post" enctype="multipart/form-data">
+
+<form action="KI-importOrte.php" method="post">
+<button type="submit"><h3> alle Orte importieren </h3></button>
+</form>
+
+<!-- 
+<h1>Daten Import:<h1/>
+<form  action="KI-importOrte.php" method="post" enctype="multipart/form-data">
 <p>Traubuch: <input id="traubuch" name="traubuch" required/></p>
 <input type="file" id="daten_import_file" name="daten_import_file"  accept="*.txt" required />
 <br />
 <br />
 <button type="submit">Importieren</button>
 </form>
-
-<h1>Daten importieren (Thierbach):<h1/>
-<form  action="/stammbaum-import-Thierbach.php" method="post">
-<textarea id="daten_import" name="daten_import" rows="5" cols="150" >
-</textarea>
-<br />
-<br />
-<button type="submit">Thierbach Importieren</button>
-</form>
+ -->
 
 </body> 
 </html> 

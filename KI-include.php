@@ -1,25 +1,39 @@
 <?php
 
-// Database connection
-function getDbConnection() {
-    $host = 'your_host'; // e.g., localhost
-    $db = 'your_database';
-    $user = 'your_username';
-    $pass = 'your_password';
-    $charset = 'utf8mb4';
 
-    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+function getPDO() {
+    
+    $host = 'localhost';       // oder IP-Adresse
+    $benutzer = 'franziska';
+    $passwort = 'Rychp27g!';
+    $datenbank = 'stammbaum';
+    $charset = 'utf8mb4';
+    
+    $dsn =null;
+    $options = null;
+    $pdo = null;
+    
+    $dsn = "mysql:host=$host;dbname=$datenbank;charset=$charset";
     $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
     ];
-
+    
     try {
-        return new PDO($dsn, $user, $pass, $options);
-    } catch (	hrowable $e) {
-        die('Database connection failed: ' . $e->getMessage());
+        $pdo = new PDO($dsn, $benutzer, $passwort, $options);
+    } catch (\PDOException $e) {
+        die("DB-Verbindung fehlgeschlagen: " . $e->getMessage());
     }
+    
+    return $pdo;
+}
+
+function formatDBDateOrNull($dateStr, $fromFormat = 'Y-m-d', $toFormat = 'd.m.Y') {
+    if ($dateStr == null){
+        return null;
+    }
+    $dt = DateTime::createFromFormat($fromFormat, $dateStr);
+    return $dt ? $dt->format($toFormat) : null;
 }
 
 // Helper function to sanitize input
