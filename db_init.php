@@ -1,7 +1,11 @@
 <?php
 
-include 'include.php';
 ini_set('display_errors', 1);
+
+// Prüfe ob getPDO bereits definiert ist, um doppelte Definitionen zu vermeiden
+if (!function_exists('getPDO')) {
+    include 'include.php';
+}
 
 $pdo = getPDO();
 

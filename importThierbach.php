@@ -1,8 +1,13 @@
 <?php
 
-include 'include.php';
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
+
+// Prüfe ob getPDO bereits definiert ist, um doppelte Definitionen zu vermeiden
+if (!function_exists('getPDO')) {
+    include 'include.php';
+}
 
 $DEBUG = true;
 
@@ -13,7 +18,7 @@ function debug($msg) {
 
 $pdo = getPDO();
 
-echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
+echo "<br /><br /><a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 
 
 
@@ -21,11 +26,11 @@ echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10
  HELFER
  ========================= */
 
-function parseDate($text) {
+function parseDateThierbach($text) {
     return date("Y-m-d", strtotime(str_replace('.', '-', $text)));
 }
 
-function extractSId(&$text) {
+function extractSIdThierbach(&$text) {
     if (preg_match('/\b(S\d+)\b/', $text, $m)) {
         $text = str_replace($m[1], '', $text);
         return $m[1];
@@ -58,7 +63,7 @@ function extractField(&$text, $label) {
 
 function parsePersonText($text) {
     
-    $referenzEhe = extractSId($text);
+    $referenzEhe = extractSIdThierbach($text);
     
     // Datum am Anfang entfernen
     $text = preg_replace('/^\d{2}\.\d{2}\.\d{4}\s*/', '', $text);
@@ -94,8 +99,8 @@ function parsePersonText($text) {
     return [
         'vorname' => trim($vorname),
         'nachname' => $nachname,
-        'geburtsdatum' => $geb ? parseDate($geb) : null,
-        'sterbedatum' => $gest ? parseDate($gest) : null,
+        'geburtsdatum' => $geb ? parseDateThierbach($geb) : null,
+        'sterbedatum' => $gest ? parseDateThierbach($gest) : null,
         'hof' => $hof,
         'ort' => $ort,
         'bemerkung' => $bemerkung,
@@ -219,7 +224,7 @@ function parseLine($line) {
     
     // erstes Datum = Heirat
     if (preg_match('/^\s*(\d{2}\.\d{2}\.\d{4})/', $line, $dm)) {
-        $result['heiratsdatum'] = parseDate($dm[1]);
+        $result['heiratsdatum'] = parseDateThierbach($dm[1]);
         $line = preg_replace('/^\s*\d{2}\.\d{2}\.\d{4}\s*/', '', $line);
     }
     
@@ -329,7 +334,7 @@ foreach ($lines as $line) {
     debug("✅ Ehe gespeichert (ID: $eheId)");
 }
 
-echo "<hr><strong>Import erfolgreich</strong><br /><br /><br />";
+echo "<hr><strong><h2>Import Thierbach erfolgreich</h2></strong><br /><br /><br />";
 echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a><br /><br />";
 
 ?>

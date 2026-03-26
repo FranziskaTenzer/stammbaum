@@ -37,15 +37,16 @@ if ($vorname != null or $Nachname != null) {
         <h3>Ähnliche Namen anzeigen</h3>
     </button>
 </form>
-   
-
-<form action="stammbaum-recreateAll.php" method="get">
+<br />   
+<hr>
+<br />
+<form action="re-create-all.php" method="get">
     <button type="submit">
-        <h3>Daten komplett löschen und neu importieren</h3>
+        <h3 style="color:red; font-weight:bold;">Daten komplett löschen und neu importieren</h3>
     </button>
 </form>   
    
-    
+  <!--  
 <form action="db_init.php" method="post">
 <button type="submit"><h4 style='color:red'>Datenbank neu erstellen</h4></button>
 </form>
@@ -67,6 +68,6 @@ if ($vorname != null or $Nachname != null) {
 <button type="submit"><h3> alle Orte importieren </h3></button>
 </form>
 
-
+-->  
 </body> 
 </html> 
