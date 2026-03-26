@@ -31,6 +31,12 @@ if ($vorname != null or $Nachname != null) {
 <button type="submit"><h3> Stammbaum Suche</h3></button>
 </form>
 
+<form action="stammbaum-aehnliche-namen.php" method="get">
+    <button type="submit">
+        <h3>Ähnliche Namen anzeigen</h3>
+    </button>
+</form>
+
 <h1>KI Daten importieren (Thierbach):<h1/>
 <form  action="KI-importThierbach.php" method="post">
 <textarea id="daten_import" name="daten_import" rows="5" cols="150" >

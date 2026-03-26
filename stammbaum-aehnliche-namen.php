@@ -1,26 +1,25 @@
 <?php
 
-// Database connection parameters
-$host = 'localhost'; // Change according to your database configuration
-$db_name = 'your_database_name'; // Set your database name
-$username = 'your_username'; // Set your database username
-$password = 'your_password'; // Set your database password
+include 'KI-include.php';
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-// Create connection to the database
-$conn = new mysqli($host, $username, $password, $db_name);
+$DEBUG = true;
 
-// Check connection
-if ($conn->connect_error) {
-    die('Connection failed: ' . $conn->connect_error);
+function debug($msg) {
+    global $DEBUG;
+    if ($DEBUG) echo "<div style='color:#555'>$msg</div>";
 }
+
+$pdo = getPDO();
 
 // Function to find similar names
 function findSimilarNames($name) {
-    global $conn;
+    global $pdo;
     // SQL query to find names similar to the input
     $sql = "SELECT first_name, last_name, variation, church_book FROM person_table WHERE first_name LIKE ? OR last_name LIKE ?";
-    $stmt = $conn->prepare($sql);
-    $likeName = '%' . $conn->real_escape_string($name) . '%';
+    $stmt = $pdo->prepare($sql);
+    $likeName = '%' . $pdo->real_escape_string($name) . '%';
     $stmt->bind_param('ss', $likeName, $likeName);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -48,6 +47,4 @@ if (count($results) > 0) {
     echo '<p>No similar names found.</p>';
 }
 
-// Close connection
-$conn->close();
 ?>
