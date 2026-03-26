@@ -22,20 +22,28 @@ if ($vorname != null or $Nachname != null) {
 </head>
 <body>
 <br />
-<form action="db_init.php" method="post">
-<button type="submit"><h4 style='color:red'>Datenbank neu erstellen</h4></button>
-</form>
-<br/>
 
 <form action="stammbaum-familien.php" method="post">
 <button type="submit"><h3> Stammbaum Suche</h3></button>
 </form>
+
+
+<?php include("../stammbaum-daten/overview.html");?>
+    
+    
 
 <form action="stammbaum-aehnliche-namen.php" method="get">
     <button type="submit">
         <h3>Ähnliche Namen anzeigen</h3>
     </button>
 </form>
+   
+    
+    
+<form action="db_init.php" method="post">
+<button type="submit"><h4 style='color:red'>Datenbank neu erstellen</h4></button>
+</form>
+<br/>    
 
 <h1>KI Daten importieren (Thierbach):<h1/>
 <form  action="KI-importThierbach.php" method="post">

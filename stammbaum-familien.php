@@ -76,6 +76,9 @@ AND p.nachname LIKE :nachname
     </style>
 </head>
 <body>
+<br/>
+<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>
+
 
 <h1>Personensuche</h1>
 

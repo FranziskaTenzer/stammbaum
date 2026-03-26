@@ -340,7 +340,7 @@ if ($totalErrors > 0) {
 echo "<li>📁 Verarbeitete Dateien: " . count($files) . "</li>";
 echo "</ul>";
 
-echo "<hr>";
+echo "<hr><br />";
 echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 
 ?>

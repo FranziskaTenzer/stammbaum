@@ -141,5 +141,7 @@ $stmt->execute();
 
 
 
-echo "Datenbank erfolgreich gelöscht und neu erstellt";
+echo "<h2>Datenbank erfolgreich gelöscht und neu erstellt</h2><br />";
+echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
+
 ?>

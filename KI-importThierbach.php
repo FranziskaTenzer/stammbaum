@@ -13,43 +13,8 @@ function debug($msg) {
 
 $pdo = getPDO();
 
-/* =========================
- TABELLEN
- ========================= */
+echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 
-// ehe: externe_id NICHT mehr UNIQUE → Mehrfachehen pro S-ID möglich
-$pdo->exec("
-CREATE TABLE IF NOT EXISTS ehe (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    externe_id VARCHAR(10),
-    vater_id INT,
-    vater_alter INT,
-    mutter_id INT,
-    mutter_alter INT,
-    heiratsdatum DATE NULL,
-    traubuch VARCHAR(255)
-);
-");
-
-// person: erweitert um hof/ort + referenz
-$pdo->exec("
-CREATE TABLE IF NOT EXISTS person (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    vorname VARCHAR(255) NOT NULL,
-    nachname VARCHAR(255) NOT NULL,
-    
-    vater_id INT NULL,
-    mutter_id INT NULL,
-    
-    geburtsdatum DATE NULL,
-    sterbedatum DATE NULL,
-    
-    hof VARCHAR(255) NULL,
-    ort VARCHAR(255) NULL,
-    
-    referenz_ehe_id INT NULL
-);
-");
 
 
 /* =========================
@@ -364,5 +329,7 @@ foreach ($lines as $line) {
     debug("✅ Ehe gespeichert (ID: $eheId)");
 }
 
-echo "<hr><strong>Import erfolgreich</strong>";
+echo "<hr><strong>Import erfolgreich</strong><br /><br /><br />";
+echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a><br /><br />";
+
 ?>
