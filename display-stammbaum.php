@@ -1,6 +1,6 @@
 <?php
 
-include 'KI-include.php';
+include 'include.php';
 ini_set('display_errors', 1);
 
 $pdo = getPDO();
@@ -504,6 +504,8 @@ document.addEventListener("click", function(e){
 </head>
 
 <body>
+<br /><a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>
+<br />
 
 <h2 style="text-align:center;">Stammbaum</h2>
 

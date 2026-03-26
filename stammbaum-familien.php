@@ -1,7 +1,7 @@
 <?php 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-require 'KI-include.php';
+require 'include.php';
 
 $pdo = getPDO();
 
@@ -109,7 +109,7 @@ AND p.nachname LIKE :nachname
     <tbody>
         <?php foreach ($results as $row): ?>
         <tr>
-            <td><a href='KI-ausgabe.php?id=<?=$row['id']?>'><?= htmlspecialchars($row['id']) ?></a></td>
+            <td><a href='display-stammbaum.php?id=<?=$row['id']?>'><?= htmlspecialchars($row['id']) ?></a></td>
             <td>
                 <?= htmlspecialchars($row['vorname'] . ' ' . $row['nachname']) ?>
             </td>

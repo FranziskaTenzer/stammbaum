@@ -38,7 +38,13 @@ if ($vorname != null or $Nachname != null) {
     </button>
 </form>
    
-    
+
+<form action="stammbaum-recreateAll.php" method="get">
+    <button type="submit">
+        <h3>Daten komplett löschen und neu importieren</h3>
+    </button>
+</form>   
+   
     
 <form action="db_init.php" method="post">
 <button type="submit"><h4 style='color:red'>Datenbank neu erstellen</h4></button>
@@ -46,7 +52,7 @@ if ($vorname != null or $Nachname != null) {
 <br/>    
 
 <h1>KI Daten importieren (Thierbach):<h1/>
-<form  action="KI-importThierbach.php" method="post">
+<form  action="importThierbach.php" method="post">
 <textarea id="daten_import" name="daten_import" rows="5" cols="150" >
 <?php include("../stammbaum-daten/Thierbach-komplett.txt");?>
 
@@ -57,20 +63,10 @@ if ($vorname != null or $Nachname != null) {
 </form>
 
 
-<form action="KI-importOrte.php" method="post">
+<form action="importOrte.php" method="post">
 <button type="submit"><h3> alle Orte importieren </h3></button>
 </form>
 
-<!-- 
-<h1>Daten Import:<h1/>
-<form  action="KI-importOrte.php" method="post" enctype="multipart/form-data">
-<p>Traubuch: <input id="traubuch" name="traubuch" required/></p>
-<input type="file" id="daten_import_file" name="daten_import_file"  accept="*.txt" required />
-<br />
-<br />
-<button type="submit">Importieren</button>
-</form>
- -->
 
 </body> 
 </html> 
