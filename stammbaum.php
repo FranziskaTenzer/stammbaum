@@ -24,13 +24,17 @@ if ($vorname != null or $Nachname != null) {
 <br />
 
 <form action="stammbaum-familien.php" method="post">
-<button type="submit"><h3> Stammbaum Suche</h3></button>
+<button type="submit"><h3> 🌳👨‍👩‍👧‍👦 Stammbaum Suche 👨‍👩‍👧‍👦🌳</h3></button>
 </form>
 
 
 <?php include("../stammbaum-daten/overview.html");?>
     
-    
+<br /> 
+<br />   
+<hr>
+<br /> 
+<h2>Adminbereich</h2>  
 
 <form action="vornamen-aehnlich.php" method="get">
     <button type="submit">
@@ -48,7 +52,7 @@ if ($vorname != null or $Nachname != null) {
 <br />
 <form action="re-create-all.php" method="get">
     <button type="submit">
-        <h3 style="color:red; font-weight:bold;">❌ ⛁ ⛔ Daten komplett löschen und neu importieren ⛁ 🚮<br />(Weiterhin fehlerhaft)</h3>
+        <h3 style="color:red; font-weight:bold;">⛁ 🚮 Daten komplett löschen und neu importieren 🚮 ⛁<br />(Weiterhin fehlerhaft)</h3>
     </button>
 </form> 
  
