@@ -32,15 +32,15 @@ if ($vorname != null or $Nachname != null) {
     
     
 
-<form action="stammbaum-aehnliche-vornamen.php" method="get">
+<form action="vornamen-aehnlich.php" method="get">
     <button type="submit">
-        <h3>Ähnliche Vornamen anzeigen</h3>
+        <h3>👨≈👨 Ähnliche Vornamen anzeigen 👩≈👩</h3>
     </button>
 </form>
 <br />
-<form action="stammbaum-aehnliche-namen.php" method="get">
+<form action="nachnamen-aehnlich.php" method="get">
     <button type="submit">
-        <h3>Ähnliche Namen anzeigen - inkl. Vergleich Tiroler Namen</h3>
+        <h3>🇦🇹👤 Ähnliche Namen anzeigen - inkl. Vergleich Tiroler Namen 👤🇦🇹</h3>
     </button>
 </form>
 <br />   
@@ -48,7 +48,7 @@ if ($vorname != null or $Nachname != null) {
 <br />
 <form action="re-create-all.php" method="get">
     <button type="submit">
-        <h3 style="color:red; font-weight:bold;">Daten komplett löschen und neu importieren<br />(Weiterhin fehlerhaft)</h3>
+        <h3 style="color:red; font-weight:bold;">❌ ⛁ ⛔ Daten komplett löschen und neu importieren ⛁ 🚮<br />(Weiterhin fehlerhaft)</h3>
     </button>
 </form> 
  

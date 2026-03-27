@@ -1,6 +1,8 @@
 <?php
 
 include 'include.php';
+include 'tirol-archiv-helper.php';
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -54,6 +56,22 @@ function getSimilarNachnamen($pdo) {
     return $groups;
 }
 
+// Gruppiere Nachnamen nach Anfangsbuchstaben
+function groupNachamenByFirstLetter($groups) {
+    $grouped = [];
+    
+    foreach ($groups as $group) {
+        $firstLetter = strtoupper(substr($group[0], 0, 1));
+        if (!isset($grouped[$firstLetter])) {
+            $grouped[$firstLetter] = [];
+        }
+        $grouped[$firstLetter][] = $group;
+    }
+    
+    ksort($grouped);
+    return $grouped;
+}
+
 // Get all records for a specific nachname
 function getRecordsForNachname($pdo, $nachname) {
     $sql = "
@@ -100,7 +118,6 @@ function formatDate($date) {
 }
 
 function formatTraubuch($traubuch) {
-    // Entferne alles nach ".txt"
     if (strpos($traubuch, '.txt') !== false) {
         return substr($traubuch, 0, strpos($traubuch, '.txt') + 4);
     }
@@ -110,13 +127,10 @@ function formatTraubuch($traubuch) {
 function renderPersonRecord($record, $recordId) {
     $html = '<div style="background:#f0f8ff; padding:12px; margin:8px 0; border-left:4px solid #0066cc; border-radius:3px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">';
     
-    // NAME UND ELTERN - KEIN ONCLICK, NUR TEXT ZUM KOPIEREN
     $html .= '<div style="flex-grow:1; min-width:250px; user-select:text;">';
     
-    // Name
     $html .= '<span style="color:#0066cc; font-size:1.1em; font-weight:bold;">' . htmlspecialchars($record['vorname'] . ' ' . $record['nachname']) . '</span>';
     
-    // Eltern
     if ($record['vater_vorname'] || $record['mutter_vorname']) {
         $html .= '<span style="color:#666; font-size:0.85em; margin-left:10px;">';
         if ($record['vater_vorname']) {
@@ -131,7 +145,6 @@ function renderPersonRecord($record, $recordId) {
     
     $html .= '</div>';
     
-    // TRAUBUCH - KEIN ONCLICK
     if ($record['traubuch']) {
         $traubuchClean = formatTraubuch($record['traubuch']);
         $html .= '<span style="background:#fff3cd; color:#856404; padding:4px 8px; border-radius:3px; font-size:0.85em; display:inline-block; white-space:nowrap;">';
@@ -139,15 +152,12 @@ function renderPersonRecord($record, $recordId) {
         $html .= '</span>';
     }
     
-    // TOGGLE ICON - NUR DAS HAT ONCLICK!
     $html .= '<span class="toggle-icon" style="color:#0066cc; font-size:1.2em; font-weight:bold; transition:transform 0.3s; cursor:pointer; user-select:none;" onclick="toggleRecord(this, \'' . $recordId . '\'); event.stopPropagation();">▶</span>';
     
     $html .= '</div>';
     
-    // Versteckte Details
     $html .= '<div id="record-' . $recordId . '" style="display:none; margin-top:12px; margin-left:12px; padding:12px; background:#f9f9f9; border-radius:3px; border-left:4px solid #0066cc;">';
     
-    // Daten
     if ($record['geburtsdatum'] || $record['sterbedatum']) {
         $html .= '<span style="color:#555; font-size:0.9em; display:block; margin-bottom:8px;">';
         $html .= '<strong>Lebensdaten:</strong> ';
@@ -167,7 +177,6 @@ function renderPersonRecord($record, $recordId) {
         $html .= '</span>';
     }
     
-    // Zusatzinfos
     if ($record['hof'] || $record['ort'] || $record['bemerkung']) {
         $html .= '<span style="color:#888; font-size:0.85em; display:block;">';
         if ($record['hof']) {
@@ -182,7 +191,6 @@ function renderPersonRecord($record, $recordId) {
         $html .= '</span>';
     }
     
-    // Heiratsdatum
     if ($record['heiratsdatum']) {
         $html .= '<span style="color:#888; font-size:0.85em; display:block;">';
         $html .= '<strong>Heirat:</strong> ' . formatDate($record['heiratsdatum']);
@@ -194,12 +202,11 @@ function renderPersonRecord($record, $recordId) {
     return $html;
 }
 
-function renderNameGroup($groupNames, $groupType, $pdo) {
-    $groupId = 'group-' . $groupType . '-' . md5(implode('-', $groupNames));
+function renderNameGroup($groupNames, $pdo) {
+    $groupId = 'group-nachname-' . md5(implode('-', $groupNames));
     
     $html = '<div class="name-group" style="background:#f9f9f9; padding:12px; margin:10px 0; border-left:4px solid #666; border-radius:3px;">';
     
-    // Header mit Klick-Event
     $html .= '<div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleNameGroup(this, \'' . $groupId . '\');">';
     $html .= '<div>';
     $html .= '<strong style="color:#333; user-select:none;">' . htmlspecialchars(implode(', ', $groupNames)) . '</strong>';
@@ -207,23 +214,17 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
     $html .= '<span class="toggle-icon" style="color:#666; font-size:1.2em; transition:transform 0.3s; user-select:none;">▶</span>';
     $html .= '</div>';
     
-    // Content Container (versteckt)
+    // Verwende die Helper-Funktion aus tirol-archiv-helper.php
+    $html .= renderArchiveNamesBox($groupNames[0]);
+    
     $html .= '<div id="' . $groupId . '" class="group-content" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #ddd;">';
     
-    // Hole Datensätze für jedes Namen in der Gruppe
     foreach ($groupNames as $name) {
-        if ($groupType === 'mutter') {
-            $records = getRecordsForMutterName($pdo, $name);
-        } elseif ($groupType === 'vater') {
-            $records = getRecordsForVaterName($pdo, $name);
-        } else {
-            $records = getRecordsForNachname($pdo, $name);
-        }
+        $records = getRecordsForNachname($pdo, $name);
         
         if (!empty($records)) {
-            $versionId = 'version-' . $groupType . '-' . md5($name);
+            $versionId = 'version-nachname-' . md5($name);
             
-            // Version-Header mit Klick-Event
             $html .= '<div style="margin-top:12px; padding:10px; background:#ffffff; border:1px solid #ddd; border-radius:3px;">';
             $html .= '<div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleVersion(this, \'' . $versionId . '\'); event.stopPropagation();">';
             $html .= '<div>';
@@ -233,12 +234,11 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
             $html .= '<span class="version-icon" style="color:#0066cc; font-size:1.1em; transition:transform 0.3s; display:inline-block; user-select:none;">▶</span>';
             $html .= '</div>';
             
-            // Container für Datensätze dieser Version (versteckt)
             $html .= '<div id="' . $versionId . '" class="version-content" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">';
             
             $recordCounter = 0;
             foreach ($records as $record) {
-                $recordId = $groupType . '-' . $name . '-' . ($recordCounter++);
+                $recordId = 'nachname-' . $name . '-' . ($recordCounter++);
                 $html .= renderPersonRecord($record, $recordId);
             }
             
@@ -258,7 +258,7 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Ähnliche Namen - Stammbaum</title>
+    <title>Ähnliche Nachnamen - Stammbaum</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -295,8 +295,63 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
         .back-link:hover {
             background: #5568d3;
         }
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .letter-btn {
+            padding: 12px;
+            text-align: center;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+        .letter-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .letter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .letter-content {
+            display: none;
+        }
+        .letter-content.active {
+            display: block;
+        }
+        .letter-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
     </style>
     <script>
+        function showLetter(letter) {
+            document.querySelectorAll('.letter-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.letter-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            const content = document.getElementById('letter-' + letter);
+            if (content) {
+                content.classList.add('active');
+            }
+            
+            event.target.classList.add('active');
+        }
+        
         function toggleRecord(element, recordId) {
             const elem = document.getElementById(recordId);
             const icon = element;
@@ -343,28 +398,45 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
     <div class="container">
         <a href="stammbaum.php" class="back-link">← Zurück zur Startseite</a>
         
-        <h1>🔍 Ähnliche Namen im Stammbaum</h1>
+        <h1>🔍 Ähnliche Nachnamen im Stammbaum</h1>
         
         <p style="color:#666; margin-bottom:20px;">
-            Klicken Sie auf einen Bereich um ihn auf- oder zuzuklappen:
+            Diese Seite zeigt Gruppen ähnlicher Familiennamen und vergleicht sie mit dem 
+            Tirol-Archiv Familiennamen-Verzeichnis. Es werden nur Namen mit mind. 80% Ähnlichkeit angezeigt,
+            sowie die Orte, in denen diese Namen vorkommen.
             <br>
-            <strong>Ebene 1:</strong> Gruppe ähnlicher Namen | 
-            <strong>Ebene 2:</strong> Einzelne Namensversion | 
-            <strong>Ebene 3:</strong> Datensätze der Person (nur das Pfeil-Icon ist klickbar)
+            <strong>Wählen Sie einen Anfangsbuchstaben:</strong> Die Nachnamen werden nach Gruppe und Ähnlichkeit angezeigt.
             <br>
             <em style="color:#999;">Namen und Eltern können kopiert werden</em>
         </p>
         
-        <!-- NACHNAMEN -->
-        <h2>📛 Nachnamen</h2>
+        <!-- BUCHSTABEN-FILTER -->
+        <h2>📝 Nachnamen nach Anfangsbuchstabe</h2>
+        
         <?php
             $nachnamenGroups = getSimilarNachnamen($pdo);
-            if (count($nachnamenGroups) > 0) {
-                foreach ($nachnamenGroups as $group) {
-                    echo renderNameGroup($group, 'nachname', $pdo);
+            $groupedByLetter = groupNachamenByFirstLetter($nachnamenGroups);
+            
+            echo '<div class="letter-grid">';
+            foreach ($groupedByLetter as $letter => $groups) {
+                $count = count($groups);
+                echo '<button class="letter-btn" onclick="showLetter(\'' . $letter . '\'); event.preventDefault();">';
+                echo $letter . '<br><small style="font-size:0.8em; font-weight:normal;">(' . $count . ')</small>';
+                echo '</button>';
+            }
+            echo '</div>';
+            
+            foreach ($groupedByLetter as $letter => $groups) {
+                echo '<div id="letter-' . $letter . '" class="letter-content">';
+                echo '<div class="letter-section">';
+                echo '<h3 style="color:#667eea; margin-top:0;">Nachnamen mit ' . $letter . ' (' . count($groups) . ' Gruppen)</h3>';
+                
+                foreach ($groups as $group) {
+                    echo renderNameGroup($group, $pdo);
                 }
-            } else {
-                echo '<p style="color:#999;">Keine ähnlichen Nachnamen gefunden.</p>';
+                
+                echo '</div>';
+                echo '</div>';
             }
         ?>
         
