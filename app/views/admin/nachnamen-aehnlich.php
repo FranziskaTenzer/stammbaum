@@ -1,7 +1,11 @@
 <?php
 
-$pageTitle = "Zeige ähnliche Nachnamen";
-require 'header.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once dirname(__DIR__, 2) . '/lib/session-helper.php';
+requireLogin();
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -13,13 +17,15 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 });
     
     try {
-        include 'include.php';
-        include 'tirol-archiv-helper.php';
+        include dirname(__DIR__, 2) . '/lib/include.php';
+        include dirname(__DIR__, 2) . '/lib/tirol-archiv-helper.php';
         
         $pdo = getPDO();
     } catch (Exception $e) {
         die('Verbindungsfehler: ' . $e->getMessage());
     }
+
+$baseUrl = getBaseUrl();
     
     // ===========================
     // HELPER FUNKTIONEN
@@ -424,7 +430,7 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 </head>
 <body>
     <div class="container">
-        <a href="stammbaum.php" class="back-link">← Zurück zur Startseite</a>
+        <a href="<?= htmlspecialchars($baseUrl) ?>/public/index.php" class="back-link">← Zurück zur Startseite</a>
         
         <h1>🔍 Ähnliche Nachnamen im Stammbaum</h1>
         
@@ -470,9 +476,7 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
         ?>
         
         <br>
-        <a href="stammbaum.php" class="back-link">← Zurück zur Startseite</a>
+        <a href="<?= htmlspecialchars($baseUrl) ?>/public/index.php" class="back-link">← Zurück zur Startseite</a>
     </div>
 </body>
 </html>
-
-<?php require 'footer.php'; ?>

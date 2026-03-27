@@ -4,11 +4,20 @@ ini_set('display_errors', 1);
 set_time_limit(600);
 ob_start();
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once dirname(__DIR__, 2) . '/lib/session-helper.php';
+requireLogin();
+
 if (!function_exists('getPDO')) {
-    include 'include.php';
+    include dirname(__DIR__, 2) . '/lib/include.php';
 }
 
 $pdo = getPDO();
+
+$baseUrl = getBaseUrl();
 
 // ===========================
 // SCHRITT 1: Datenbank initialisieren (INLINE - ohne require!)
@@ -125,7 +134,7 @@ flush();
 
 try {
     $SKIP_AUTO_IMPORT = true;
-    require_once 'importThierbach.php';
+    require_once dirname(__DIR__, 2) . '/import/importThierbach.php';
     runThierbachImport();
     echo "<p style='color:green;'>✅ Thierbach-Import abgeschlossen!</p>";
 } catch (Exception $e) {
@@ -151,7 +160,7 @@ flush();
 
 try {
     $SKIP_AUTO_IMPORT = true;
-    require_once 'importOrte.php';
+    require_once dirname(__DIR__, 2) . '/import/importOrte.php';
     runOrteImport();
     echo "<p style='color:green;'>✅ Orte-Import abgeschlossen!</p>";
 } catch (Exception $e) {
@@ -194,9 +203,7 @@ try {
 echo "<div style='background:#f3e5f5; padding:20px; margin:10px 0; border-radius:8px; border:2px solid #9c27b0;'>";
 echo "<h2 style='color:#9c27b0;'>🎉 ALLE IMPORTE ERFOLGREICH!</h2>";
 echo "<p>Alle Daten wurden mit einer einzigen Datenbankverbindung importiert.</p>";
-echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none; display:inline-block;'>← Zurück zur Startseite</a>";
+echo "<a href='" . htmlspecialchars($baseUrl) . "/public/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none; display:inline-block;'>← Zurück zur Startseite</a>";
 echo "</div>";
 ob_flush();
 flush();
-
-?>

@@ -1,18 +1,9 @@
 <?php
-// Menu-System für Stammbaum
-require_once 'session-helper.php';
-requireLogin();
-?>
+// Sidebar Menu - wird auf allen Seiten über header.php includiert
+require_once dirname(__DIR__) . '/lib/session-helper.php';
 
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style-menu.css">
-    <title>Menü</title>
-</head>
-<body>
+$baseUrl = getBaseUrl();
+?>
 
 <aside class="sidebar">
     <div class="sidebar-header">
@@ -23,6 +14,19 @@ requireLogin();
     <nav class="sidebar-nav">
         
         <!-- ================================
+             🏠 HOME
+             ================================ -->
+        <div class="nav-section">
+            <h3 class="nav-section-title" onclick="toggleSection(this)">
+                <span class="section-icon">▶</span>
+                🏠 Home
+            </h3>
+            <ul class="nav-menu" style="display:block;">
+                <li><a href="<?= htmlspecialchars($baseUrl) ?>/public/index.php">🏠 Startseite</a></li>
+            </ul>
+        </div>
+
+        <!-- ================================
              🔍 STAMMBAUM - Hauptbereich
              ================================ -->
         <div class="nav-section">
@@ -31,9 +35,9 @@ requireLogin();
                 🔍 Stammbaum
             </h3>
             <ul class="nav-menu" style="display:block;">
-                <li><a href="stammbaum-familien.php">👤 Personensuche</a></li>
-                <li><a href="display-stammbaum.php">📊 Stammbaum anzeigen</a></li>
-                <li><a href="traubuch-liste.php">📚 Traubuch-Liste</a></li>
+                <li><a href="<?= htmlspecialchars($baseUrl) ?>/app/views/user/stammbaum-search.php">👤 Personensuche</a></li>
+                <li><a href="<?= htmlspecialchars($baseUrl) ?>/app/views/user/stammbaum-display.php">📊 Stammbaum anzeigen</a></li>
+                <li><a href="<?= htmlspecialchars($baseUrl) ?>/app/views/user/traubuch-list.php">📚 Traubuch-Liste</a></li>
             </ul>
         </div>
 
@@ -55,9 +59,9 @@ requireLogin();
                         📋 Daten verwalten
                     </span>
                     <ul class="nav-submenu">
-                        <li><a href="importOrte.php">➕ Neue Orte importieren</a></li>
+                        <li><a href="<?= htmlspecialchars($baseUrl) ?>/app/views/admin/import-orte.php">➕ Neue Orte importieren</a></li>
                         <li class="warning-item">
-                            <a href="re-create-all.php" onclick="return confirm('⚠️ WARNUNG: Dies löscht ALLE Daten und importiert alles neu. Möchten Sie fortfahren?');">
+                            <a href="<?= htmlspecialchars($baseUrl) ?>/app/views/admin/re-create-all.php" onclick="return confirm('⚠️ WARNUNG: Dies löscht ALLE Daten und importiert alles neu. Möchten Sie fortfahren?');">
                                 🔄 Kompletter Neustart
                             </a>
                         </li>
@@ -71,8 +75,8 @@ requireLogin();
                         🛠️ Verwaltung
                     </span>
                     <ul class="nav-submenu">
-                        <li><a href="vornamen-aehnlich.php">👨≈👨 Ähnliche Vornamen</a></li>
-                        <li><a href="nachnamen-aehnlich.php">👤≈👤 Ähnliche Nachnamen</a></li>
+                        <li><a href="<?= htmlspecialchars($baseUrl) ?>/app/views/admin/vornamen-aehnlich.php">👨≈👨 Ähnliche Vornamen</a></li>
+                        <li><a href="<?= htmlspecialchars($baseUrl) ?>/app/views/admin/nachnamen-aehnlich.php">👤≈👤 Ähnliche Nachnamen</a></li>
                     </ul>
                 </li>
 
@@ -91,7 +95,7 @@ requireLogin();
                                 <?php endif; ?>
                             </span>
                         </li>
-                        <li><a href="logout.php" style="color:#d32f2f;">🚪 Ausloggen</a></li>
+                        <li><a href="<?= htmlspecialchars($baseUrl) ?>/public/logout.php" style="color:#d32f2f;">🚪 Ausloggen</a></li>
                     </ul>
                 </li>
 
@@ -112,8 +116,3 @@ requireLogin();
     </footer>
 
 </aside>
-
-<script src="script-menu.js"></script>
-
-</body>
-</html>

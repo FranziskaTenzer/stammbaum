@@ -1,14 +1,22 @@
 <?php
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once dirname(__DIR__, 2) . '/lib/session-helper.php';
+requireLogin();
+
 ini_set('display_errors', 1);
 
 // Prüfe ob getPDO bereits definiert ist, um doppelte Definitionen zu vermeiden
 if (!function_exists('getPDO')) {
-    include 'include.php';
+    include dirname(__DIR__, 2) . '/lib/include.php';
 }
 
 $pdo = getPDO();
 
+$baseUrl = getBaseUrl();
 
 $sqlDeleteDB = " SET FOREIGN_KEY_CHECKS = 0;
     
@@ -102,7 +110,6 @@ $stmt->execute();
 
 
 
-
 /* =========================
  TABELLEN
  ========================= */
@@ -146,6 +153,4 @@ $stmt->execute();
 
 
 echo "<h2>Datenbank erfolgreich gelöscht und neu erstellt</h2><br />";
-echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
-
-?>
+echo "<a href='" . htmlspecialchars($baseUrl) . "/public/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";

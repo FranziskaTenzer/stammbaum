@@ -1,6 +1,8 @@
 <?php 
 $pageTitle = "Stammbaum Startseite";
-require 'header.php';
+require_once dirname(__DIR__) . '/app/layout/header.php';
+
+$baseUrl = getBaseUrl();
 ?>
 
 <div class="page-header">
@@ -12,28 +14,28 @@ require 'header.php';
     <div class="content-card">
         <h3>👤 Personensuche</h3>
         <p>Suchen Sie nach Personen im Stammbaum nach Vor- und Nachname</p>
-        <a href="stammbaum-familien.php" class="btn btn-primary">Zur Suche</a>
+        <a href="<?= htmlspecialchars($baseUrl) ?>/app/views/user/stammbaum-search.php" class="btn btn-primary">Zur Suche</a>
     </div>
 
     <div class="content-card">
         <h3>📊 Stammbaum anzeigen</h3>
         <p>Zeigen Sie den Stammbaum für eine bestimmte Person an</p>
-        <a href="display-stammbaum.php" class="btn btn-primary">Stammbaum öffnen</a>
+        <a href="<?= htmlspecialchars($baseUrl) ?>/app/views/user/stammbaum-display.php" class="btn btn-primary">Stammbaum öffnen</a>
     </div>
 
     <div class="content-card">
         <h3>📚 Traubuch-Liste</h3>
         <p>Durchsuchen Sie alle verfügbaren Traubücher</p>
-        <a href="traubuch-liste.php" class="btn btn-primary">Traubücher ansehen</a>
+        <a href="<?= htmlspecialchars($baseUrl) ?>/app/views/user/traubuch-list.php" class="btn btn-primary">Traubücher ansehen</a>
     </div>
 
     <?php if (isLoggedIn()): ?>
     <div class="content-card admin-card">
         <h3>⚙️ Admin-Bereich</h3>
         <p>Verwalten Sie die Daten und Importe</p>
-        <a href="#" onclick="document.querySelector('.nav-section:nth-child(3) .nav-section-title').click()" class="btn btn-warning">Admin-Menü öffnen</a>
+        <a href="<?= htmlspecialchars($baseUrl) ?>/app/views/admin/admin-dashboard.php" class="btn btn-warning">Admin-Dashboard</a>
     </div>
     <?php endif; ?>
 </div>
 
-<?php require 'footer.php'; ?>
+<?php require_once dirname(__DIR__) . '/app/layout/footer.php'; ?>

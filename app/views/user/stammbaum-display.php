@@ -1,8 +1,13 @@
 <?php
 
-$pageTitle = "Anzeige Stammbaum";
-require 'header.php';
-require 'include.php';  // wenn nötig
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once dirname(__DIR__, 2) . '/lib/session-helper.php';
+requireLogin();
+
+require_once dirname(__DIR__, 2) . '/lib/include.php';
 
 ini_set('display_errors', 1);
 
@@ -423,6 +428,8 @@ $visitedDesc = [];
 
 $p = $personsById[$startId];
 
+$baseUrl = getBaseUrl();
+
 ?>
 
 <!DOCTYPE html>
@@ -507,9 +514,9 @@ document.addEventListener("click", function(e){
 </head>
 
 <body>
-<br /><a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>
+<br /><a href='<?= htmlspecialchars($baseUrl) ?>/public/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>
 <br /><br /><br />
-<br /><a href='stammbaum-familien.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Personensuche</a>
+<br /><a href='<?= htmlspecialchars($baseUrl) ?>/app/views/user/stammbaum-search.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Personensuche</a>
 <br />
 
 <h2 style="text-align:center;">Stammbaum</h2>
@@ -579,5 +586,3 @@ document.addEventListener("click", function(e){
 
 </body>
 </html>
-
-<?php require 'footer.php'; ?>

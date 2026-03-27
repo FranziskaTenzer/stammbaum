@@ -3,12 +3,18 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-$pageTitle = "Zeige ähnliche Vornamen";
-require 'header.php';
-require 'include.php';  // wenn nötig
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
+require_once dirname(__DIR__, 2) . '/lib/session-helper.php';
+requireLogin();
+
+require_once dirname(__DIR__, 2) . '/lib/include.php';
 
 $pdo = getPDO();
+
+$baseUrl = getBaseUrl();
 
 // ===========================
 // HELPER FUNKTIONEN
@@ -423,7 +429,7 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
 </head>
 <body>
     <div class="container">
-        <a href="stammbaum.php" class="back-link">← Zurück zur Startseite</a>
+        <a href="<?= htmlspecialchars($baseUrl) ?>/public/index.php" class="back-link">← Zurück zur Startseite</a>
         
         <h1>🔍 Ähnliche Namen im Stammbaum</h1>
         
@@ -464,9 +470,7 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
         ?>
         
         <br>
-        <a href="stammbaum.php" class="back-link">← Zurück zur Startseite</a>
+        <a href="<?= htmlspecialchars($baseUrl) ?>/public/index.php" class="back-link">← Zurück zur Startseite</a>
     </div>
 </body>
 </html>
-
-<?php require 'footer.php'; ?>

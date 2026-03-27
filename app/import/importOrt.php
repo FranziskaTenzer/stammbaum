@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 
 // Prüfe ob getPDO bereits definiert ist, um doppelte Definitionen zu vermeiden
 if (!function_exists('getPDO')) {
-    include 'include.php';
+    include dirname(__DIR__) . '/lib/include.php';
 }
 $traubuch = $_POST['traubuch'];
 $uploadedFile = $_FILES['daten_import_file'];

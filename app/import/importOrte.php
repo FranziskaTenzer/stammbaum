@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 if (!function_exists('getPDO')) {
-    include 'include.php';
+    include dirname(__DIR__) . '/lib/include.php';
 }
 
 // ===========================
@@ -310,7 +310,7 @@ function importFile($pdo, $filePath, $traubuch) {
 function runOrteImport() {
     global $pdo;
     
-    $dataDir = "../stammbaum-daten/";
+    $dataDir = dirname(__DIR__, 2) . "/../stammbaum-daten/";
     $results = [];
     $totalImported = 0;
     $totalErrors = 0;
@@ -379,7 +379,8 @@ function runOrteImport() {
     echo "</ul>";
     
     echo "<hr><br />";
-    echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
+    $baseUrl = function_exists('getBaseUrl') ? getBaseUrl() : '';
+    echo "<a href='" . htmlspecialchars($baseUrl) . "/public/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 }
 
 /* =========================

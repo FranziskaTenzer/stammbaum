@@ -9,10 +9,6 @@ function getPDO() {
     $datenbank = 'stammbaum';
     $charset = 'utf8mb4';
     
-    $dsn =null;
-    $options = null;
-    $pdo = null;
-    
     $dsn = "mysql:host=$host;dbname=$datenbank;charset=$charset";
     $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -42,4 +38,3 @@ function sanitizeInput($input) {
 }
 
 // Other helper functions can be added here
-?>

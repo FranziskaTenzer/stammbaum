@@ -1,12 +1,28 @@
 <?php
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // ===========================
 // SESSION MANAGEMENT HELPER
 // ===========================
 
 define('ADMIN_PASSWORD', 'admin123');  // ⚠️ ÄNDERN SIE DIESES PASSWORT!
+
+/**
+ * Berechnet die Basis-URL der Anwendung dynamisch
+ */
+function getBaseUrl() {
+    $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME']);
+    $parts = explode('/', $script);
+    $result = [];
+    foreach ($parts as $part) {
+        if ($part === 'app' || $part === 'public') break;
+        $result[] = $part;
+    }
+    return rtrim(implode('/', $result), '/');
+}
 
 /**
  * Prüft ob Benutzer angemeldet ist
@@ -20,7 +36,7 @@ function isLoggedIn() {
  */
 function requireLogin() {
     if (!isLoggedIn()) {
-        header('Location: login.php');
+        header('Location: ' . getBaseUrl() . '/public/login.php');
         exit;
     }
 }
@@ -62,5 +78,3 @@ function loginAsAdmin($username) {
     loginUser($username);
     $_SESSION['is_admin'] = true;
 }
-
-?>
