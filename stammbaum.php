@@ -42,10 +42,13 @@ if ($vorname != null or $Nachname != null) {
 <br />
 <form action="re-create-all.php" method="get">
     <button type="submit">
-        <h3 style="color:red; font-weight:bold;">Daten komplett löschen und neu importieren</h3>
+        <h3 style="color:red; font-weight:bold;">Daten komplett löschen und neu importieren<br />(Weiterhin fehlerhaft)</h3>
     </button>
-</form>   
-   
+</form> 
+ 
+<br />   
+<hr>
+<br />  
   
 <form action="db_init.php" method="post">
 <button type="submit"><h4 style='color:red'>Datenbank neu erstellen</h4></button>
@@ -62,7 +65,7 @@ if ($vorname != null or $Nachname != null) {
 <br />
 <button type="submit">Thierbach Importieren</button>
 </form>
-
+<!-- 
 <h1>Daten Import Ort :<h1/>
 <form  action="importOrt.php" method="post" enctype="multipart/form-data">
 <p>Traubuch: <input id="traubuch" name="traubuch" required/></p>
@@ -70,7 +73,7 @@ if ($vorname != null or $Nachname != null) {
 <br />
 <br />
 <button type="submit">Importieren</button>
-</form>
+</form> -->
 
 <form action="importOrte.php" method="post">
 <button type="submit"><h3> alle Orte importieren </h3></button>

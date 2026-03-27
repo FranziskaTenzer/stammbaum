@@ -3,12 +3,9 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Prüfe ob getPDO bereits definiert ist, um doppelte Definitionen zu vermeiden
 if (!function_exists('getPDO')) {
     include 'include.php';
 }
-
-$pdo = getPDO();
 
 // ===========================
 // HELPER FUNKTIONEN
@@ -91,7 +88,6 @@ function extractParents(&$text) {
     $vater = null;
     $mutter = null;
     
-    // Extrahiere (Vater & Mutter) oder (Vater & null)
     if (preg_match('/\(([^&)]+)\s*&\s*([^)]+)\)/i', $text, $m)) {
         $vater_text = trim($m[1]);
         $mutter_text = trim($m[2]);
@@ -99,13 +95,10 @@ function extractParents(&$text) {
         $vater = $vater_text ? $vater_text : null;
         $mutter = $mutter_text ? $mutter_text : null;
         
-        // Entferne die Klammer aus dem Text
         $text = str_replace($m[0], '', $text);
     } elseif (preg_match('/\(([^)]+)\)/i', $text, $m)) {
-        // Nur eine Person in Klammer, könnte Vater oder Mutter sein
         $parent_text = trim($m[1]);
         if ($parent_text && !preg_match('/^(unehelich|S\d+)/i', $parent_text)) {
-            // Assume vater if only one parent is given
             $vater = $parent_text;
         }
         $text = str_replace($m[0], '', $text);
@@ -146,16 +139,10 @@ function parsePerson($text) {
     list($tod, $todOrt) = extractDateAndPlace($text, 'gest');
     list($geb, $gebOrt) = extractDateAndPlace($text, 'geb');
     
-    // Eltern extrahieren
     list($vater_text, $mutter_text) = extractParents($text);
     
-    // Klammern entfernen
     $text = preg_replace('/\([^)]*\)/', '', $text);
-    
-    // Alter entfernen
     $text = preg_replace('/\b\d+\s*[jJ]\b/', '', $text);
-    
-    // Zusätze entfernen (Hof, Ort)
     $text = preg_replace('/,?\s*(Hof|Ort):\s*[^,]*/i', '', $text);
     
     $text = trim($text);
@@ -214,10 +201,8 @@ function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
 function findOrCreatePersonFromText($pdo, $personText) {
     if (!$personText) return null;
     
-    // Parse the text to extract name and parents
     $personData = parsePerson($personText);
     
-    // Recursively find or create parents
     $vaterId = null;
     $mutterId = null;
     
@@ -229,7 +214,6 @@ function findOrCreatePersonFromText($pdo, $personText) {
         $mutterId = findOrCreatePersonFromText($pdo, $personData['mutter_text']);
     }
     
-    // Find or create the person with parent IDs
     return findOrCreatePerson($pdo, $personData, $vaterId, $mutterId);
 }
 
@@ -323,78 +307,89 @@ function importFile($pdo, $filePath, $traubuch) {
     ];
 }
 
-// ===========================
-// HAUPTLOGIK
-// ===========================
-
-$dataDir = "../stammbaum-daten/";
-$results = [];
-$totalImported = 0;
-$totalErrors = 0;
-
-if (!is_dir($dataDir)) {
-    die("❌ Verzeichnis nicht gefunden: $dataDir");
-}
-
-// Alle .txt Dateien auflisten
-$files = glob($dataDir . "*.txt");
-
-if (empty($files)) {
-    die("❌ Keine .txt Dateien im Verzeichnis gefunden");
-}
-
-echo "<h2>🔄 Importiere alle Orte...</h2>";
-echo "<div style='background:#f5f5f5; padding:15px; border-radius:8px;'>";
-
-foreach ($files as $filePath) {
+function runOrteImport() {
+    global $pdo;
     
-    $filename = basename($filePath);
+    $dataDir = "../stammbaum-daten/";
+    $results = [];
+    $totalImported = 0;
+    $totalErrors = 0;
     
-    // Thierbach-komplett.txt ausschließen
-    if (stripos($filename, 'thierbach-komplett') !== false) {
-        echo "<div style='color:#999;'>⏭️ <strong>$filename</strong> - übersprungen</div>";
-        continue;
+    if (!is_dir($dataDir)) {
+        echo "❌ Verzeichnis nicht gefunden: $dataDir";
+        return;
     }
     
-    // Traubuch-Name extrahieren (erste Wort vor - oder _)
-    preg_match('/^([^-_]+)/', $filename, $m);
-    $traubuch = ucfirst(strtolower($m[1] ?? 'Unbekannt'));
+    $files = glob($dataDir . "*.txt");
     
-    echo "<div style='margin:10px 0; padding:10px; background:white; border-left:4px solid #667eea;'>";
-    echo "📄 <strong>$filename</strong><br>";
+    if (empty($files)) {
+        echo "❌ Keine .txt Dateien im Verzeichnis gefunden";
+        return;
+    }
     
-    $result = importFile($pdo, $filePath, $traubuch);
+    echo "<h2>🔄 Importiere alle Orte...</h2>";
+    echo "<div style='background:#f5f5f5; padding:15px; border-radius:8px;'>";
     
-    if (isset($result['error'])) {
-        echo "❌ Fehler: " . htmlspecialchars($result['error']) . "<br>";
-    } else {
-        echo "✅ Ort: <strong>" . htmlspecialchars($result['traubuch']) . "</strong><br>";
-        echo "📊 Importiert: <span style='color:green;'>" . $result['imported'] . " Einträge</span>";
+    foreach ($files as $filePath) {
         
-        if ($result['errors'] > 0) {
-            echo ", <span style='color:red;'>" . $result['errors'] . " Fehler</span>";
+        $filename = basename($filePath);
+        
+        // Thierbach-komplett.txt ausschließen
+        if (stripos($filename, 'thierbach-komplett') !== false) {
+            echo "<div style='color:#999;'>⏭️ <strong>$filename</strong> - übersprungen</div>";
+            continue;
         }
         
-        $totalImported += $result['imported'];
-        $totalErrors += $result['errors'];
+        // Traubuch-Name extrahieren (erste Wort vor - oder _)
+        preg_match('/^([^-_]+)/', $filename, $m);
+        $traubuch = ucfirst(strtolower($m[1] ?? 'Unbekannt'));
+        
+        echo "<div style='margin:10px 0; padding:10px; background:white; border-left:4px solid #667eea;'>";
+        echo "📄 <strong>$filename</strong><br>";
+        
+        $result = importFile($pdo, $filePath, $traubuch);
+        
+        if (isset($result['error'])) {
+            echo "❌ Fehler: " . htmlspecialchars($result['error']) . "<br>";
+        } else {
+            echo "✅ Ort: <strong>" . htmlspecialchars($result['traubuch']) . "</strong><br>";
+            echo "📊 Importiert: <span style='color:green;'>" . $result['imported'] . " Einträge</span>";
+            
+            if ($result['errors'] > 0) {
+                echo ", <span style='color:red;'>" . $result['errors'] . " Fehler</span>";
+            }
+            
+            $totalImported += $result['imported'];
+            $totalErrors += $result['errors'];
+        }
+        
+        echo "</div>";
     }
     
     echo "</div>";
+    
+    echo "<hr>";
+    echo "<h3>📈 Zusammenfassung</h3>";
+    echo "<ul>";
+    echo "<li>✅ Insgesamt importiert: <strong style='color:green;'>$totalImported</strong> Einträge</li>";
+    if ($totalErrors > 0) {
+        echo "<li>❌ Fehler: <strong style='color:red;'>$totalErrors</strong></li>";
+    }
+    echo "<li>📁 Verarbeitete Dateien: " . count($files) . "</li>";
+    echo "</ul>";
+    
+    echo "<hr>";
+    echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 }
 
-echo "</div>";
+/* =========================
+ HAUPTLOGIK
+ ========================= */
 
-echo "<hr>";
-echo "<h3>📈 Zusammenfassung</h3>";
-echo "<ul>";
-echo "<li>✅ Insgesamt importiert: <strong style='color:green;'>$totalImported</strong> Einträge</li>";
-if ($totalErrors > 0) {
-    echo "<li>❌ Fehler: <strong style='color:red;'>$totalErrors</strong></li>";
+// Wenn direkt aufgerufen (nicht über re-create-all.php)
+if (!isset($SKIP_AUTO_IMPORT)) {
+    $pdo = getPDO();
+    runOrteImport();
 }
-echo "<li>📁 Verarbeitete Dateien: " . count($files) . "</li>";
-echo "</ul>";
-
-echo "<hr>";
-echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 
 ?>

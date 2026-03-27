@@ -1,10 +1,8 @@
 <?php
 
-
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Prüfe ob getPDO bereits definiert ist, um doppelte Definitionen zu vermeiden
 if (!function_exists('getPDO')) {
     include 'include.php';
 }
@@ -15,12 +13,6 @@ function debug($msg) {
     global $DEBUG;
     if ($DEBUG) echo "<div style='color:#555'>$msg</div>";
 }
-
-$pdo = getPDO();
-
-echo "<br /><br /><a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
-
-
 
 /* =========================
  HELFER
@@ -39,23 +31,13 @@ function extractSIdThierbach(&$text) {
 }
 
 function extractFieldThierbach(&$text, $label) {
-    
-    /* $value = trim($m[1]);
-    
-    // nur erstes Wort
-    $value = preg_split('/\s+/', $value)[0];
-    */
     if (preg_match('/' . preg_quote($label, '/') . '\s*([^,]+)/i', $text, $m)) {
         $value = trim($m[1]);
-        
-        // Entfernt exakt dieses Feld wieder aus dem Text
         $text = preg_replace('/' . preg_quote($label, '/') . '\s*[^,]+,?/i', '', $text);
-        
         return $value;
     }
     return null;
 }
-
 
 /* =========================
  PERSON PARSER
@@ -65,7 +47,6 @@ function parsePersonText($text) {
     
     $referenzEhe = extractSIdThierbach($text);
     
-    // Datum am Anfang entfernen
     $text = preg_replace('/^\d{2}\.\d{2}\.\d{4}\s*/', '', $text);
     
     preg_match('/\b(\d+)\s*[jJ]\b/', $text, $ageMatch);
@@ -77,17 +58,14 @@ function parsePersonText($text) {
     $geb = $gebMatch[1] ?? null;
     $gest = $gestMatch[1] ?? null;
     
-    // Entfernen
     $text = preg_replace('/geb\..*?\d{2}\.\d{2}\.\d{4}/', '', $text);
     $text = preg_replace('/gest\..*?\d{2}\.\d{2}\.\d{4}/', '', $text);
     $text = preg_replace('/\b(\d+)\s*[jJ]\b/', '', $text);
     
-    // Hof / Ort / Bemerkung extrahieren
     $hof = extractFieldThierbach($text, 'Hof:');
     $ort = extractFieldThierbach($text, 'Ort:');
     $bemerkung = extractFieldThierbach($text, 'Bemerkung:');
     
-    // Kommas entfernen
     $text = str_replace(',', '', $text);
     
     $text = trim($text);
@@ -108,7 +86,6 @@ function parsePersonText($text) {
         'alter' => $alter
     ];
 }
-
 
 /* =========================
  PERSON DB
@@ -139,16 +116,15 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
         if ($id = $stmt->fetchColumn()) return $id;
     }
     
-    // 2. Match über Eltern
     // 2. Match über Eltern + Geburtsdatum
     $stmt = $pdo->prepare("
-    SELECT id, geburtsdatum
-    FROM person
-    WHERE vorname = ?
-    AND nachname = ?
-    AND (vater_id <=> ?)
-    AND (mutter_id <=> ?)
-");
+        SELECT id, geburtsdatum
+        FROM person
+        WHERE vorname = ?
+        AND nachname = ?
+        AND (vater_id <=> ?)
+        AND (mutter_id <=> ?)
+    ");
     
     $stmt->execute([
         $data['vorname'],
@@ -159,15 +135,11 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
     
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         
-        // Wenn Geburtsdatum gesetzt ist → vergleichen
         if (!empty($data['geburtsdatum'])) {
-            
             if ($row['geburtsdatum'] === $data['geburtsdatum']) {
-                return $row['id']; // exakter Treffer
+                return $row['id'];
             }
-            
         } else {
-            // Falls kein Geburtsdatum vorhanden → erster Treffer zählt
             return $row['id'];
         }
     }
@@ -178,7 +150,7 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
             vorname, nachname,
             vater_id, mutter_id,
             geburtsdatum, sterbedatum,
-             hof, ort, bemerkung
+            hof, ort, bemerkung
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
@@ -198,7 +170,6 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
     return $pdo->lastInsertId();
 }
 
-
 /* =========================
  LINE PARSER
  ========================= */
@@ -213,7 +184,6 @@ function parseLine($line) {
         'kinder' => []
     ];
     
-    // Traubuch extrahieren
     $traubuch = extractFieldThierbach($line, 'Traubuch:');
     $result['traubuch'] = $traubuch;
     
@@ -222,13 +192,11 @@ function parseLine($line) {
         $line = preg_replace('/^S\d+\s*/', '', $line);
     }
     
-    // erstes Datum = Heirat
     if (preg_match('/^\s*(\d{2}\.\d{2}\.\d{4})/', $line, $dm)) {
         $result['heiratsdatum'] = parseDateThierbach($dm[1]);
         $line = preg_replace('/^\s*\d{2}\.\d{2}\.\d{4}\s*/', '', $line);
     }
     
-    // Kinder
     if (strpos($line, 'Kinder:') !== false) {
         list($line, $kinderTeil) = explode('Kinder:', $line, 2);
         
@@ -242,9 +210,7 @@ function parseLine($line) {
         }
     }
     
-    // Eltern
     if (preg_match('/^(.*?)\s*&\s*(.*)$/', $line, $m)) {
-        
         $result['eltern'] = [
             'vater' => parsePersonText(trim($m[1])),
             'mutter' => parsePersonText(trim($m[2]))
@@ -254,87 +220,105 @@ function parseLine($line) {
     return $result;
 }
 
-
 /* =========================
- IMPORT
+ IMPORT FUNKTION
  ========================= */
 
-$daten = $_POST['daten_import'] ?? '';
-$lines = preg_split("/\r\n|\n|\r/", $daten);
-
-foreach ($lines as $line) {
+function runThierbachImport() {
+    global $pdo;
     
-    $line = trim($line);
-    if ($line === '') continue;
+    $daten = $_POST['daten_import'] ?? '';
+    if (!$daten) return ['imported' => 0, 'errors' => 0];
     
-    echo "<hr>";
-    debug("🧾 RAW: $line");
+    $lines = preg_split("/\r\n|\n|\r/", $daten);
+    $imported = 0;
+    $errors = 0;
     
-    $parsed = parseLine($line);
-    
-    if (!$parsed['eltern']) {
-        debug("❌ Kein Eltern-Pattern");
-        continue;
-    }
-    
-    $vaterData = $parsed['eltern']['vater'];
-    $mutterData = $parsed['eltern']['mutter'];
-    
-    $vaterId = getOrCreatePerson($pdo, $vaterData);
-    $mutterId = getOrCreatePerson($pdo, $mutterData);
-    
-    // -------------------------
-    // Ehe: Mehrfachehen erlaubt
-    // -------------------------
-    $stmt = $pdo->prepare("
-        INSERT INTO ehe (
-            externe_id,
-            vater_id, vater_alter,
-            mutter_id, mutter_alter,
-            heiratsdatum, traubuch
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
-    
-    $stmt->execute([
-        $parsed['s_id'],
-        $vaterId,
-        $vaterData['alter'] ?? null,
-        $mutterId,
-        $mutterData['alter'] ?? null,
-        $parsed['heiratsdatum'],
-        $parsed['traubuch'] ?? 'Thierbach'
-    ]);
-    
-    $eheId = $pdo->lastInsertId();
-    
-    // Referenz setzen
-    $pdo->prepare("UPDATE person SET referenz_ehe_id=? WHERE id IN (?, ?)")
-    ->execute([$eheId, $vaterId, $mutterId]);
-    
-    // -------------------------
-    // Kinder
-    // -------------------------
-    foreach ($parsed['kinder'] as $kind) {
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '') continue;
         
-        $kindId = getOrCreatePerson($pdo, $kind, $vaterId, $mutterId);
+        echo "<hr>";
+        debug("🧾 RAW: $line");
         
-        if (!empty($kind['referenz_ehe'])) {
+        $parsed = parseLine($line);
+        
+        if (!$parsed['eltern']) {
+            debug("❌ Kein Eltern-Pattern");
+            continue;
+        }
+        
+        $vaterData = $parsed['eltern']['vater'];
+        $mutterData = $parsed['eltern']['mutter'];
+        
+        $vaterId = getOrCreatePerson($pdo, $vaterData);
+        $mutterId = getOrCreatePerson($pdo, $mutterData);
+        
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO ehe (
+                    externe_id,
+                    vater_id, vater_alter,
+                    mutter_id, mutter_alter,
+                    heiratsdatum, traubuch
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
             
-            $stmt = $pdo->prepare("SELECT id FROM ehe WHERE externe_id = ?");
-            $stmt->execute([$kind['referenz_ehe']]);
+            $stmt->execute([
+                $parsed['s_id'],
+                $vaterId,
+                $vaterData['alter'] ?? null,
+                $mutterId,
+                $mutterData['alter'] ?? null,
+                $parsed['heiratsdatum'],
+                $parsed['traubuch'] ?? 'Thierbach'
+            ]);
             
-            if ($refEheId = $stmt->fetchColumn()) {
-                $pdo->prepare("UPDATE person SET referenz_ehe_id=? WHERE id=?")
-                ->execute([$refEheId, $kindId]);
+            $eheId = $pdo->lastInsertId();
+            
+            $pdo->prepare("UPDATE person SET referenz_ehe_id=? WHERE id IN (?, ?)")
+            ->execute([$eheId, $vaterId, $mutterId]);
+            
+            foreach ($parsed['kinder'] as $kind) {
+                $kindId = getOrCreatePerson($pdo, $kind, $vaterId, $mutterId);
+                
+                if (!empty($kind['referenz_ehe'])) {
+                    $stmt = $pdo->prepare("SELECT id FROM ehe WHERE externe_id = ?");
+                    $stmt->execute([$kind['referenz_ehe']]);
+                    
+                    if ($refEheId = $stmt->fetchColumn()) {
+                        $pdo->prepare("UPDATE person SET referenz_ehe_id=? WHERE id=?")
+                        ->execute([$refEheId, $kindId]);
+                    }
+                }
             }
+            
+            debug("✅ Ehe gespeichert (ID: $eheId)");
+            $imported++;
+            
+        } catch (Exception $e) {
+            debug("❌ Fehler: " . $e->getMessage());
+            $errors++;
         }
     }
     
-    debug("✅ Ehe gespeichert (ID: $eheId)");
+    return ['imported' => $imported, 'errors' => $errors];
 }
 
-echo "<hr><strong><h2>Import Thierbach erfolgreich</h2></strong><br /><br /><br />";
-echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a><br /><br />";
+/* =========================
+ HAUPTLOGIK
+ ========================= */
+
+// Wenn direkt aufgerufen (nicht via require_once in re-create-all.php)
+if (!isset($SKIP_AUTO_IMPORT)) {
+    $pdo = getPDO();
+    
+    echo "<br /><br />";
+    runThierbachImport();
+    
+    echo "<hr><strong><h2>Import Thierbach erfolgreich</h2></strong><br /><br /><br />";
+    echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a><br /><br />";
+}
 
 ?>
