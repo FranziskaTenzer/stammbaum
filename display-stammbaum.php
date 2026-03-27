@@ -1,6 +1,9 @@
 <?php
 
-include 'include.php';
+$pageTitle = "Anzeige Stammbaum";
+require 'header.php';
+require 'include.php';  // wenn nötig
+
 ini_set('display_errors', 1);
 
 $pdo = getPDO();
@@ -576,3 +579,5 @@ document.addEventListener("click", function(e){
 
 </body>
 </html>
+
+<?php require 'footer.php'; ?>

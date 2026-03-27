@@ -1,4 +1,7 @@
 <?php
+$pageTitle = "Stammbaum";
+require 'header.php';
+
 require_once 'session-helper.php';
 requireLogin();  // Erzwingt Login
 ?>
@@ -23,3 +26,5 @@ requireLogin();  // Erzwingt Login
     <script src="script-menu.js"></script>
 </body>
 </html>
+
+<?php require 'footer.php'; ?>

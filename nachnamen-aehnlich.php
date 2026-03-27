@@ -1,5 +1,8 @@
 <?php
 
+$pageTitle = "Zeige ähnliche Nachnamen";
+require 'header.php';
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -471,3 +474,5 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
     </div>
 </body>
 </html>
+
+<?php require 'footer.php'; ?>

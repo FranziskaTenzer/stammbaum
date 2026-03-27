@@ -1,8 +1,12 @@
 <?php
 
-include 'include.php';
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
+
+$pageTitle = "Zeige ähnliche Vornamen";
+require 'header.php';
+require 'include.php';  // wenn nötig
+
 
 $pdo = getPDO();
 
@@ -464,3 +468,5 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
     </div>
 </body>
 </html>
+
+<?php require 'footer.php'; ?>
