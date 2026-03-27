@@ -32,9 +32,15 @@ if ($vorname != null or $Nachname != null) {
     
     
 
+<form action="stammbaum-aehnliche-vornamen.php" method="get">
+    <button type="submit">
+        <h3>Ähnliche Vornamen anzeigen</h3>
+    </button>
+</form>
+<br />
 <form action="stammbaum-aehnliche-namen.php" method="get">
     <button type="submit">
-        <h3>Ähnliche Namen anzeigen</h3>
+        <h3>Ähnliche Namen anzeigen - inkl. Vergleich Tiroler Namen</h3>
     </button>
 </form>
 <br />   

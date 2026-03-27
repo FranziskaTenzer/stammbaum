@@ -17,25 +17,26 @@ function levenshteinSimilarity($str1, $str2) {
     return round((1 - ($distance / $maxLen)) * 100);
 }
 
-// Get all unique last names (both genders)
-function getSimilarNachnamen($pdo) {
+// Get all unique MOTHER first names (mutter_id from ehe)
+function getSimilarMutterNamen($pdo) {
     $stmt = $pdo->prepare("
-        SELECT DISTINCT nachname
-        FROM person
-        WHERE nachname IS NOT NULL AND nachname != ''
-        ORDER BY nachname
+        SELECT DISTINCT p.vorname
+        FROM person p
+        JOIN ehe e ON p.id = e.mutter_id
+        WHERE p.vorname IS NOT NULL AND p.vorname != ''
+        ORDER BY p.vorname
     ");
     $stmt->execute();
-    $nachnamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $vornamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
     $groups = [];
     $processed = [];
     
-    foreach ($nachnamen as $name) {
+    foreach ($vornamen as $name) {
         if (in_array($name, $processed)) continue;
         
         $group = [$name];
-        foreach ($nachnamen as $compareName) {
+        foreach ($vornamen as $compareName) {
             if ($compareName != $name && !in_array($compareName, $processed)) {
                 $similarity = levenshteinSimilarity($name, $compareName);
                 if ($similarity >= 80) {
@@ -54,8 +55,46 @@ function getSimilarNachnamen($pdo) {
     return $groups;
 }
 
-// Get all records for a specific nachname
-function getRecordsForNachname($pdo, $nachname) {
+// Get all unique FATHER first names (vater_id from ehe)
+function getSimilarVaterNamen($pdo) {
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT p.vorname
+        FROM person p
+        JOIN ehe e ON p.id = e.vater_id
+        WHERE p.vorname IS NOT NULL AND p.vorname != ''
+        ORDER BY p.vorname
+    ");
+    $stmt->execute();
+    $vornamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    $groups = [];
+    $processed = [];
+    
+    foreach ($vornamen as $name) {
+        if (in_array($name, $processed)) continue;
+        
+        $group = [$name];
+        foreach ($vornamen as $compareName) {
+            if ($compareName != $name && !in_array($compareName, $processed)) {
+                $similarity = levenshteinSimilarity($name, $compareName);
+                if ($similarity >= 80) {
+                    $group[] = $compareName;
+                    $processed[] = $compareName;
+                }
+            }
+        }
+        
+        if (count($group) > 1) {
+            $groups[] = $group;
+            $processed[] = $name;
+        }
+    }
+    
+    return $groups;
+}
+
+// Get all records for a specific mother name
+function getRecordsForMutterName($pdo, $vorname) {
     $sql = "
         SELECT
             p.id,
@@ -80,16 +119,55 @@ function getRecordsForNachname($pdo, $nachname) {
             kinder.geburtsdatum as kind_geburtsdatum,
             kinder.sterbedatum as kind_sterbedatum
         FROM person p
-        JOIN ehe e ON (p.id = e.vater_id OR p.id = e.mutter_id)
+        JOIN ehe e ON p.id = e.mutter_id
         LEFT JOIN person vater ON e.vater_id = vater.id
         LEFT JOIN person mutter ON e.mutter_id = mutter.id
         LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.vater_id AND kinder.mutter_id = e.mutter_id))
-        WHERE p.nachname = ?
-        ORDER BY e.traubuch, p.geburtsdatum
+        WHERE p.vorname = ?
+        ORDER BY e.traubuch, p.nachname, p.geburtsdatum
     ";
     
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$nachname]);
+    $stmt->execute([$vorname]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Get all records for a specific father name
+function getRecordsForVaterName($pdo, $vorname) {
+    $sql = "
+        SELECT
+            p.id,
+            p.vorname,
+            p.nachname,
+            p.geburtsdatum,
+            p.sterbedatum,
+            p.geburtsort,
+            p.sterbeort,
+            p.hof,
+            p.ort,
+            p.bemerkung,
+            e.traubuch,
+            e.heiratsdatum,
+            vater.vorname as vater_vorname,
+            vater.nachname as vater_nachname,
+            mutter.vorname as mutter_vorname,
+            mutter.nachname as mutter_nachname,
+            kinder.id as kind_id,
+            kinder.vorname as kind_vorname,
+            kinder.nachname as kind_nachname,
+            kinder.geburtsdatum as kind_geburtsdatum,
+            kinder.sterbedatum as kind_sterbedatum
+        FROM person p
+        JOIN ehe e ON p.id = e.vater_id
+        LEFT JOIN person vater ON e.vater_id = vater.id
+        LEFT JOIN person mutter ON e.mutter_id = mutter.id
+        LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.vater_id AND kinder.mutter_id = e.mutter_id))
+        WHERE p.vorname = ?
+        ORDER BY e.traubuch, p.nachname, p.geburtsdatum
+    ";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$vorname]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -355,16 +433,29 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
             <em style="color:#999;">Namen und Eltern können kopiert werden</em>
         </p>
         
-        <!-- NACHNAMEN -->
-        <h2>📛 Nachnamen</h2>
+        <!-- FRAUEN VORNAMEN -->
+        <h2>👩 Frauen Vornamen</h2>
         <?php
-            $nachnamenGroups = getSimilarNachnamen($pdo);
-            if (count($nachnamenGroups) > 0) {
-                foreach ($nachnamenGroups as $group) {
-                    echo renderNameGroup($group, 'nachname', $pdo);
+            $mutterGroups = getSimilarMutterNamen($pdo);
+            if (count($mutterGroups) > 0) {
+                foreach ($mutterGroups as $group) {
+                    echo renderNameGroup($group, 'mutter', $pdo);
                 }
             } else {
-                echo '<p style="color:#999;">Keine ähnlichen Nachnamen gefunden.</p>';
+                echo '<p style="color:#999;">Keine ähnlichen Frauenvornamen gefunden.</p>';
+            }
+        ?>
+        
+        <!-- MÄNNER VORNAMEN -->
+        <h2>👨 Männer Vornamen</h2>
+        <?php
+            $vaterGroups = getSimilarVaterNamen($pdo);
+            if (count($vaterGroups) > 0) {
+                foreach ($vaterGroups as $group) {
+                    echo renderNameGroup($group, 'vater', $pdo);
+                }
+            } else {
+                echo '<p style="color:#999;">Keine ähnlichen Männervornamen gefunden.</p>';
             }
         ?>
         
