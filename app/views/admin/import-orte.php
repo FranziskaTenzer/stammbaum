@@ -1,7 +1,7 @@
 <?php
 $pageTitle = "Orte Importieren";
-require_once dirname(__DIR__, 2) . '/layout/header.php';
-require_once dirname(__DIR__, 2) . '/lib/include.php';
+require_once '../../layout/header.php';
+require_once '../../lib/include.php';
 
 if (!isAdmin()) {
     die('❌ Zugriff verweigert! Nur für Administratoren.');
@@ -10,9 +10,9 @@ if (!isAdmin()) {
 $pdo = getPDO();
 
 $SKIP_AUTO_IMPORT = true;
-require_once dirname(__DIR__, 2) . '/lib/importOrte.php';
+require_once '../../lib/importOrte.php';
 
 runOrteImport();
 ?>
 
-<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
+<?php require_once '../../layout/footer.php'; ?>
