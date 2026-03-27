@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "Traubuch-Liste";
-require_once dirname(__DIR__, 2) . '/layout/header.php';
+require_once '../../layout/header.php';
 ?>
 
 <div class="page-header">
@@ -18,4 +18,4 @@ if (file_exists($overviewPath)) {
 }
 ?>
 
-<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
+<?php require_once '../../layout/footer.php'; ?>

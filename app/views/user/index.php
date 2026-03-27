@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "Stammbaum Startseite";
-require_once dirname(__DIR__, 2) . '/layout/header.php';
+require_once '../../layout/header.php';
 ?>
 
 <div class="page-header">
@@ -36,4 +36,4 @@ require_once dirname(__DIR__, 2) . '/layout/header.php';
     <?php endif; ?>
 </div>
 
-<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
+<?php require_once '../../layout/footer.php'; ?>
