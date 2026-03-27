@@ -13,18 +13,19 @@
 define('TIROL_ARCHIV_BASE_URL', 'https://www.tirol.gv.at/kunst-kultur/landesarchiv/forschungstipps/familiennamen/');
 
 // Timeout für HTTP-Requests
-define('TIROL_ARCHIV_TIMEOUT', 10);
+define('TIROL_ARCHIV_TIMEOUT', 15);
 
 // Minimale Ähnlichkeit für Archiv-Vergleich (in Prozent)
-define('TIROL_ARCHIV_MIN_SIMILARITY', 75);
+define('TIROL_ARCHIV_MIN_SIMILARITY', 80);
 
-// Cache-Verzeichnis
-define('TIROL_ARCHIV_CACHE_DIR', dirname(__FILE__) . '/cache/tirol-archiv/');
+// Cache-Verzeichnis (optional)
+define('TIROL_ARCHIV_CACHE_DIR', __DIR__ . '/cache/tirol-archiv/');
 
-// Cache-Gültigkeitsdauer (in Sekunden)
+// Cache-Gültigkeitsdauer (in Sekunden, 0 = kein Cache)
 define('TIROL_ARCHIV_CACHE_TTL', 86400); // 24 Stunden
 
 // Buchstaben-Gruppen für Tirol-Archiv
+// A  B  C  D  E  F  G  H  I  J  K  L  M  N  O  P/Q  R  S  Sch  Sp  St  T  U  V  W  X/Y/Z
 $TIROL_ARCHIV_MAPPINGS = [
     'a' => 'a',
     'b' => 'b',
@@ -41,8 +42,8 @@ $TIROL_ARCHIV_MAPPINGS = [
     'm' => 'm',
     'n' => 'n',
     'o' => 'o',
-    'p' => 'pq',
-    'q' => 'pq',
+    'p' => 'pq',      // P/Q zusammen als pq
+    'q' => 'pq',      // P/Q zusammen als pq
     'r' => 'r',
     's' => 's',
     'sch' => 'sch',
@@ -52,9 +53,9 @@ $TIROL_ARCHIV_MAPPINGS = [
     'u' => 'u',
     'v' => 'v',
     'w' => 'w',
-    'x' => 'xyz',
-    'y' => 'xyz',
-    'z' => 'xyz',
+    'x' => 'xyz',     // X/Y/Z zusammen als xyz
+    'y' => 'xyz',     // X/Y/Z zusammen als xyz
+    'z' => 'xyz',     // X/Y/Z zusammen als xyz
 ];
 
 // ===========================
@@ -62,23 +63,24 @@ $TIROL_ARCHIV_MAPPINGS = [
 // ===========================
 
 /**
+ * Entferne Fragezeichen aus Namen für Vergleich
+ */
+function cleanNameForComparison($name) {
+    return str_replace('?', '', $name);
+}
+
+/**
  * Levenshtein-Ähnlichkeit in Prozent berechnen
  */
-if (!function_exists('levenshteinSimilarity')) {
-    function levenshteinSimilarity($str1, $str2) {
-        if (empty($str1) || empty($str2)) {
-            return 0;
-        }
-        
-        $distance = levenshtein(strtolower(trim($str1)), strtolower(trim($str2)));
-        $maxLen = max(strlen($str1), strlen($str2));
-        
-        if ($maxLen == 0) {
-            return 100;
-        }
-        
-        return round((1 - ($distance / $maxLen)) * 100);
-    }
+function levenshteinSimilarity($str1, $str2) {
+    // Entferne Fragezeichen für Vergleich
+    $str1_clean = cleanNameForComparison($str1);
+    $str2_clean = cleanNameForComparison($str2);
+    
+    $distance = levenshtein(strtolower($str1_clean), strtolower($str2_clean));
+    $maxLen = max(strlen($str1_clean), strlen($str2_clean));
+    if ($maxLen == 0) return 100;
+    return round((1 - ($distance / $maxLen)) * 100);
 }
 
 /**
@@ -87,14 +89,10 @@ if (!function_exists('levenshteinSimilarity')) {
 function getTirolArchivPrefix($nachname) {
     global $TIROL_ARCHIV_MAPPINGS;
     
-    if (empty($nachname)) {
-        return '';
-    }
-    
-    $lower = strtolower(trim($nachname));
+    $lower = strtolower(cleanNameForComparison($nachname));
     
     // Prüfe längere spezielle Präfixe zuerst
-    $specials = ['sch', 'sp', 'st', 'tsch', 'tz', 'ch'];
+    $specials = ['sch', 'sp', 'st', 'tz', 'tsch', 'ch'];
     foreach ($specials as $special) {
         if (strpos($lower, $special) === 0) {
             return isset($TIROL_ARCHIV_MAPPINGS[$special])
@@ -144,7 +142,7 @@ function sanitizeFilename($str) {
 }
 
 /**
- * Cache laden
+ * Cache laden (wenn verfügbar und noch gültig)
  */
 function loadTirolArchivCache($prefix) {
     if (!TIROL_ARCHIV_CACHE_TTL || empty($prefix)) {
@@ -162,13 +160,8 @@ function loadTirolArchivCache($prefix) {
         return null;
     }
     
-    $content = @file_get_contents($cacheFile);
-    if ($content === false) {
-        return null;
-    }
-    
-    $cached = @json_decode($content, true);
-    return is_array($cached) ? $cached : null;
+    $cached = @json_decode(file_get_contents($cacheFile), true);
+    return $cached ?: null;
 }
 
 /**
@@ -184,12 +177,7 @@ function saveTirolArchivCache($prefix, $data) {
         return;
     }
     
-    $json = json_encode($data);
-    if ($json === false) {
-        return;
-    }
-    
-    @file_put_contents($cacheFile, $json, LOCK_EX);
+    @file_put_contents($cacheFile, json_encode($data), LOCK_EX);
 }
 
 /**
@@ -235,7 +223,8 @@ function isTirolArchivUrlAvailable($url) {
 }
 
 /**
- * Holt und parsed Nachnamen vom Tirol-Archiv
+ * Holt und parsed Nachnamen vom Tirol-Archiv mit Ortsangaben
+ * Gibt Array zurück: ['Name' => ['Ort1', 'Ort2', ...], ...]
  */
 function getTirolArchivNamesWithPlaces($prefix) {
     if (empty($prefix)) {
@@ -277,7 +266,7 @@ function getTirolArchivNamesWithPlaces($prefix) {
         
         $html = @file_get_contents($url, false, $context);
         
-        if ($html === false || empty($html)) {
+        if ($html === false) {
             error_log('Tirol Archiv: Keine HTML erhalten für Prefix ' . $prefix);
             return [];
         }
@@ -286,15 +275,13 @@ function getTirolArchivNamesWithPlaces($prefix) {
         $html = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $html);
         $html = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $html);
         
-        // Parse Names
+        // Parse Names mit verschiedenen Mustern
         $names = parseNamesFromHtml($html, $prefix);
         
         error_log('Tirol Archiv: ' . count($names) . ' Namen gefunden für Prefix ' . $prefix);
         
         // Speichere im Cache
-        if (!empty($names)) {
-            saveTirolArchivCache($prefix, $names);
-        }
+        saveTirolArchivCache($prefix, $names);
         
     } catch (Exception $e) {
         error_log('Tirol Archiv Error: ' . $e->getMessage());
@@ -314,7 +301,7 @@ function parseNamesFromHtml($html, $prefix) {
     
     $names = [];
     
-    // Hauptmuster: <p>Name: Ort1, Ort2, Ort3</p>
+    // Muster: <p>Name: Ort1, Ort2, Ort3</p>
     if (preg_match_all('/<p[^>]*>([^<]+)<\/p>/i', $html, $p_matches)) {
         foreach ($p_matches[1] as $p_content) {
             // Prüfe ob Doppelpunkt vorhanden ist
@@ -354,15 +341,17 @@ function parseNamesFromHtml($html, $prefix) {
             $places = array_filter($places); // Entferne leere Einträge
             
             // Validiere Name gegen Prefix
-            $name_lower = strtolower($name_part);
+            $name_lower = strtolower(cleanNameForComparison($name_part));
             $prefix_lower = strtolower($prefix);
             
             // Prüfe Prefix-Match
             $valid = false;
             
             if ($prefix_lower === 'pq') {
+                // P/Q Seite - erlaubt P und Q
                 $valid = in_array($name_lower[0], ['p', 'q']);
             } elseif ($prefix_lower === 'xyz') {
+                // X/Y/Z Seite - erlaubt X, Y und Z
                 $valid = in_array($name_lower[0], ['x', 'y', 'z']);
             } elseif ($prefix_lower === 'sch') {
                 $valid = strpos($name_lower, 'sch') === 0;
@@ -399,7 +388,7 @@ function parseNamesFromHtml($html, $prefix) {
 }
 
 /**
- * Findet ähnliche Namen im Tirol-Archiv
+ * Findet ähnliche Namen im Tirol-Archiv mit konfigurierbarer minimaler Ähnlichkeit
  */
 function findSimilarNamesInArchive($nachname, $minSimilarity = TIROL_ARCHIV_MIN_SIMILARITY) {
     if (empty($nachname)) {
@@ -428,13 +417,14 @@ function findSimilarNamesInArchive($nachname, $minSimilarity = TIROL_ARCHIV_MIN_
             $similar[] = [
                 'name' => $archiveName,
                 'similarity' => $similarity,
-                'places' => is_array($places) ? $places : [],
+                'places' => $places,
                 'prefix' => $prefix,
-                'searchedName' => $nachname  // Gesuchter Name hinzufügen
+                'searchedName' => $nachname
             ];
         }
     }
     
+    // Sortiere nach Ähnlichkeit (absteigend)
     usort($similar, function($a, $b) {
         return $b['similarity'] - $a['similarity'];
     });
@@ -444,81 +434,94 @@ function findSimilarNamesInArchive($nachname, $minSimilarity = TIROL_ARCHIV_MIN_
 
 /**
  * Gibt HTML für eine Ähnliche-Namen-Box zurück
+ * Box ist standardmäßig eingeklappt
  */
 function renderArchiveNamesBox($nachname, $minSimilarity = TIROL_ARCHIV_MIN_SIMILARITY) {
     if (empty($nachname)) {
         return '';
     }
     
-    try {
-        $similar = findSimilarNamesInArchive($nachname, $minSimilarity);
-        
-        if (empty($similar)) {
-            return '<div style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px; margin:12px 0; border-radius:3px; font-size:0.9em; color:#856404;">
-                        <strong>ℹ️ Tirol-Archiv:</strong> Keine Namen mit mind. ' . intval($minSimilarity) . '% Ähnlichkeit gefunden
-                    </div>';
-        }
-        
-        $html = '<div style="background:#e8f4f8; border:2px solid #0099cc; padding:12px; margin:12px 0; border-radius:3px; font-size:0.9em;">';
-        $html .= '<strong style="color:#0099cc; font-size:1.05em;">📚 Tirol-Archiv Familiennamen - Ähnlichkeiten zu <em>' . htmlspecialchars($nachname, ENT_QUOTES, 'UTF-8') . '</em> (' . intval($minSimilarity) . '%+)</strong><br>';
-        $html .= '<small style="color:#0c5460; display:block; margin-top:8px;">';
-        
-        foreach ($similar as $item) {
-            if (!isset($item['similarity']) || !isset($item['name'])) {
-                continue;
-            }
-            
-            $match = '';
-            $sim = intval($item['similarity']);
-            
-            if ($sim == 100) {
-                $match = '✅ Exakt';
-            } elseif ($sim >= 90) {
-                $match = '🟢 ' . $sim . '% sehr ähnlich';
-            } elseif ($sim >= 80) {
-                $match = '🟡 ' . $sim . '% ähnlich';
-            } else {
-                $match = '🔵 ' . $sim . '% ähnlich';
-            }
-            
-            $html .= '<div style="padding:12px; background:#d1ecf1; margin:10px 0; border-radius:3px; border-left:4px solid #0099cc;">';
-            
-            // Kopfzeile mit Ähnlichkeit
-            $html .= '<div style="margin-bottom:8px;">';
-            $html .= '<strong style="color:#0c5460; font-size:1.1em;">' . htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') . '</strong> ';
-            $html .= '<span style="color:#555; font-size:0.95em;">' . htmlspecialchars($match, ENT_QUOTES, 'UTF-8') . '</span>';
-            $html .= '</div>';
-            
-            // Vergleichsinfo
-            $html .= '<div style="color:#0c5460; font-size:0.85em; background:#ffffff; padding:6px 8px; border-radius:2px; margin-bottom:8px; border-left:3px solid #0099cc;">';
-            $html .= '<em>Ähnlichkeit zu "' . htmlspecialchars($item['searchedName'], ENT_QUOTES, 'UTF-8') . '": ' . $sim . '%</em>';
-            $html .= '</div>';
-            
-            // Orte
-            if (!empty($item['places']) && is_array($item['places'])) {
-                $html .= '<div style="color:#555; font-size:0.85em;">';
-                $html .= '<strong>Orte:</strong> ';
-                $placesStr = implode(', ', array_map(function($p) {
-                    return htmlspecialchars($p, ENT_QUOTES, 'UTF-8');
-                }, $item['places']));
-                    $html .= $placesStr;
-                    $html .= '</div>';
-            }
-            
-            $html .= '</div>';
-        }
-        
-        $html .= '</small>';
-        $html .= '</div>';
-        
-        return $html;
-        
-    } catch (Exception $e) {
-        error_log('renderArchiveNamesBox Error: ' . $e->getMessage());
-        return '<div style="background:#f8d7da; border-left:4px solid #dc3545; padding:12px; margin:12px 0; border-radius:3px; font-size:0.9em; color:#721c24;">
-                    <strong>⚠️ Fehler:</strong> Tirol-Archiv konnte nicht abgerufen werden
+    $similar = findSimilarNamesInArchive($nachname, $minSimilarity);
+    
+    if (empty($similar)) {
+        return '<div style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px; margin:12px 0; border-radius:3px; font-size:0.9em; color:#856404;">
+                    <strong>ℹ️ Tirol-Archiv:</strong> Keine Namen mit mind. ' . $minSimilarity . '% Ähnlichkeit gefunden
                 </div>';
     }
+    
+    $boxId = 'tirol-archive-' . md5($nachname);
+    $contentId = 'tirol-archive-content-' . md5($nachname);
+    
+    $html = '<div style="background:#e8f4f8; border:2px solid #0099cc; padding:14px; margin:12px 0; border-radius:3px;">';
+    
+    // Kopfzeile mit Toggle
+    $html .= '<div style="cursor:pointer; display:flex; align-items:center; justify-content:space-between;" onclick="toggleTirolArchive(\'' . $boxId . '\', \'' . $contentId . '\');">';
+    $html .= '<strong style="color:#0099cc; font-size:1.1em;">📚 Tirol-Archiv Familiennamen - Ähnlichkeiten zu <em>' . htmlspecialchars($nachname, ENT_QUOTES, 'UTF-8') . '</em></strong>';
+    $html .= '<span id="' . $boxId . '-icon" style="color:#0099cc; font-size:1.2em; transition:transform 0.3s; display:inline-block;">▶</span>';
+    $html .= '</div>';
+    
+    // Zusammenfassung (immer sichtbar)
+    $html .= '<div style="color:#0c5460; font-size:0.9em; margin-top:8px;">';
+    $html .= '<strong>' . count($similar) . ' ähnliche Namen gefunden</strong>';
+    if (count($similar) > 0) {
+        $html .= ' - Beste Übereinstimmung: <strong>' . htmlspecialchars($similar[0]['name'], ENT_QUOTES, 'UTF-8') . '</strong> (' . intval($similar[0]['similarity']) . '%)';
+    }
+    $html .= '</div>';
+    
+    // Inhalt (eingeklappt)
+    $html .= '<div id="' . $contentId . '" style="display:none; margin-top:14px; padding-top:14px; border-top:2px solid #0099cc;">';
+    $html .= '<small style="color:#0c5460;">';
+    
+    foreach ($similar as $item) {
+        if (!isset($item['similarity']) || !isset($item['name'])) {
+            continue;
+        }
+        
+        $match = '';
+        $sim = intval($item['similarity']);
+        
+        if ($sim == 100) {
+            $match = '✅ Exakt';
+        } elseif ($sim >= 95) {
+            $match = '🟢 ' . $sim . '% sehr ähnlich';
+        } elseif ($sim >= 90) {
+            $match = '🟡 ' . $sim . '% ähnlich';
+        } else {
+            $match = '🔵 ' . $sim . '% ähnlich';
+        }
+        
+        $html .= '<div style="padding:12px; background:#d1ecf1; margin:10px 0; border-radius:3px; border-left:4px solid #0099cc;">';
+        
+        // Kopfzeile mit Ähnlichkeit
+        $html .= '<div style="margin-bottom:8px;">';
+        $html .= '<strong style="color:#0c5460; font-size:1.05em;">' . htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') . '</strong> ';
+        $html .= '<span style="color:#555; font-size:0.95em;">' . htmlspecialchars($match, ENT_QUOTES, 'UTF-8') . '</span>';
+        $html .= '</div>';
+        
+        // Vergleichsinfo
+        $html .= '<div style="color:#0c5460; font-size:0.85em; background:#ffffff; padding:6px 8px; border-radius:2px; margin-bottom:8px; border-left:3px solid #0099cc;">';
+        $html .= '<em>Ähnlichkeit zu "' . htmlspecialchars($item['searchedName'], ENT_QUOTES, 'UTF-8') . '": ' . $sim . '%</em>';
+        $html .= '</div>';
+        
+        // Orte
+        if (!empty($item['places']) && is_array($item['places'])) {
+            $html .= '<div style="color:#555; font-size:0.85em;">';
+            $html .= '<strong>Orte:</strong> ';
+            $placesStr = implode(', ', array_map(function($p) {
+                return htmlspecialchars($p, ENT_QUOTES, 'UTF-8');
+            }, $item['places']));
+                $html .= $placesStr;
+                $html .= '</div>';
+        }
+        
+        $html .= '</div>';
+    }
+    
+    $html .= '</small>';
+    $html .= '</div>';
+    $html .= '</div>';
+    
+    return $html;
 }
 
 ?>

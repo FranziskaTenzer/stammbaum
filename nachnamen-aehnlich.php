@@ -347,7 +347,7 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
             margin-bottom: 20px;
         }
     </style>
-    <script>
+       <script>
         function showLetter(letter) {
             document.querySelectorAll('.letter-content').forEach(el => {
                 el.classList.remove('active');
@@ -364,14 +364,27 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
             event.target.classList.add('active');
         }
         
+        function toggleTirolArchive(boxId, contentId) {
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(boxId + '-icon');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.style.transform = 'rotate(90deg)';
+            } else {
+                content.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+        
         function toggleRecord(element, recordId) {
             const elem = document.getElementById(recordId);
             const icon = element;
             
-            if (elem && elem.style.display === 'none') {
+            if (elem.style.display === 'none') {
                 elem.style.display = 'block';
                 icon.style.transform = 'rotate(90deg)';
-            } else if (elem) {
+            } else {
                 elem.style.display = 'none';
                 icon.style.transform = 'rotate(0deg)';
             }
@@ -383,10 +396,10 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
             const content = document.getElementById(groupId);
             const icon = element.querySelector('.toggle-icon');
             
-            if (content && content.style.display === 'none') {
+            if (content.style.display === 'none') {
                 content.style.display = 'block';
                 icon.style.transform = 'rotate(90deg)';
-            } else if (content) {
+            } else {
                 content.style.display = 'none';
                 icon.style.transform = 'rotate(0deg)';
             }
@@ -396,10 +409,10 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
             const content = document.getElementById(versionId);
             const icon = element.querySelector('.version-icon');
             
-            if (content && content.style.display === 'none') {
+            if (content.style.display === 'none') {
                 content.style.display = 'block';
                 icon.style.transform = 'rotate(90deg)';
-            } else if (content) {
+            } else {
                 content.style.display = 'none';
                 icon.style.transform = 'rotate(0deg)';
             }
