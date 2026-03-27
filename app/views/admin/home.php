@@ -38,6 +38,23 @@ if (!isAdmin()) {
         <p>Gruppen ähnlicher Nachnamen anzeigen und mit Tirol-Archiv vergleichen</p>
         <a href="nachnamen-similar.php" class="btn btn-warning">Nachnamen prüfen</a>
     </div>
+    
+    <div class="content-card admin-card">
+        <h3>To Do List:</h3>
+        <ul>
+        <li>Re-create-all überschreibt Werte, die beim einzelnen aufrufen nicht überschrieben werden</li>
+        <li>DB Tabelle für User</li>
+        <li>- Registrierung (Bezahlung?)</li>
+        <li>- Löschen</li>
+        <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
+        <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
+        <li>Verlinkungen nach der Umstruktierung</li>
+        <li>Als Datum auch xx oder 00 erlauben wenn die Zahlen nicht richtig zu erkennen waren</li>
+        <li></li>
+        <li></li>
+        <li></li>
+        </ul>
+    </div>
 </div>
 
 <?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>

@@ -26,5 +26,10 @@ $_projectUrl = rtrim(str_replace($_docRoot, '', str_replace('\\', '/', realpath(
     <?php if (isset($extraHead)) echo $extraHead; ?>
 </head>
 <body>
-<?php include __DIR__ . '/sidebar-menu.php'; ?>
-<main class="main-content">
+    <table class="layout-table">
+        <tr>
+            <td class="sidebar-cell">
+                <?php include __DIR__ . '/sidebar-menu.php'; ?>
+            </td>
+            <td class="content-cell">
+                <main class="main-content">

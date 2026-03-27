@@ -106,7 +106,6 @@ $_p = isset($_projectUrl) ? $_projectUrl : '';
     </nav>
 
     <footer class="sidebar-footer">
-        <p>Stammbaum Wildschönau</p>
         <p style="font-size:0.8em; color:#999;">
             <?php if (isLoggedIn()): ?>
                 Angemeldet seit: 
