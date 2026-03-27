@@ -14,13 +14,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $valid_user = 'user';
     $valid_pass = 'stammbaum2024';
     
+    // Compute project URL prefix relative to the web root (same approach as session-helper.php)
+    $realDocRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+    $realFilePath = realpath(__FILE__);
+    $docRoot = $realDocRoot !== false ? rtrim(str_replace('\\', '/', $realDocRoot), '/') : '';
+    $projectPath = $realFilePath !== false ? str_replace('\\', '/', dirname(dirname($realFilePath))) : dirname(dirname(__FILE__));
+    $projectUrl = rtrim(str_replace($docRoot, '', $projectPath), '/');
+    // Strip any newline characters to prevent header injection
+    $projectUrl = str_replace(["\r", "\n"], '', $projectUrl);
+
     if ($username === $valid_username && $password === $valid_password) {
         $_SESSION['logged_in'] = true;
         $_SESSION['username'] = $username;
         $_SESSION['is_admin'] = true;
         $_SESSION['login_time'] = time();
         
-        header('Location: ../app/views/admin/home.php');
+        header('Location: ' . $projectUrl . '/app/views/admin/home.php');
         exit;
     } elseif ($username === $valid_user && $password === $valid_pass) {
         $_SESSION['logged_in'] = true;
@@ -28,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['is_admin'] = false;
         $_SESSION['login_time'] = time();
         
-        header('Location: ../app/views/user/index.php');
+        header('Location: ' . $projectUrl . '/app/views/user/index.php');
         exit;
     } else {
         $error = '❌ Ungültige Anmeldedaten!';
