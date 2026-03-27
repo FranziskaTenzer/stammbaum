@@ -13,11 +13,12 @@ if (!function_exists('getPDO')) {
 
 function parseDate($text) {
     if (!$text) return null;
-    try {
-        return date("Y-m-d", strtotime(str_replace('.', '-', $text)));
-    } catch (Exception $e) {
-        return null;
+    // Uncertain dates (containing 'x') are stored as-is in DD.MM.YYYY format
+    if (preg_match('/[xX]/', $text)) {
+        return $text;
     }
+    // Regular dates are already in DD.MM.YYYY format — store as-is
+    return $text;
 }
 
 function extractSId(&$text) {
@@ -68,16 +69,16 @@ function extractDateAndPlace(&$text, $type) {
     $ort = null;
     
     if ($type === 'geb') {
-        if (preg_match('/geb\.\s*(\d{2}\.\d{2}\.\d{4})/', $text, $m)) {
+        if (preg_match('/geb\.\s*([\dxX]{2}\.[\dxX]{2}\.\d{4})/', $text, $m)) {
             $datum = parseDate($m[1]);
-            $text = preg_replace('/geb\.\s*\d{2}\.\d{2}\.\d{4}.*/', '', $text);
+            $text = preg_replace('/geb\.\s*[\dxX]{2}\.[\dxX]{2}\.\d{4}.*/', '', $text);
         }
     }
     
     if ($type === 'gest') {
-        if (preg_match('/gest\.\s*(\d{2}\.\d{2}\.\d{4})/', $text, $m)) {
+        if (preg_match('/gest\.\s*([\dxX]{2}\.[\dxX]{2}\.\d{4})/', $text, $m)) {
             $datum = parseDate($m[1]);
-            $text = preg_replace('/gest\.\s*\d{2}\.\d{2}\.\d{4}.*/', '', $text);
+            $text = preg_replace('/gest\.\s*[\dxX]{2}\.[\dxX]{2}\.\d{4}.*/', '', $text);
         }
     }
     
@@ -262,10 +263,16 @@ function importFile($pdo, $filePath, $traubuch) {
         if ($line === '') continue;
         
         try {
-            preg_match('/^\d{2}\.\d{2}\.\d{4}/', $line, $m);
-            $heiratsdatum = isset($m[0]) ? parseDate($m[0]) : null;
+            preg_match('/^[\dxX]{2}\.[\dxX]{2}\.\d{4}/', $line, $m);
+            // Only store precise marriage dates (heiratsdatum is a DATE column, needs Y-m-d)
+            if (isset($m[0]) && !preg_match('/[xX]/', $m[0])) {
+                $dt = DateTime::createFromFormat('d.m.Y', $m[0]);
+                $heiratsdatum = $dt ? $dt->format('Y-m-d') : null;
+            } else {
+                $heiratsdatum = null;
+            }
             
-            $line = preg_replace('/^\d{2}\.\d{2}\.\d{4}\s*/', '', $line);
+            $line = preg_replace('/^[\dxX]{2}\.[\dxX]{2}\.\d{4}\s*/', '', $line);
             
             list($mannText, $frauText) = splitOutsideBrackets($line);
             if (!$mannText || !$frauText) continue;

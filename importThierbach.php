@@ -19,7 +19,13 @@ function debug($msg) {
  ========================= */
 
 function parseDateThierbach($text) {
-    return date("Y-m-d", strtotime(str_replace('.', '-', $text)));
+    if (!$text) return null;
+    // Uncertain dates (containing 'x') are stored as-is in DD.MM.YYYY format
+    if (preg_match('/[xX]/', $text)) {
+        return $text;
+    }
+    // Regular dates are already in DD.MM.YYYY format — store as-is
+    return $text;
 }
 
 function extractSIdThierbach(&$text) {
@@ -47,19 +53,19 @@ function parsePersonText($text) {
     
     $referenzEhe = extractSIdThierbach($text);
     
-    $text = preg_replace('/^\d{2}\.\d{2}\.\d{4}\s*/', '', $text);
+    $text = preg_replace('/^[\dxX]{2}\.[\dxX]{2}\.\d{4}\s*/', '', $text);
     
     preg_match('/\b(\d+)\s*[jJ]\b/', $text, $ageMatch);
     $alter = $ageMatch[1] ?? null;
     
-    preg_match('/geb\.\s*(\d{2}\.\d{2}\.\d{4})/', $text, $gebMatch);
-    preg_match('/gest\.\s*(\d{2}\.\d{2}\.\d{4})/', $text, $gestMatch);
+    preg_match('/geb\.\s*([\dxX]{2}\.[\dxX]{2}\.\d{4})/', $text, $gebMatch);
+    preg_match('/gest\.\s*([\dxX]{2}\.[\dxX]{2}\.\d{4})/', $text, $gestMatch);
     
     $geb = $gebMatch[1] ?? null;
     $gest = $gestMatch[1] ?? null;
     
-    $text = preg_replace('/geb\..*?\d{2}\.\d{2}\.\d{4}/', '', $text);
-    $text = preg_replace('/gest\..*?\d{2}\.\d{2}\.\d{4}/', '', $text);
+    $text = preg_replace('/geb\..*?[\dxX]{2}\.[\dxX]{2}\.\d{4}/', '', $text);
+    $text = preg_replace('/gest\..*?[\dxX]{2}\.[\dxX]{2}\.\d{4}/', '', $text);
     $text = preg_replace('/\b(\d+)\s*[jJ]\b/', '', $text);
     
     $hof = extractFieldThierbach($text, 'Hof:');
@@ -192,9 +198,16 @@ function parseLine($line) {
         $line = preg_replace('/^S\d+\s*/', '', $line);
     }
     
-    if (preg_match('/^\s*(\d{2}\.\d{2}\.\d{4})/', $line, $dm)) {
-        $result['heiratsdatum'] = parseDateThierbach($dm[1]);
-        $line = preg_replace('/^\s*\d{2}\.\d{2}\.\d{4}\s*/', '', $line);
+    if (preg_match('/^\s*([\dxX]{2}\.[\dxX]{2}\.\d{4})/', $line, $dm)) {
+        // Only store as heiratsdatum if it is a precise date (no 'x' placeholders)
+        // heiratsdatum is a DATE column so it needs Y-m-d format
+        if (!preg_match('/[xX]/', $dm[1])) {
+            $dt = DateTime::createFromFormat('d.m.Y', $dm[1]);
+            $result['heiratsdatum'] = $dt ? $dt->format('Y-m-d') : null;
+        } else {
+            $result['heiratsdatum'] = null;
+        }
+        $line = preg_replace('/^\s*[\dxX]{2}\.[\dxX]{2}\.\d{4}\s*/', '', $line);
     }
     
     if (strpos($line, 'Kinder:') !== false) {

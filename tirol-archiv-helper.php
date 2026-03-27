@@ -63,10 +63,11 @@ $TIROL_ARCHIV_MAPPINGS = [
 // ===========================
 
 /**
- * Entferne Fragezeichen aus Namen für Vergleich
+ * Entferne Fragezeichen und 'x' Platzhalter für Vergleiche (Namen und Datumsangaben)
  */
 function cleanNameForComparison($name) {
-    return str_replace('?', '', $name);
+    // Remove '?' and 'x'/'X' placeholders used for uncertain dates and names
+    return str_ireplace(['?', 'x'], '', $name);
 }
 
 /**

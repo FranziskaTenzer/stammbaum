@@ -69,8 +69,8 @@ CREATE TABLE IF NOT EXISTS person (
     vater_id INT NULL,
     mutter_id INT NULL,
     
-    geburtsdatum DATE NULL,
-    sterbedatum DATE NULL,
+    geburtsdatum VARCHAR(20) NULL,
+    sterbedatum VARCHAR(20) NULL,
     geburtsort VARCHAR(255) NULL,
     sterbeort VARCHAR(255) NULL,
     hof VARCHAR(255) NULL,

@@ -85,7 +85,7 @@ AND p.nachname LIKE :nachname
 <form method="GET">
     <input type="text" name="vorname" placeholder="Vorname" value="<?= htmlspecialchars($vorname) ?>" required>
     <input type="text" name="nachname" placeholder="Nachname" value="<?= htmlspecialchars($nachname) ?>" required>
-    <input type="date" name="geburtsdatum" value="<?= htmlspecialchars($geburtsdatum) ?>">
+    <input type="text" name="geburtsdatum" placeholder="Geburtsdatum (TT.MM.JJJJ)" value="<?= htmlspecialchars($geburtsdatum ?? '') ?>">
     <button type="submit">Suchen</button>
 </form>
 <h2>Personen</h2>

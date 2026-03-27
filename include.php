@@ -29,9 +29,19 @@ function getPDO() {
 }
 
 function formatDBDateOrNull($dateStr, $fromFormat = 'Y-m-d', $toFormat = 'd.m.Y') {
-    if ($dateStr == null){
+    if ($dateStr == null) {
         return null;
     }
+    // Handle uncertain dates containing 'x' placeholders (e.g. "22.xx.1816" → "22.??.1816")
+    if (stripos($dateStr, 'x') !== false) {
+        return str_ireplace('xx', '??', $dateStr);
+    }
+    // Primary storage format is DD.MM.YYYY — parse and reformat as needed
+    $dt = DateTime::createFromFormat('d.m.Y', $dateStr);
+    if ($dt) {
+        return $dt->format($toFormat);
+    }
+    // Fallback: try the caller-supplied $fromFormat (e.g. 'Y-m-d' for heiratsdatum in ehe table)
     $dt = DateTime::createFromFormat($fromFormat, $dateStr);
     return $dt ? $dt->format($toFormat) : null;
 }
