@@ -493,14 +493,12 @@ $visitedDesc = [];
 $p = $personsById[$startId];
 
 ?>
-
-<br /><a href='index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>
-<br /><br /><br />
-<br /><a href='stammbaum-search.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Personensuche</a>
+<a href="stammbaum-search.php?vorname=<?= $p['vorname']; ?>&nachname=<?= $p['nachname']?>&geburtsdatum=<?= $p['geburtsdatum']?>" class="btn btn-primary">Zurück zur Übersicht</a>
 <br />
 
 <h2 style="text-align:center;">Stammbaum</h2>
-
+<br />
+<br />
 <div class="container">
 
     <div class="column">
@@ -519,11 +517,11 @@ $p = $personsById[$startId];
         <div>Geboren: <?= !empty($p['geburtsdatum']) ? formatDBDateOrNull($p['geburtsdatum']) : "-" ?></div>
         <div>Gestorben: <?= !empty($p['sterbedatum']) ? formatDBDateOrNull($p['sterbedatum']) : "-" ?></div>
     </div>
-
+<br/>
     <hr>
-
-    <h4>Ehen</h4>
-
+<br />
+    <h4>Ehe(n)</h4>
+<br />
     <?php foreach ($spouseMap[$startId] ?? [] as $ehe): ?>
 
     <?php

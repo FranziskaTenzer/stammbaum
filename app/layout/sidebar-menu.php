@@ -44,7 +44,7 @@ $_p = isset($_projectUrl) ? $_projectUrl : '/stammbaum';
         <!-- ================================
              ⚙️ ADMIN - Nur für angemeldete User
              ================================ -->
-        <?php if (isLoggedIn()): ?>
+        <?php if (isLoggedIn() && isAdmin()): ?>
         <div class="nav-section">
             <h3 class="nav-section-title" onclick="toggleSection(this)">
                 <span class="section-icon">▶</span>

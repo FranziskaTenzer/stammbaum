@@ -93,7 +93,7 @@ AND p.nachname LIKE :nachname
         <div class="table-responsive">
             <table class="results-table">
                 <thead>
-                    <tr>
+                    <tr  style="height:20px; overflow:hidden">
                         <th>ID</th>
                         <th>Name</th>
                         <th>Geburtsdatum</th>
@@ -108,8 +108,8 @@ AND p.nachname LIKE :nachname
                 </thead>
                 <tbody>
                     <?php foreach ($results as $row): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($row['id']) ?></td>
+                    <tr  style="height:20px; overflow:hidden">
+                        <td ><?= htmlspecialchars($row['id']) ?></td>
                         <td><strong><?= htmlspecialchars($row['vorname'] . ' ' . $row['nachname']) ?></strong></td>
                         <td><?= formatDBDateOrNull($row['geburtsdatum']) ?></td>
                         <td><?= htmlspecialchars($row['geburtsort'] ?? '') ?></td>
