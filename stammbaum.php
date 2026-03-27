@@ -1,94 +1,25 @@
 <?php
-
-$vorname = $_POST['vorname'];
-$nachname = $_POST['nachname'];
-
-if ($vorname != null or $Nachname != null) {
-    echo ("Vorname: $vorname Nachname: $nachname");
-}
+require_once 'session-helper.php';
+requireLogin();  // Erzwingt Login
 ?>
 
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Stammbäume Wildschönau</title>
- <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background: #f4f4f4; }
-        input {padding:5px;}
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stammbaum</title>
+    <link rel="stylesheet" href="style-menu.css">
 </head>
 <body>
-<br />
 
-<form action="stammbaum-familien.php" method="post">
-<button type="submit"><h3> 🌳👨‍👩‍👧‍👦 Stammbaum Suche 👨‍👩‍👧‍👦🌳</h3></button>
-</form>
+    <?php include 'menu.php'; ?>
 
+    <main class="main-content">
+        <h1>🌳 Willkommen zum Stammbaum</h1>
+        <p>Wählen Sie ein Menü-Element, um zu beginnen.</p>
+    </main>
 
-<?php include("../stammbaum-daten/overview.html");?>
-    
-<br /> 
-<br />   
-<hr>
-<br /> 
-<h2>Adminbereich</h2>  
-
-<form action="vornamen-aehnlich.php" method="get">
-    <button type="submit">
-        <h3>👨≈👨 Ähnliche Vornamen anzeigen 👩≈👩</h3>
-    </button>
-</form>
-<br />
-<form action="nachnamen-aehnlich.php" method="get">
-    <button type="submit">
-        <h3>🇦🇹👤 Ähnliche Namen anzeigen - inkl. Vergleich Tiroler Namen 👤🇦🇹</h3>
-    </button>
-</form>
-<br />   
-<hr>
-<br />
-<form action="re-create-all.php" method="get">
-    <button type="submit">
-        <h3 style="color:red; font-weight:bold;">⛁ 🚮 Daten komplett löschen und neu importieren 🚮 ⛁<br />(Weiterhin fehlerhaft)</h3>
-    </button>
-</form> 
- 
-<br />   
-<hr>
-<br />  
-  
-<form action="db_init.php" method="post">
-<button type="submit"><h4 style='color:red'>Datenbank neu erstellen</h4></button>
-</form>
-<br/>    
-
-<h1>KI Daten importieren (Thierbach):<h1/>
-<form  action="importThierbach.php" method="post">
-<textarea id="daten_import" name="daten_import" rows="5" cols="150" >
-<?php include("../stammbaum-daten/Thierbach-komplett.txt");?>
-
-</textarea>
-<br />
-<br />
-<button type="submit">Thierbach Importieren</button>
-</form>
-<!-- 
-<h1>Daten Import Ort :<h1/>
-<form  action="importOrt.php" method="post" enctype="multipart/form-data">
-<p>Traubuch: <input id="traubuch" name="traubuch" required/></p>
-<input type="file" id="daten_import_file" name="daten_import_file"  accept="*.txt" required />
-<br />
-<br />
-<button type="submit">Importieren</button>
-</form> -->
-
-<form action="importOrte.php" method="post">
-<button type="submit"><h3> alle Orte importieren </h3></button>
-</form>
-
-
-</body> 
-</html> 
+    <script src="script-menu.js"></script>
+</body>
+</html>

@@ -24,56 +24,23 @@ define('TIROL_ARCHIV_CACHE_DIR', __DIR__ . '/cache/tirol-archiv/');
 // Cache-Gültigkeitsdauer (in Sekunden, 0 = kein Cache)
 define('TIROL_ARCHIV_CACHE_TTL', 86400); // 24 Stunden
 
-// Buchstaben-Gruppen für Tirol-Archiv
-// A  B  C  D  E  F  G  H  I  J  K  L  M  N  O  P/Q  R  S  Sch  Sp  St  T  U  V  W  X/Y/Z
-$TIROL_ARCHIV_MAPPINGS = [
-    'a' => 'a',
-    'b' => 'b',
-    'c' => 'c',
-    'd' => 'd',
-    'e' => 'e',
-    'f' => 'f',
-    'g' => 'g',
-    'h' => 'h',
-    'i' => 'i',
-    'j' => 'j',
-    'k' => 'k',
-    'l' => 'l',
-    'm' => 'm',
-    'n' => 'n',
-    'o' => 'o',
-    'p' => 'pq',      // P/Q zusammen als pq
-    'q' => 'pq',      // P/Q zusammen als pq
-    'r' => 'r',
-    's' => 's',
-    'sch' => 'sch',
-    'sp' => 'sp',
-    'st' => 'st',
-    't' => 't',
-    'u' => 'u',
-    'v' => 'v',
-    'w' => 'w',
-    'x' => 'xyz',     // X/Y/Z zusammen als xyz
-    'y' => 'xyz',     // X/Y/Z zusammen als xyz
-    'z' => 'xyz',     // X/Y/Z zusammen als xyz
-];
-
 // ===========================
 // HELPER FUNKTIONEN
 // ===========================
 
 /**
- * Entferne Fragezeichen aus Namen für Vergleich
+ * Entferne Fragezeichen und x aus Namen für Vergleich
  */
 function cleanNameForComparison($name) {
-    return str_replace('?', '', $name);
+    return str_replace(['?', '?', 'x', 'X'], '', $name);
 }
 
 /**
  * Levenshtein-Ähnlichkeit in Prozent berechnen
+ * Entfernt Fragezeichen und x vor dem Vergleich
  */
 function levenshteinSimilarity($str1, $str2) {
-    // Entferne Fragezeichen für Vergleich
+    // Entferne Fragezeichen und x für Vergleich
     $str1_clean = cleanNameForComparison($str1);
     $str2_clean = cleanNameForComparison($str2);
     
@@ -85,45 +52,35 @@ function levenshteinSimilarity($str1, $str2) {
 
 /**
  * Bestimmt das Tirol-Archiv-Prefix für einen Nachnamen
+ * z.B. "Schmied" -> "sch", "Brenner" -> "b"
  */
 function getTirolArchivPrefix($nachname) {
-    global $TIROL_ARCHIV_MAPPINGS;
-    
     $lower = strtolower(cleanNameForComparison($nachname));
     
-    // Prüfe längere spezielle Präfixe zuerst
+    // Prüfe spezielle Präfixe (längere zuerst)
     $specials = ['sch', 'sp', 'st', 'tz', 'tsch', 'ch'];
     foreach ($specials as $special) {
         if (strpos($lower, $special) === 0) {
-            return isset($TIROL_ARCHIV_MAPPINGS[$special])
-            ? $TIROL_ARCHIV_MAPPINGS[$special]
-            : $special;
+            return $special;
         }
     }
     
     // Erster Buchstabe
-    $firstChar = strtolower(substr($nachname, 0, 1));
-    
-    return isset($TIROL_ARCHIV_MAPPINGS[$firstChar])
-    ? $TIROL_ARCHIV_MAPPINGS[$firstChar]
-    : $firstChar;
+    return strtolower(substr($nachname, 0, 1));
 }
 
 /**
  * Generiert die URL für einen bestimmten Prefix
  */
 function getTirolArchivUrl($prefix) {
-    if (empty($prefix)) {
-        return '';
-    }
-    return TIROL_ARCHIV_BASE_URL . 'familiennamen-' . urlencode($prefix) . '/';
+    return TIROL_ARCHIV_BASE_URL . 'familiennamen-' . $prefix . '/';
 }
 
 /**
  * Cache-Dateiname generieren
  */
 function getTirolArchivCacheFile($prefix) {
-    if (!TIROL_ARCHIV_CACHE_TTL || empty($prefix)) {
+    if (!TIROL_ARCHIV_CACHE_TTL) {
         return null;
     }
     
@@ -131,27 +88,20 @@ function getTirolArchivCacheFile($prefix) {
         @mkdir(TIROL_ARCHIV_CACHE_DIR, 0755, true);
     }
     
-    return TIROL_ARCHIV_CACHE_DIR . 'archiv-' . sanitizeFilename($prefix) . '.json';
-}
-
-/**
- * Sanitize Dateiname
- */
-function sanitizeFilename($str) {
-    return preg_replace('/[^a-z0-9-]/i', '_', $str);
+    return TIROL_ARCHIV_CACHE_DIR . 'archiv-' . $prefix . '.json';
 }
 
 /**
  * Cache laden (wenn verfügbar und noch gültig)
  */
 function loadTirolArchivCache($prefix) {
-    if (!TIROL_ARCHIV_CACHE_TTL || empty($prefix)) {
+    if (!TIROL_ARCHIV_CACHE_TTL) {
         return null;
     }
     
     $cacheFile = getTirolArchivCacheFile($prefix);
     
-    if (!$cacheFile || !file_exists($cacheFile)) {
+    if (!file_exists($cacheFile)) {
         return null;
     }
     
@@ -168,58 +118,12 @@ function loadTirolArchivCache($prefix) {
  * Cache speichern
  */
 function saveTirolArchivCache($prefix, $data) {
-    if (!TIROL_ARCHIV_CACHE_TTL || empty($prefix)) {
+    if (!TIROL_ARCHIV_CACHE_TTL) {
         return;
     }
     
     $cacheFile = getTirolArchivCacheFile($prefix);
-    if (!$cacheFile) {
-        return;
-    }
-    
     @file_put_contents($cacheFile, json_encode($data), LOCK_EX);
-}
-
-/**
- * Prüfe ob eine URL erreichbar ist
- */
-function isTirolArchivUrlAvailable($url) {
-    if (empty($url)) {
-        return false;
-    }
-    
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'HEAD',
-            'timeout' => 5,
-            'user_agent' => 'Mozilla/5.0'
-        ],
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-        ]
-    ]);
-    
-    try {
-        $headers = @get_headers($url, 1, $context);
-        
-        if ($headers === false) {
-            return false;
-        }
-        
-        if (is_array($headers)) {
-            $status = isset($headers[0]) ? $headers[0] : '';
-        } else {
-            $status = $headers;
-        }
-        
-        return (strpos($status, '200') !== false ||
-            strpos($status, '301') !== false ||
-            strpos($status, '302') !== false);
-        
-    } catch (Exception $e) {
-        return false;
-    }
 }
 
 /**
@@ -227,10 +131,6 @@ function isTirolArchivUrlAvailable($url) {
  * Gibt Array zurück: ['Name' => ['Ort1', 'Ort2', ...], ...]
  */
 function getTirolArchivNamesWithPlaces($prefix) {
-    if (empty($prefix)) {
-        return [];
-    }
-    
     // Prüfe Cache
     $cached = loadTirolArchivCache($prefix);
     if ($cached !== null) {
@@ -238,25 +138,13 @@ function getTirolArchivNamesWithPlaces($prefix) {
     }
     
     $url = getTirolArchivUrl($prefix);
-    if (empty($url)) {
-        return [];
-    }
-    
-    // Prüfe ob URL verfügbar ist
-    if (!isTirolArchivUrlAvailable($url)) {
-        error_log('Tirol Archiv: URL nicht verfügbar - ' . $url);
-        return [];
-    }
-    
     $names = [];
     
     try {
         $context = stream_context_create([
             'http' => [
                 'timeout' => TIROL_ARCHIV_TIMEOUT,
-                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                'follow_location' => true,
-                'max_redirects' => 5
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
             ],
             'ssl' => [
                 'verify_peer' => false,
@@ -267,7 +155,6 @@ function getTirolArchivNamesWithPlaces($prefix) {
         $html = @file_get_contents($url, false, $context);
         
         if ($html === false) {
-            error_log('Tirol Archiv: Keine HTML erhalten für Prefix ' . $prefix);
             return [];
         }
         
@@ -277,8 +164,6 @@ function getTirolArchivNamesWithPlaces($prefix) {
         
         // Parse Names mit verschiedenen Mustern
         $names = parseNamesFromHtml($html, $prefix);
-        
-        error_log('Tirol Archiv: ' . count($names) . ' Namen gefunden für Prefix ' . $prefix);
         
         // Speichere im Cache
         saveTirolArchivCache($prefix, $names);
@@ -292,94 +177,44 @@ function getTirolArchivNamesWithPlaces($prefix) {
 
 /**
  * Parse Familiennamen aus HTML
- * Format: <p>Oberauer: Alpbach, Brandenberg, Gnadenwald, Innsbruck, ...</p>
+ * Diese Funktion kann leicht erweitert werden
  */
 function parseNamesFromHtml($html, $prefix) {
-    if (empty($html) || empty($prefix)) {
-        return [];
-    }
-    
     $names = [];
     
-    // Muster: <p>Name: Ort1, Ort2, Ort3</p>
-    if (preg_match_all('/<p[^>]*>([^<]+)<\/p>/i', $html, $p_matches)) {
-        foreach ($p_matches[1] as $p_content) {
-            // Prüfe ob Doppelpunkt vorhanden ist
-            if (strpos($p_content, ':') === false) {
-                continue;
+    // Muster 1: <li>Name (Ort1, Ort2)</li>
+    if (preg_match_all('/<li[^>]*>([^<]+)<\/li>/i', $html, $matches)) {
+        foreach ($matches[1] as $match) {
+            $entry = parseNameEntry($match, $prefix);
+            if ($entry) {
+                $name = $entry['name'];
+                $places = $entry['places'];
+                
+                if (!isset($names[$name])) {
+                    $names[$name] = [];
+                }
+                $names[$name] = array_merge($names[$name], $places);
+                $names[$name] = array_unique($names[$name]);
             }
-            
-            // Splitte bei Doppelpunkt
-            $parts = explode(':', $p_content, 2);
-            
-            if (count($parts) !== 2) {
-                continue;
+        }
+    }
+    
+    // Muster 2: <p>Name (Ort1, Ort2)</p>
+    if (empty($names)) {
+        if (preg_match_all('/<p[^>]*>([^<]+(?:' . preg_quote($prefix, '/') . ')[^<]*)<\/p>/i', $html, $matches)) {
+            foreach ($matches[1] as $match) {
+                $entry = parseNameEntry($match, $prefix);
+                if ($entry) {
+                    $name = $entry['name'];
+                    $places = $entry['places'];
+                    
+                    if (!isset($names[$name])) {
+                        $names[$name] = [];
+                    }
+                    $names[$name] = array_merge($names[$name], $places);
+                    $names[$name] = array_unique($names[$name]);
+                }
             }
-            
-            $name_part = trim($parts[0]);
-            $places_part = trim($parts[1]);
-            
-            // Überspringe wenn leer
-            if (empty($name_part) || empty($places_part)) {
-                continue;
-            }
-            
-            // Decode HTML entities
-            $name_part = html_entity_decode($name_part);
-            $places_part = html_entity_decode($places_part);
-            
-            // Entferne Zahlen/Nummern am Anfang
-            $name_part = preg_replace('/^\d+\.\s*/', '', $name_part);
-            $name_part = trim($name_part);
-            
-            if (empty($name_part) || strlen($name_part) < 2) {
-                continue;
-            }
-            
-            // Parse Orte (komma-separiert)
-            $places = array_map('trim', explode(',', $places_part));
-            $places = array_filter($places); // Entferne leere Einträge
-            
-            // Validiere Name gegen Prefix
-            $name_lower = strtolower(cleanNameForComparison($name_part));
-            $prefix_lower = strtolower($prefix);
-            
-            // Prüfe Prefix-Match
-            $valid = false;
-            
-            if ($prefix_lower === 'pq') {
-                // P/Q Seite - erlaubt P und Q
-                $valid = in_array($name_lower[0], ['p', 'q']);
-            } elseif ($prefix_lower === 'xyz') {
-                // X/Y/Z Seite - erlaubt X, Y und Z
-                $valid = in_array($name_lower[0], ['x', 'y', 'z']);
-            } elseif ($prefix_lower === 'sch') {
-                $valid = strpos($name_lower, 'sch') === 0;
-            } elseif ($prefix_lower === 'sp') {
-                $valid = strpos($name_lower, 'sp') === 0;
-            } elseif ($prefix_lower === 'st') {
-                $valid = strpos($name_lower, 'st') === 0;
-            } elseif (strlen($prefix_lower) === 1) {
-                $valid = ($name_lower[0] === $prefix_lower);
-            } else {
-                $valid = strpos($name_lower, $prefix_lower) === 0;
-            }
-            
-            if (!$valid) {
-                continue;
-            }
-            
-            // Überspringe sehr kurze Namen
-            if (strlen($name_part) < 3 && !preg_match('/^[A-Z]{2,3}$/', $name_part)) {
-                continue;
-            }
-            
-            // Speichere Name mit Orten
-            if (!isset($names[$name_part])) {
-                $names[$name_part] = [];
-            }
-            $names[$name_part] = array_merge($names[$name_part], $places);
-            $names[$name_part] = array_unique($names[$name_part]);
         }
     }
     
@@ -388,30 +223,73 @@ function parseNamesFromHtml($html, $prefix) {
 }
 
 /**
+ * Parse einen einzelnen Name-Eintrag
+ * Gibt ['name' => '...', 'places' => [...]] oder null zurück
+ */
+function parseNameEntry($text, $prefix) {
+    $text = trim(strip_tags(html_entity_decode($text)));
+    $text = trim($text, ' ,');
+    
+    if (empty($text) || strlen($text) < 2) {
+        return null;
+    }
+    
+    // Überspringe Jahrzahlen und Längen-Angaben
+    if (preg_match('/^\d{4}|[0-9]{4}$/', $text)) {
+        return null;
+    }
+    
+    $name = $text;
+    $places = [];
+    
+    // Muster 1: "Name (Ort1, Ort2)"
+    if (preg_match('/^([^(]+)\s*\(([^)]+)\)/', $text, $m)) {
+        $name = trim($m[1]);
+        $places = array_map('trim', explode(',', $m[2]));
+        $places = array_filter($places); // Entferne leere Einträge
+    }
+    // Muster 2: "Name – Ort1, Ort2" oder "Name - Ort1, Ort2"
+    elseif (preg_match('/^([^–-]+)\s*[–-]\s*(.+)$/', $text, $m)) {
+        $name = trim($m[1]);
+        $places = array_map('trim', explode(',', $m[2]));
+        $places = array_filter($places);
+    }
+    
+    // Validiere Namen
+    if (empty($name) || strlen($name) < 2) {
+        return null;
+    }
+    
+    // Prüfe, ob Name mit dem richtigen Prefix anfängt
+    if (strpos(strtolower(cleanNameForComparison($name)), strtolower($prefix)) !== 0) {
+        return null;
+    }
+    
+    // Überspringe sehr kurze Namen (wahrscheinlich Fehler)
+    if (strlen(cleanNameForComparison($name)) < 3 && !preg_match('/^[A-Z]{2,3}$/', $name)) {
+        return null;
+    }
+    
+    return [
+        'name' => $name,
+        'places' => $places
+    ];
+}
+
+/**
  * Findet ähnliche Namen im Tirol-Archiv mit konfigurierbarer minimaler Ähnlichkeit
  */
 function findSimilarNamesInArchive($nachname, $minSimilarity = TIROL_ARCHIV_MIN_SIMILARITY) {
-    if (empty($nachname)) {
-        return [];
-    }
-    
     $prefix = getTirolArchivPrefix($nachname);
-    if (empty($prefix)) {
-        return [];
-    }
-    
     $archiveNames = getTirolArchivNamesWithPlaces($prefix);
     
     if (empty($archiveNames)) {
-        error_log('Tirol Archiv: Keine Namen in Archiv für Prefix ' . $prefix . ', suchte nach: ' . $nachname);
         return [];
     }
     
     $similar = [];
     foreach ($archiveNames as $archiveName => $places) {
         $similarity = levenshteinSimilarity($nachname, $archiveName);
-        
-        error_log('Tirol Archiv: Vergleich ' . $nachname . ' mit ' . $archiveName . ' = ' . $similarity . '%');
         
         if ($similarity >= $minSimilarity) {
             $similar[] = [
