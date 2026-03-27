@@ -1,8 +1,77 @@
 <?php
 
 $pageTitle = "Anzeige Stammbaum";
-require 'header.php';
-require 'include.php';  // wenn nötig
+$extraHead = '<style>
+.container {
+    display:flex;
+    gap:20px;
+    justify-content:center;
+}
+
+.column {
+    width:30%;
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    overflow:auto;
+}
+
+.center { text-align:center; max-width: 300px; }
+
+ul { list-style:none; padding-left:20px; }
+
+.person {
+    background:#fff;
+    padding:6px;
+    margin:4px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.node > ul { display:none; }
+.node.open > ul { display:block; }
+
+.person:hover { background:#e3f2fd; }
+
+/* Vorfahren Layout */
+.ancestor-flex {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+}
+
+.ancestor-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 400px;
+}
+
+/* Linie zwischen Elternpaaren */
+.ancestor-line {
+    height: 2px;
+    background: #999;
+    margin: 6px 0;
+    width: 100%;
+}
+
+.placeholder {
+    visibility: hidden;
+}
+</style>
+<script>
+document.addEventListener("click", function(e){
+    if(e.target.classList.contains("person")){
+        let node = e.target.parentElement;
+        node.classList.toggle("open");
+    }
+});
+</script>';
+
+require_once dirname(__DIR__, 2) . '/layout/header.php';
+require_once dirname(__DIR__, 2) . '/lib/include.php';
 
 ini_set('display_errors', 1);
 
@@ -425,91 +494,9 @@ $p = $personsById[$startId];
 
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Stammbaum</title>
-
-<style>
-body { font-family: Arial; background:#f5f5f5; }
-
-.container {
-    display:flex;
-    gap:20px;
-    justify-content:center;
-}
-
-.column {
-    width:30%;
-    background:white;
-    padding:15px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(0,0,0,0.1);
-    overflow:auto;
-}
-
-.center { text-align:center; max-width: 300px; }
-
-ul { list-style:none; padding-left:20px; }
-
-.person {
-    background:#fff;
-    padding:6px;
-    margin:4px;
-    border-radius:6px;
-    cursor:pointer;
-}
-
-.node > ul { display:none; }
-.node.open > ul { display:block; }
-
-.person:hover { background:#e3f2fd; }
-
-/* Vorfahren Layout */
-.ancestor-flex {
-    display: flex;
-    gap: 40px;
-    align-items: center;
-}
-
-.ancestor-col {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* 🔥 wichtig */
-    height: 100%;
-    min-height: 400px;
-}
-
-/* Linie zwischen Elternpaaren */
-.ancestor-line {
-    height: 2px;
-    background: #999;
-    margin: 6px 0;
-    width: 100%;
-}
-
-.placeholder {
-    visibility: hidden;
-}
-
-</style>
-
-<script>
-document.addEventListener("click", function(e){
-    if(e.target.classList.contains("person")){
-        let node = e.target.parentElement;
-        node.classList.toggle("open");
-    }
-});
-</script>
-
-</head>
-
-<body>
-<br /><a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>
+<br /><a href='index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>
 <br /><br /><br />
-<br /><a href='stammbaum-familien.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Personensuche</a>
+<br /><a href='stammbaum-search.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Personensuche</a>
 <br />
 
 <h2 style="text-align:center;">Stammbaum</h2>
@@ -577,7 +564,4 @@ document.addEventListener("click", function(e){
 
 </div>
 
-</body>
-</html>
-
-<?php require 'footer.php'; ?>
+<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>

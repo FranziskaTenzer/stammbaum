@@ -1,10 +1,15 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once dirname(__DIR__) . '/app/lib/session-helper.php';
+requireLogin();
 
 ini_set('display_errors', 1);
 
-// Prüfe ob getPDO bereits definiert ist, um doppelte Definitionen zu vermeiden
 if (!function_exists('getPDO')) {
-    include 'include.php';
+    include dirname(__DIR__) . '/app/lib/include.php';
 }
 
 $pdo = getPDO();
@@ -99,53 +104,6 @@ ON ehe (externe_id, vater_id, mutter_id, heiratsdatum);
 $stmt = $pdo->prepare($sqlMultiEhe);
 $stmt->execute();
 
-
-
-
-
-/* =========================
- TABELLEN
- ========================= */
-/*
- // ehe: externe_id NICHT mehr UNIQUE → Mehrfachehen pro S-ID möglich
- $pdo->exec("
- CREATE TABLE IF NOT EXISTS ehe (
- id INT AUTO_INCREMENT PRIMARY KEY,
- externe_id VARCHAR(10),
- vater_id INT,
- vater_alter INT,
- mutter_id INT,
- mutter_alter INT,
- heiratsdatum DATE NULL,
- traubuch VARCHAR(255)
- );
- ");
- 
- // person: erweitert um hof/ort + referenz
- $pdo-*>exec("
- CREATE TABLE IF NOT EXISTS person (
- id INT AUTO_INCREMENT PRIMARY KEY,
- vorname VARCHAR(255) NOT NULL,
- nachname VARCHAR(255) NOT NULL,
- 
- vater_id INT NULL,
- mutter_id INT NULL,
- 
- geburtsdatum DATE NULL,
- sterbedatum DATE NULL,
- 
- hof VARCHAR(255) NULL,
- ort VARCHAR(255) NULL,
- 
- referenz_ehe_id INT NULL
- );
- ");
- 
- */
-
-
-
 echo "<h2>Datenbank erfolgreich gelöscht und neu erstellt</h2><br />";
-echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
-
+echo "<a href='../app/views/user/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 ?>

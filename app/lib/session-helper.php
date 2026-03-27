@@ -1,6 +1,9 @@
 <?php
 
-session_start();
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // ===========================
 // SESSION MANAGEMENT HELPER
@@ -20,7 +23,11 @@ function isLoggedIn() {
  */
 function requireLogin() {
     if (!isLoggedIn()) {
-        header('Location: login.php');
+        // Compute path to public/login.php relative to the web root
+        $docRoot = rtrim(str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT'])), '/');
+        $projectPath = str_replace('\\', '/', dirname(dirname(realpath(__DIR__))));
+        $projectUrl = rtrim(str_replace($docRoot, '', $projectPath), '/');
+        header('Location: ' . $projectUrl . '/public/login.php');
         exit;
     }
 }
@@ -62,5 +69,3 @@ function loginAsAdmin($username) {
     loginUser($username);
     $_SESSION['is_admin'] = true;
 }
-
-?>

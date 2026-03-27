@@ -4,9 +4,12 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 $pageTitle = "Zeige ähnliche Vornamen";
-require 'header.php';
-require 'include.php';  // wenn nötig
+require_once dirname(__DIR__, 2) . '/layout/header.php';
+require_once dirname(__DIR__, 2) . '/lib/include.php';
 
+if (!isAdmin()) {
+    die('❌ Zugriff verweigert! Nur für Administratoren.');
+}
 
 $pdo = getPDO();
 
@@ -336,137 +339,124 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
 }
 
 ?>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Ähnliche Namen - Stammbaum</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 10px;
-        }
-        h2 {
-            color: #667eea;
-            margin-top: 30px;
-            font-size: 1.3em;
-        }
-        .back-link {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            margin-bottom: 20px;
-        }
-        .back-link:hover {
-            background: #5568d3;
-        }
-    </style>
-    <script>
-        function toggleRecord(element, recordId) {
-            const elem = document.getElementById(recordId);
-            const icon = element;
-            
-            if (elem.style.display === 'none') {
-                elem.style.display = 'block';
-                icon.style.transform = 'rotate(90deg)';
-            } else {
-                elem.style.display = 'none';
-                icon.style.transform = 'rotate(0deg)';
-            }
-            
-            event.stopPropagation();
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+        color: #333;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 10px;
+    }
+    h2 {
+        color: #667eea;
+        margin-top: 30px;
+        font-size: 1.3em;
+    }
+    .back-link {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        margin-bottom: 20px;
+    }
+    .back-link:hover {
+        background: #5568d3;
+    }
+</style>
+<script>
+    function toggleRecord(element, recordId) {
+        const elem = document.getElementById('record-' + recordId);
+        const icon = element;
+        
+        if (elem.style.display === 'none') {
+            elem.style.display = 'block';
+            icon.style.transform = 'rotate(90deg)';
+        } else {
+            elem.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
         }
         
-        function toggleNameGroup(element, groupId) {
-            const content = document.getElementById(groupId);
-            const icon = element.querySelector('.toggle-icon');
-            
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                icon.style.transform = 'rotate(90deg)';
-            } else {
-                content.style.display = 'none';
-                icon.style.transform = 'rotate(0deg)';
-            }
+        event.stopPropagation();
+    }
+    
+    function toggleNameGroup(element, groupId) {
+        const content = document.getElementById(groupId);
+        const icon = element.querySelector('.toggle-icon');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.style.transform = 'rotate(90deg)';
+        } else {
+            content.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
         }
+    }
+    
+    function toggleVersion(element, versionId) {
+        const content = document.getElementById(versionId);
+        const icon = element.querySelector('.version-icon');
         
-        function toggleVersion(element, versionId) {
-            const content = document.getElementById(versionId);
-            const icon = element.querySelector('.version-icon');
-            
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                icon.style.transform = 'rotate(90deg)';
-            } else {
-                content.style.display = 'none';
-                icon.style.transform = 'rotate(0deg)';
-            }
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.style.transform = 'rotate(90deg)';
+        } else {
+            content.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
         }
-    </script>
-</head>
-<body>
-    <div class="container">
-        <a href="stammbaum.php" class="back-link">← Zurück zur Startseite</a>
-        
-        <h1>🔍 Ähnliche Namen im Stammbaum</h1>
-        
-        <p style="color:#666; margin-bottom:20px;">
-            Klicken Sie auf einen Bereich um ihn auf- oder zuzuklappen:
-            <br>
-            <strong>Ebene 1:</strong> Gruppe ähnlicher Namen | 
-            <strong>Ebene 2:</strong> Einzelne Namensversion | 
-            <strong>Ebene 3:</strong> Datensätze der Person (nur das Pfeil-Icon ist klickbar)
-            <br>
-            <em style="color:#999;">Namen und Eltern können kopiert werden</em>
-        </p>
-        
-        <!-- FRAUEN VORNAMEN -->
-        <h2>👩 Frauen Vornamen</h2>
-        <?php
-            $mutterGroups = getSimilarMutterNamen($pdo);
-            if (count($mutterGroups) > 0) {
-                foreach ($mutterGroups as $group) {
-                    echo renderNameGroup($group, 'mutter', $pdo);
-                }
-            } else {
-                echo '<p style="color:#999;">Keine ähnlichen Frauenvornamen gefunden.</p>';
-            }
-        ?>
-        
-        <!-- MÄNNER VORNAMEN -->
-        <h2>👨 Männer Vornamen</h2>
-        <?php
-            $vaterGroups = getSimilarVaterNamen($pdo);
-            if (count($vaterGroups) > 0) {
-                foreach ($vaterGroups as $group) {
-                    echo renderNameGroup($group, 'vater', $pdo);
-                }
-            } else {
-                echo '<p style="color:#999;">Keine ähnlichen Männervornamen gefunden.</p>';
-            }
-        ?>
-        
-        <br>
-        <a href="stammbaum.php" class="back-link">← Zurück zur Startseite</a>
-    </div>
-</body>
-</html>
+    }
+</script>
 
-<?php require 'footer.php'; ?>
+<div class="container">
+    <a href="../user/index.php" class="back-link">← Zurück zur Startseite</a>
+    
+    <h1>🔍 Ähnliche Namen im Stammbaum</h1>
+    
+    <p style="color:#666; margin-bottom:20px;">
+        Klicken Sie auf einen Bereich um ihn auf- oder zuzuklappen:
+        <br>
+        <strong>Ebene 1:</strong> Gruppe ähnlicher Namen | 
+        <strong>Ebene 2:</strong> Einzelne Namensversion | 
+        <strong>Ebene 3:</strong> Datensätze der Person (nur das Pfeil-Icon ist klickbar)
+        <br>
+        <em style="color:#999;">Namen und Eltern können kopiert werden</em>
+    </p>
+    
+    <!-- FRAUEN VORNAMEN -->
+    <h2>👩 Frauen Vornamen</h2>
+    <?php
+        $mutterGroups = getSimilarMutterNamen($pdo);
+        if (count($mutterGroups) > 0) {
+            foreach ($mutterGroups as $group) {
+                echo renderNameGroup($group, 'mutter', $pdo);
+            }
+        } else {
+            echo '<p style="color:#999;">Keine ähnlichen Frauenvornamen gefunden.</p>';
+        }
+    ?>
+    
+    <!-- MÄNNER VORNAMEN -->
+    <h2>👨 Männer Vornamen</h2>
+    <?php
+        $vaterGroups = getSimilarVaterNamen($pdo);
+        if (count($vaterGroups) > 0) {
+            foreach ($vaterGroups as $group) {
+                echo renderNameGroup($group, 'vater', $pdo);
+            }
+        } else {
+            echo '<p style="color:#999;">Keine ähnlichen Männervornamen gefunden.</p>';
+        }
+    ?>
+    
+    <br>
+    <a href="../user/index.php" class="back-link">← Zurück zur Startseite</a>
+</div>
+
+<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>

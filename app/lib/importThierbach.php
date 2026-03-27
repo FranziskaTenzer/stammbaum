@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 if (!function_exists('getPDO')) {
-    include 'include.php';
+    include __DIR__ . '/include.php';
 }
 
 $DEBUG = true;
@@ -318,7 +318,5 @@ if (!isset($SKIP_AUTO_IMPORT)) {
     runThierbachImport();
     
     echo "<hr><strong><h2>Import Thierbach erfolgreich</h2></strong><br /><br /><br />";
-    echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a><br /><br />";
+    echo "<a href='../../views/user/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a><br /><br />";
 }
-
-?>

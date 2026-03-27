@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
@@ -15,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['is_admin'] = true;
         $_SESSION['login_time'] = time();
         
-        header('Location: stammbaum.php');
+        header('Location: ../app/views/user/index.php');
         exit;
     } else {
         $error = '❌ Ungültige Anmeldedaten!';

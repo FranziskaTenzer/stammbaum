@@ -42,4 +42,3 @@ function sanitizeInput($input) {
 }
 
 // Other helper functions can be added here
-?>

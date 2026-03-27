@@ -1,7 +1,7 @@
 <?php
 $pageTitle = "Personensuche";
-require 'header.php';
-require 'include.php';
+require_once dirname(__DIR__, 2) . '/layout/header.php';
+require_once dirname(__DIR__, 2) . '/lib/include.php';
 
 $pdo = getPDO();
 $results = [];
@@ -119,7 +119,7 @@ AND p.nachname LIKE :nachname
                         <td><?= htmlspecialchars($row['ort'] ?? '') ?></td>
                         <td><?= htmlspecialchars(substr($row['bemerkung'] ?? '', 0, 30)) ?></td>
                         <td>
-                            <a href="display-stammbaum.php?id=<?= $row['id'] ?>" class="btn btn-small">Stammbaum</a>
+                            <a href="stammbaum-display.php?id=<?= $row['id'] ?>" class="btn btn-small">Stammbaum</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -134,4 +134,4 @@ AND p.nachname LIKE :nachname
 </div>
 <?php endif; ?>
 
-<?php require 'footer.php'; ?>
+<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>

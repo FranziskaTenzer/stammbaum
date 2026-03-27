@@ -18,8 +18,8 @@ define('TIROL_ARCHIV_TIMEOUT', 15);
 // Minimale Ähnlichkeit für Archiv-Vergleich (in Prozent)
 define('TIROL_ARCHIV_MIN_SIMILARITY', 80);
 
-// Cache-Verzeichnis (optional)
-define('TIROL_ARCHIV_CACHE_DIR', __DIR__ . '/cache/tirol-archiv/');
+// Cache-Verzeichnis (unter dem Projektverzeichnis)
+define('TIROL_ARCHIV_CACHE_DIR', dirname(dirname(__DIR__)) . '/cache/tirol-archiv/');
 
 // Cache-Gültigkeitsdauer (in Sekunden, 0 = kein Cache)
 define('TIROL_ARCHIV_CACHE_TTL', 86400); // 24 Stunden
@@ -401,5 +401,3 @@ function renderArchiveNamesBox($nachname, $minSimilarity = TIROL_ARCHIV_MIN_SIMI
     
     return $html;
 }
-
-?>

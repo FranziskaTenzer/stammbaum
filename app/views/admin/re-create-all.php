@@ -4,8 +4,14 @@ ini_set('display_errors', 1);
 set_time_limit(600);
 ob_start();
 
+require_once dirname(__DIR__, 2) . '/layout/header.php';
+
+if (!isAdmin()) {
+    die('❌ Zugriff verweigert! Nur für Administratoren.');
+}
+
 if (!function_exists('getPDO')) {
-    include 'include.php';
+    include dirname(__DIR__, 2) . '/lib/include.php';
 }
 
 $pdo = getPDO();
@@ -22,18 +28,18 @@ try {
     // Datenbank INLINE löschen und neu erstellen
     $sqlDeleteDB = " SET FOREIGN_KEY_CHECKS = 0;
         
-    SET @tables = (
-      SELECT GROUP_CONCAT(CONCAT('`', table_name, '`'))
-      FROM information_schema.tables
-      WHERE table_schema = 'stammbaum'
-    );
+SET @tables = (
+  SELECT GROUP_CONCAT(CONCAT('`', table_name, '`'))
+  FROM information_schema.tables
+  WHERE table_schema = 'stammbaum'
+);
         
-    SET @sql = CONCAT('DROP TABLE IF EXISTS ', @tables);
-    PREPARE stmt FROM @sql;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
+SET @sql = CONCAT('DROP TABLE IF EXISTS ', @tables);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
         
-    SET FOREIGN_KEY_CHECKS = 1;
+SET FOREIGN_KEY_CHECKS = 1;
     ";
     
     $stmt = $pdo->prepare($sqlDeleteDB);
@@ -125,7 +131,7 @@ flush();
 
 try {
     $SKIP_AUTO_IMPORT = true;
-    require_once 'importThierbach.php';
+    require_once dirname(__DIR__, 2) . '/lib/importThierbach.php';
     runThierbachImport();
     echo "<p style='color:green;'>✅ Thierbach-Import abgeschlossen!</p>";
 } catch (Exception $e) {
@@ -151,7 +157,7 @@ flush();
 
 try {
     $SKIP_AUTO_IMPORT = true;
-    require_once 'importOrte.php';
+    require_once dirname(__DIR__, 2) . '/lib/importOrte.php';
     runOrteImport();
     echo "<p style='color:green;'>✅ Orte-Import abgeschlossen!</p>";
 } catch (Exception $e) {
@@ -194,9 +200,10 @@ try {
 echo "<div style='background:#f3e5f5; padding:20px; margin:10px 0; border-radius:8px; border:2px solid #9c27b0;'>";
 echo "<h2 style='color:#9c27b0;'>🎉 ALLE IMPORTE ERFOLGREICH!</h2>";
 echo "<p>Alle Daten wurden mit einer einzigen Datenbankverbindung importiert.</p>";
-echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none; display:inline-block;'>← Zurück zur Startseite</a>";
+echo "<a href='../user/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none; display:inline-block;'>← Zurück zur Startseite</a>";
 echo "</div>";
 ob_flush();
 flush();
 
+require_once dirname(__DIR__, 2) . '/layout/footer.php';
 ?>
