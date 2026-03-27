@@ -505,6 +505,8 @@ document.addEventListener("click", function(e){
 
 <body>
 <br /><a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>
+<br /><br /><br />
+<br /><a href='stammbaum-familien.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Personensuche</a>
 <br />
 
 <h2 style="text-align:center;">Stammbaum</h2>

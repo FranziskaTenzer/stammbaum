@@ -38,7 +38,7 @@ function extractSIdThierbach(&$text) {
     return null;
 }
 
-function extractField(&$text, $label) {
+function extractFieldThierbach(&$text, $label) {
     
     /* $value = trim($m[1]);
     
@@ -83,9 +83,9 @@ function parsePersonText($text) {
     $text = preg_replace('/\b(\d+)\s*[jJ]\b/', '', $text);
     
     // Hof / Ort / Bemerkung extrahieren
-    $hof = extractField($text, 'Hof:');
-    $ort = extractField($text, 'Ort:');
-    $bemerkung = extractField($text, 'Bemerkung:');
+    $hof = extractFieldThierbach($text, 'Hof:');
+    $ort = extractFieldThierbach($text, 'Ort:');
+    $bemerkung = extractFieldThierbach($text, 'Bemerkung:');
     
     // Kommas entfernen
     $text = str_replace(',', '', $text);
@@ -214,7 +214,7 @@ function parseLine($line) {
     ];
     
     // Traubuch extrahieren
-    $traubuch = extractField($line, 'Traubuch:');
+    $traubuch = extractFieldThierbach($line, 'Traubuch:');
     $result['traubuch'] = $traubuch;
     
     if (preg_match('/^(S\d+)/', $line, $m)) {

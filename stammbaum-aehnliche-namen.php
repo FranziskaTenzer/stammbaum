@@ -6,7 +6,10 @@ error_reporting(E_ALL);
 
 $pdo = getPDO();
 
-// Levenshtein distance function for similarity matching
+// ===========================
+// HELPER FUNKTIONEN
+// ===========================
+
 function levenshteinSimilarity($str1, $str2) {
     $distance = levenshtein(strtolower($str1), strtolower($str2));
     $maxLen = max(strlen($str1), strlen($str2));
@@ -14,9 +17,15 @@ function levenshteinSimilarity($str1, $str2) {
     return round((1 - ($distance / $maxLen)) * 100);
 }
 
-// Get all unique first names with their similarity groups
-function getSimilarVornamen($pdo) {
-    $stmt = $pdo->prepare("SELECT DISTINCT vorname FROM person ORDER BY vorname");
+// Get all unique MOTHER first names (mutter_id from ehe)
+function getSimilarMutterNamen($pdo) {
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT p.vorname
+        FROM person p
+        JOIN ehe e ON p.id = e.mutter_id
+        WHERE p.vorname IS NOT NULL AND p.vorname != ''
+        ORDER BY p.vorname
+    ");
     $stmt->execute();
     $vornamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
@@ -37,7 +46,7 @@ function getSimilarVornamen($pdo) {
             }
         }
         
-        if (count($group) > 0) {
+        if (count($group) > 1) {
             $groups[] = $group;
             $processed[] = $name;
         }
@@ -46,9 +55,52 @@ function getSimilarVornamen($pdo) {
     return $groups;
 }
 
-// Get all unique last names with their similarity groups
+// Get all unique FATHER first names (vater_id from ehe)
+function getSimilarVaterNamen($pdo) {
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT p.vorname
+        FROM person p
+        JOIN ehe e ON p.id = e.vater_id
+        WHERE p.vorname IS NOT NULL AND p.vorname != ''
+        ORDER BY p.vorname
+    ");
+    $stmt->execute();
+    $vornamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    $groups = [];
+    $processed = [];
+    
+    foreach ($vornamen as $name) {
+        if (in_array($name, $processed)) continue;
+        
+        $group = [$name];
+        foreach ($vornamen as $compareName) {
+            if ($compareName != $name && !in_array($compareName, $processed)) {
+                $similarity = levenshteinSimilarity($name, $compareName);
+                if ($similarity >= 80) {
+                    $group[] = $compareName;
+                    $processed[] = $compareName;
+                }
+            }
+        }
+        
+        if (count($group) > 1) {
+            $groups[] = $group;
+            $processed[] = $name;
+        }
+    }
+    
+    return $groups;
+}
+
+// Get all unique last names (both genders)
 function getSimilarNachnamen($pdo) {
-    $stmt = $pdo->prepare("SELECT DISTINCT nachname FROM person ORDER BY nachname");
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT nachname
+        FROM person
+        WHERE nachname IS NOT NULL AND nachname != ''
+        ORDER BY nachname
+    ");
     $stmt->execute();
     $nachnamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
@@ -69,7 +121,7 @@ function getSimilarNachnamen($pdo) {
             }
         }
         
-        if (count($group) > 0) {
+        if (count($group) > 1) {
             $groups[] = $group;
             $processed[] = $name;
         }
@@ -78,36 +130,243 @@ function getSimilarNachnamen($pdo) {
     return $groups;
 }
 
-// Get Traubücher for a specific vorname
-function getTraubueherForVorname($pdo, $vorname) {
+// Get all records for a specific mother name
+function getRecordsForMutterName($pdo, $vorname) {
     $sql = "
-        SELECT DISTINCT ehe.traubuch
-        FROM person
-        JOIN ehe ON (person.id = ehe.vater_id OR person.id = ehe.mutter_id)
-        WHERE person.vorname = ?
-        AND ehe.traubuch IS NOT NULL
-        ORDER BY ehe.traubuch
+        SELECT
+            p.id,
+            p.vorname,
+            p.nachname,
+            p.geburtsdatum,
+            p.sterbedatum,
+            p.geburtsort,
+            p.sterbeort,
+            p.hof,
+            p.ort,
+            p.bemerkung,
+            e.traubuch,
+            e.heiratsdatum,
+            vater.vorname as vater_vorname,
+            vater.nachname as vater_nachname,
+            mutter.vorname as mutter_vorname,
+            mutter.nachname as mutter_nachname,
+            kinder.id as kind_id,
+            kinder.vorname as kind_vorname,
+            kinder.nachname as kind_nachname,
+            kinder.geburtsdatum as kind_geburtsdatum,
+            kinder.sterbedatum as kind_sterbedatum
+        FROM person p
+        JOIN ehe e ON p.id = e.mutter_id
+        LEFT JOIN person vater ON e.vater_id = vater.id
+        LEFT JOIN person mutter ON e.mutter_id = mutter.id
+        LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.vater_id AND kinder.mutter_id = e.mutter_id))
+        WHERE p.vorname = ?
+        ORDER BY e.traubuch, p.nachname, p.geburtsdatum
     ";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$vorname]);
-    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Get Traubücher for a specific nachname
-function getTraubueherForNachname($pdo, $nachname) {
+// Get all records for a specific father name
+function getRecordsForVaterName($pdo, $vorname) {
     $sql = "
-        SELECT DISTINCT ehe.traubuch
-        FROM person
-        JOIN ehe ON (person.id = ehe.vater_id OR person.id = ehe.mutter_id)
-        WHERE person.nachname = ?
-        AND ehe.traubuch IS NOT NULL
-        ORDER BY ehe.traubuch
+        SELECT
+            p.id,
+            p.vorname,
+            p.nachname,
+            p.geburtsdatum,
+            p.sterbedatum,
+            p.geburtsort,
+            p.sterbeort,
+            p.hof,
+            p.ort,
+            p.bemerkung,
+            e.traubuch,
+            e.heiratsdatum,
+            vater.vorname as vater_vorname,
+            vater.nachname as vater_nachname,
+            mutter.vorname as mutter_vorname,
+            mutter.nachname as mutter_nachname,
+            kinder.id as kind_id,
+            kinder.vorname as kind_vorname,
+            kinder.nachname as kind_nachname,
+            kinder.geburtsdatum as kind_geburtsdatum,
+            kinder.sterbedatum as kind_sterbedatum
+        FROM person p
+        JOIN ehe e ON p.id = e.vater_id
+        LEFT JOIN person vater ON e.vater_id = vater.id
+        LEFT JOIN person mutter ON e.mutter_id = mutter.id
+        LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.vater_id AND kinder.mutter_id = e.mutter_id))
+        WHERE p.vorname = ?
+        ORDER BY e.traubuch, p.nachname, p.geburtsdatum
+    ";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$vorname]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Get all records for a specific nachname
+function getRecordsForNachname($pdo, $nachname) {
+    $sql = "
+        SELECT
+            p.id,
+            p.vorname,
+            p.nachname,
+            p.geburtsdatum,
+            p.sterbedatum,
+            p.geburtsort,
+            p.sterbeort,
+            p.hof,
+            p.ort,
+            p.bemerkung,
+            e.traubuch,
+            e.heiratsdatum,
+            vater.vorname as vater_vorname,
+            vater.nachname as vater_nachname,
+            mutter.vorname as mutter_vorname,
+            mutter.nachname as mutter_nachname,
+            kinder.id as kind_id,
+            kinder.vorname as kind_vorname,
+            kinder.nachname as kind_nachname,
+            kinder.geburtsdatum as kind_geburtsdatum,
+            kinder.sterbedatum as kind_sterbedatum
+        FROM person p
+        JOIN ehe e ON (p.id = e.vater_id OR p.id = e.mutter_id)
+        LEFT JOIN person vater ON e.vater_id = vater.id
+        LEFT JOIN person mutter ON e.mutter_id = mutter.id
+        LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.vater_id AND kinder.mutter_id = e.mutter_id))
+        WHERE p.nachname = ?
+        ORDER BY e.traubuch, p.geburtsdatum
     ";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$nachname]);
-    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function formatDate($date) {
+    if (!$date) return '—';
+    $d = DateTime::createFromFormat('Y-m-d', $date);
+    return $d ? $d->format('d.m.Y') : '—';
+}
+
+function renderPersonRecord($record, $recordId) {
+    $html = '<div style="background:#f0f8ff; padding:12px; margin:8px 0; border-left:4px solid #0066cc; border-radius:3px; cursor:pointer;" class="toggle-record" onclick="toggleRecord(\'record-' . $recordId . '\');">';
+    
+    // Header mit Namen und Eltern
+    $html .= '<div style="display:flex; align-items:center; justify-content:space-between;">';
+    $html .= '<div>';
+    
+    // Name (außen, größer)
+    $html .= '<span style="color:#0066cc; font-size:1.1em; font-weight:bold;">' . htmlspecialchars($record['vorname'] . ' ' . $record['nachname']) . '</span>';
+    
+    // Eltern direkt danach (innen, kleiner)
+    if ($record['vater_vorname'] || $record['mutter_vorname']) {
+        $html .= '<span style="color:#666; font-size:0.85em; margin-left:10px;">';
+        if ($record['vater_vorname']) {
+            $html .= htmlspecialchars($record['vater_vorname'] . ' ' . $record['vater_nachname']);
+        }
+        if ($record['mutter_vorname']) {
+            if ($record['vater_vorname']) $html .= ' & ';
+            $html .= htmlspecialchars($record['mutter_vorname'] . ' ' . $record['mutter_nachname']);
+        }
+        $html .= '</span>';
+    }
+    
+    $html .= '</div>';
+    
+    // Toggle Icon
+    $html .= '<span style="color:#0066cc; font-size:1.2em; font-weight:bold;">▶</span>';
+    $html .= '</div>';
+    
+    // Versteckte Details
+    $html .= '<div id="record-' . $recordId . '" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #ccc;">';
+    
+    // Daten
+    $html .= '<span style="color:#555; font-size:0.9em; display:block; margin-bottom:8px;">';
+    if ($record['geburtsdatum'] || $record['sterbedatum']) {
+        $html .= '<strong>Lebensdaten:</strong> ';
+        if ($record['geburtsdatum']) {
+            $html .= 'geb. ' . formatDate($record['geburtsdatum']);
+            if ($record['geburtsort']) {
+                $html .= ' in ' . htmlspecialchars($record['geburtsort']);
+            }
+        }
+        if ($record['sterbedatum']) {
+            if ($record['geburtsdatum']) $html .= ' | ';
+            $html .= 'gest. ' . formatDate($record['sterbedatum']);
+            if ($record['sterbeort']) {
+                $html .= ' in ' . htmlspecialchars($record['sterbeort']);
+            }
+        }
+        $html .= '<br>';
+    }
+    $html .= '</span>';
+    
+    // Zusatzinfos
+    if ($record['hof'] || $record['ort'] || $record['bemerkung']) {
+        $html .= '<span style="color:#888; font-size:0.85em; display:block;">';
+        if ($record['hof']) {
+            $html .= '<strong>Hof:</strong> ' . htmlspecialchars($record['hof']) . '<br>';
+        }
+        if ($record['ort']) {
+            $html .= '<strong>Ort:</strong> ' . htmlspecialchars($record['ort']) . '<br>';
+        }
+        if ($record['bemerkung']) {
+            $html .= '<strong>Bem.:</strong> ' . htmlspecialchars($record['bemerkung']) . '<br>';
+        }
+        $html .= '</span>';
+    }
+    
+    // Traubuch
+    if ($record['traubuch']) {
+        $html .= '<span style="background:#fff3cd; color:#856404; padding:4px 8px; border-radius:3px; font-size:0.85em; display:inline-block; margin-top:6px;">';
+        $html .= '📖 ' . htmlspecialchars($record['traubuch']);
+        if ($record['heiratsdatum']) {
+            $html .= ' (' . formatDate($record['heiratsdatum']) . ')';
+        }
+        $html .= '</span>';
+    }
+    
+    $html .= '</div>';
+    $html .= '</div>';
+    
+    return $html;
+}
+
+function renderNameGroup($groupNames, $groupType) {
+    $html = '<div class="name-group" style="cursor:pointer;" onclick="toggleGroup(this);">';
+    
+    // Header mit Namen und Toggle-Icon
+    $html .= '<div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background-color:#f8f9fa; border-radius:4px;">';
+    $html .= '<div>';
+    $html .= '<strong style="color:#155724; font-size:1.1em;">';
+    
+    if ($groupType === 'mutter') {
+        $html .= '👩 ';
+    } elseif ($groupType === 'vater') {
+        $html .= '👨 ';
+    } else {
+        $html .= '📝 ';
+    }
+    
+    $html .= htmlspecialchars(implode(' / ', $groupNames));
+    $html .= '</strong>';
+    $html .= '</div>';
+    $html .= '<span style="color:#155724; font-size:1.2em; font-weight:bold; transition:transform 0.2s;">▶</span>';
+    $html .= '</div>';
+    
+    // Versteckter Inhalt (Records)
+    $html .= '<div class="group-content" style="display:none; padding:10px 0;">';
+    
+    return $html;
+}
+
+function closeNameGroup() {
+    return '</div></div>';
 }
 
 ?>
@@ -116,6 +375,7 @@ function getTraubueherForNachname($pdo, $nachname) {
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ähnliche Namen - Stammbäume Wildschönau</title>
     <style>
         body { 
@@ -142,6 +402,14 @@ function getTraubueherForNachname($pdo, $nachname) {
             border-left: 5px solid #007bff;
             border-radius: 4px;
         }
+        h3 {
+            color: #0066cc;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+            border-left: 4px solid #0066cc;
+            padding-left: 10px;
+        }
         .name-group {
             background-color: white;
             border: 1px solid #ddd;
@@ -165,20 +433,15 @@ function getTraubueherForNachname($pdo, $nachname) {
             color: #155724;
             font-size: 1.05em;
         }
-        .traubuch-list {
-            margin: 10px 0 0 0;
-            font-size: 0.95em;
-            color: #666;
+        .records-list {
+            margin: 12px 0 0 0;
+            padding: 10px 0;
         }
-        .traubuch-item {
-            margin: 5px 0 0 0;
-            padding: 6px 10px;
-            background-color: #fff3cd;
-            border-left: 3px solid #ff9800;
-            display: block;
-            border-radius: 3px;
-            font-weight: 500;
-            color: #856404;
+        .toggle-record {
+            transition: background-color 0.2s;
+        }
+        .toggle-record:hover {
+            background-color: #e6f2ff !important;
         }
         .back-link {
             margin-bottom: 30px;
@@ -215,16 +478,74 @@ function getTraubueherForNachname($pdo, $nachname) {
             margin-bottom: 25px;
             font-size: 0.95em;
         }
-        .count-badge {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            margin-left: 8px;
-        }
+        
+        .name-group {
+        background-color: white;
+        border: 2px solid #28a745;
+        border-radius: 6px;
+        margin: 15px 0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    
+    .name-group:hover {
+        box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+        border-color: #20c997;
+    }
+    
+    .group-content {
+        padding: 15px;
+        background-color: #fafbfc;
+    }
+    
+    .name-variant {
+        margin: 10px 0;
+        padding: 10px 12px;
+        background-color: #f0f8ff;
+        border-left: 4px solid #0066cc;
+        border-radius: 3px;
+    }
+    
+    .name-variant strong {
+        color: #0066cc;
+        font-size: 1em;
+    }
+    
+    .records-list {
+        margin: 12px 0 0 0;
+        padding: 10px 0;
+    }
     </style>
+    <script>
+        
+        
+       function toggleRecord(recordId) {
+        const element = document.getElementById(recordId);
+        const parent = element.parentElement;
+        const arrow = parent.querySelector('span:last-child');
+        
+        if (element.style.display === 'none') {
+            element.style.display = 'block';
+            arrow.textContent = '▼';
+        } else {
+            element.style.display = 'none';
+            arrow.textContent = '▶';
+        }
+    }
+    
+    function toggleGroup(groupHeader) {
+        const content = groupHeader.nextElementSibling;
+        const arrow = groupHeader.querySelector('span:last-child');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            arrow.style.transform = 'rotate(90deg)';
+        } else {
+            content.style.display = 'none';
+            arrow.style.transform = 'rotate(0deg)';
+        }
+    }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -234,34 +555,81 @@ function getTraubueherForNachname($pdo, $nachname) {
         
         <h1>📋 Ähnliche Namen im Stammbaum</h1>
         <div class="info-text">
-            Diese Übersicht zeigt Namen mit ähnlicher Schreibweise (ab 80% Übereinstimmung) und listet die Traubücher auf, in denen sie vorkommen.
+            Diese Übersicht zeigt Namen mit ähnlicher Schreibweise (ab 80% Übereinstimmung). 
+            Klicken Sie auf einen Namen, um Details zu sehen.
         </div>
+
+      <!-- Mutter Vornamen Section -->
+<h2>👩 Ähnliche Vornamen (Mütter)</h2>
+<?php
+$mutterGroups = getSimilarMutterNamen($pdo);
+$hasMutter = false;
+$recordCounter = 0;
+
+foreach ($mutterGroups as $group) {
+    if (count($group) > 1) {
+        $hasMutter = true;
         
-        <!-- Vornamen Section -->
-        <h2>👤 Ähnliche Vornamen</h2>
+        // Öffne die Gruppe
+        echo renderNameGroup($group, 'mutter');
+        
+        foreach ($group as $vorname) {
+            $records = getRecordsForMutterName($pdo, $vorname);
+            echo "<div class='name-variant'>";
+            echo "<strong style='font-size:0.95em;'>" . htmlspecialchars($vorname) . "</strong> (" . count($records) . " Einträge)";
+            
+            if (count($records) > 0) {
+                echo "<div class='records-list'>";
+                $displayed = [];
+                foreach ($records as $record) {
+                    $key = $record['id'];
+                    if (!in_array($key, $displayed)) {
+                        echo renderPersonRecord($record, 'mutter-' . $recordCounter++);
+                        $displayed[] = $key;
+                    }
+                }
+                echo "</div>";
+            }
+            
+            echo "</div>";
+        }
+        
+        // Schließe die Gruppe
+        echo closeNameGroup();
+    }
+}
+
+if (!$hasMutter) {
+    echo "<div class='no-results'>❌ Keine ähnlichen Muttervornamen gefunden.</div>";
+}
+?>
+        <!-- Vater Vornamen Section -->
+        <h2>👨 Ähnliche Vornamen (Väter)</h2>
         <?php
-        $vornamenGroups = getSimilarVornamen($pdo);
-        $hasVornamen = false;
+        $vaterGroups = getSimilarVaterNamen($pdo);
+        $hasVater = false;
         
-        foreach ($vornamenGroups as $group) {
+        foreach ($vaterGroups as $group) {
             if (count($group) > 1) {
-                $hasVornamen = true;
+                $hasVater = true;
                 echo "<div class='name-group'>";
                 
                 foreach ($group as $vorname) {
-                    $traubuecher = getTraubueherForVorname($pdo, $vorname);
+                    $records = getRecordsForVaterName($pdo, $vorname);
                     echo "<div class='name-variant'>";
-                    echo "<strong>📝 " . htmlspecialchars($vorname) . "</strong>";
+                    echo "<strong>👨 " . htmlspecialchars($vorname) . "</strong> (" . count($records) . " Einträge)";
                     
-                    if (count($traubuecher) > 0) {
-                        echo "<div class='traubuch-list'>";
-                        echo "<strong>Traubücher:</strong><br>";
-                        foreach ($traubuecher as $tb) {
-                            echo "<span class='traubuch-item'>" . htmlspecialchars($tb) . "</span>";
+                    if (count($records) > 0) {
+                        echo "<div class='records-list'>";
+                        $displayed = [];
+                        foreach ($records as $record) {
+                            $key = $record['id'];
+                            if (!in_array($key, $displayed)) {
+                                echo renderPersonRecord($record, 'vater-' . $recordCounter++);
+                                $displayed[] = $key;
+                            }
                         }
                         echo "</div>";
-                    } else {
-                        echo "<div class='traubuch-list'><em>Keine Traubücher zugeordnet</em></div>";
                     }
                     
                     echo "</div>";
@@ -271,13 +639,13 @@ function getTraubueherForNachname($pdo, $nachname) {
             }
         }
         
-        if (!$hasVornamen) {
-            echo "<div class='no-results'>❌ Keine ähnlichen Vornamen gefunden.</div>";
+        if (!$hasVater) {
+            echo "<div class='no-results'>❌ Keine ähnlichen Vatervornamen gefunden.</div>";
         }
         ?>
-        
+
         <!-- Nachnamen Section -->
-        <h2>👨‍👩‍👧‍👦 Ähnliche Nachnamen</h2>
+        <h2>📛 Ähnliche Nachnamen</h2>
         <?php
         $nachnamenGroups = getSimilarNachnamen($pdo);
         $hasNachnamen = false;
@@ -288,19 +656,21 @@ function getTraubueherForNachname($pdo, $nachname) {
                 echo "<div class='name-group'>";
                 
                 foreach ($group as $nachname) {
-                    $traubuecher = getTraubueherForNachname($pdo, $nachname);
+                    $records = getRecordsForNachname($pdo, $nachname);
                     echo "<div class='name-variant'>";
-                    echo "<strong>📝 " . htmlspecialchars($nachname) . "</strong>";
+                    echo "<strong>📝 " . htmlspecialchars($nachname) . "</strong> (" . count($records) . " Einträge)";
                     
-                    if (count($traubuecher) > 0) {
-                        echo "<div class='traubuch-list'>";
-                        echo "<strong>Traubücher:</strong><br>";
-                        foreach ($traubuecher as $tb) {
-                            echo "<span class='traubuch-item'>" . htmlspecialchars($tb) . "</span>";
+                    if (count($records) > 0) {
+                        echo "<div class='records-list'>";
+                        $displayed = [];
+                        foreach ($records as $record) {
+                            $key = $record['id'];
+                            if (!in_array($key, $displayed)) {
+                                echo renderPersonRecord($record, 'nachname-' . $recordCounter++);
+                                $displayed[] = $key;
+                            }
                         }
                         echo "</div>";
-                    } else {
-                        echo "<div class='traubuch-list'><em>Keine Traubücher zugeordnet</em></div>";
                     }
                     
                     echo "</div>";
@@ -314,7 +684,7 @@ function getTraubueherForNachname($pdo, $nachname) {
             echo "<div class='no-results'>❌ Keine ähnlichen Nachnamen gefunden.</div>";
         }
         ?>
-        
+
         <div class="back-link" style="margin-top: 40px; text-align: center;">
             <a href="stammbaum.php">← Zurück zur Hauptseite</a>
         </div>

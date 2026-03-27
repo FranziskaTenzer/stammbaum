@@ -46,7 +46,7 @@ if ($vorname != null or $Nachname != null) {
     </button>
 </form>   
    
-  <!--  
+  
 <form action="db_init.php" method="post">
 <button type="submit"><h4 style='color:red'>Datenbank neu erstellen</h4></button>
 </form>
@@ -63,11 +63,19 @@ if ($vorname != null or $Nachname != null) {
 <button type="submit">Thierbach Importieren</button>
 </form>
 
+<h1>Daten Import Ort :<h1/>
+<form  action="importOrt.php" method="post" enctype="multipart/form-data">
+<p>Traubuch: <input id="traubuch" name="traubuch" required/></p>
+<input type="file" id="daten_import_file" name="daten_import_file"  accept="*.txt" required />
+<br />
+<br />
+<button type="submit">Importieren</button>
+</form>
 
 <form action="importOrte.php" method="post">
 <button type="submit"><h3> alle Orte importieren </h3></button>
 </form>
 
--->  
+
 </body> 
 </html> 

@@ -87,6 +87,33 @@ function extractDateAndPlace(&$text, $type) {
     return [$datum, $ort];
 }
 
+function extractParents(&$text) {
+    $vater = null;
+    $mutter = null;
+    
+    // Extrahiere (Vater & Mutter) oder (Vater & null)
+    if (preg_match('/\(([^&)]+)\s*&\s*([^)]+)\)/i', $text, $m)) {
+        $vater_text = trim($m[1]);
+        $mutter_text = trim($m[2]);
+        
+        $vater = $vater_text ? $vater_text : null;
+        $mutter = $mutter_text ? $mutter_text : null;
+        
+        // Entferne die Klammer aus dem Text
+        $text = str_replace($m[0], '', $text);
+    } elseif (preg_match('/\(([^)]+)\)/i', $text, $m)) {
+        // Nur eine Person in Klammer, könnte Vater oder Mutter sein
+        $parent_text = trim($m[1]);
+        if ($parent_text && !preg_match('/^(unehelich|S\d+)/i', $parent_text)) {
+            // Assume vater if only one parent is given
+            $vater = $parent_text;
+        }
+        $text = str_replace($m[0], '', $text);
+    }
+    
+    return [$vater, $mutter];
+}
+
 function splitOutsideBrackets($text) {
     $depth = 0;
     for ($i = 0; $i < strlen($text); $i++) {
@@ -119,8 +146,17 @@ function parsePerson($text) {
     list($tod, $todOrt) = extractDateAndPlace($text, 'gest');
     list($geb, $gebOrt) = extractDateAndPlace($text, 'geb');
     
+    // Eltern extrahieren
+    list($vater_text, $mutter_text) = extractParents($text);
+    
+    // Klammern entfernen
     $text = preg_replace('/\([^)]*\)/', '', $text);
+    
+    // Alter entfernen
     $text = preg_replace('/\b\d+\s*[jJ]\b/', '', $text);
+    
+    // Zusätze entfernen (Hof, Ort)
+    $text = preg_replace('/,?\s*(Hof|Ort):\s*[^,]*/i', '', $text);
     
     $text = trim($text);
     
@@ -138,7 +174,8 @@ function parsePerson($text) {
         'alter' => $alter,
         'referenz_ehe' => $referenzEhe,
         'bemerkung' => $bemerkung,
-        'witwe' => $witweData
+        'vater_text' => $vater_text,
+        'mutter_text' => $mutter_text
     ];
 }
 
@@ -172,6 +209,28 @@ function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
     }
     
     return $id;
+}
+
+function findOrCreatePersonFromText($pdo, $personText) {
+    if (!$personText) return null;
+    
+    // Parse the text to extract name and parents
+    $personData = parsePerson($personText);
+    
+    // Recursively find or create parents
+    $vaterId = null;
+    $mutterId = null;
+    
+    if ($personData['vater_text']) {
+        $vaterId = findOrCreatePersonFromText($pdo, $personData['vater_text']);
+    }
+    
+    if ($personData['mutter_text']) {
+        $mutterId = findOrCreatePersonFromText($pdo, $personData['mutter_text']);
+    }
+    
+    // Find or create the person with parent IDs
+    return findOrCreatePerson($pdo, $personData, $vaterId, $mutterId);
 }
 
 function updateSpouseDeathByEhe($pdo, $personId, $sterbedatum) {
@@ -227,11 +286,10 @@ function importFile($pdo, $filePath, $traubuch) {
             list($mannText, $frauText) = splitOutsideBrackets($line);
             if (!$mannText || !$frauText) continue;
             
-            $mann = parsePerson($mannText);
-            $frau = parsePerson($frauText);
+            $mannId = findOrCreatePersonFromText($pdo, $mannText);
+            $frauId = findOrCreatePersonFromText($pdo, $frauText);
             
-            $mannId = findOrCreatePerson($pdo, $mann);
-            $frauId = findOrCreatePerson($pdo, $frau);
+            if (!$mannId || !$frauId) continue;
             
             $stmt = $pdo->prepare("
                 SELECT id FROM ehe
@@ -248,14 +306,6 @@ function importFile($pdo, $filePath, $traubuch) {
                 ")->execute([$mannId, $frauId, $heiratsdatum, $traubuch]);
                 
                 $eheId = $pdo->lastInsertId();
-            }
-            
-            if (!empty($mann['witwe']['sterbedatum_partner'])) {
-                updateSpouseDeathByEhe($pdo, $mannId, $mann['witwe']['sterbedatum_partner']);
-            }
-            
-            if (!empty($frau['witwe']['sterbedatum_partner'])) {
-                updateSpouseDeathByEhe($pdo, $frauId, $frau['witwe']['sterbedatum_partner']);
             }
             
             $imported++;
@@ -344,7 +394,7 @@ if ($totalErrors > 0) {
 echo "<li>📁 Verarbeitete Dateien: " . count($files) . "</li>";
 echo "</ul>";
 
-echo "<hr><br />";
+echo "<hr>";
 echo "<a href='stammbaum.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 
 ?>
