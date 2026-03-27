@@ -1,0 +1,78 @@
+# ================================
+# CACHE & TEMPORÄRE DATEIEN
+# ================================
+
+# PHP Cache
+/cache/
+/tmp/
+*.cache
+*.tmp
+
+# Session Dateien
+/sessions/
+*.sess
+
+# Logs
+/logs/
+*.log
+
+# ================================
+# IDE & EDITOR
+# ================================
+
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ================================
+# COMPOSER
+# ================================
+
+vendor/
+composer.lock
+
+# ================================
+# UMGEBUNGSVARIABLEN
+# ================================
+
+.env
+.env.local
+.env.*.local
+
+# ================================
+# DATENBANK
+# ================================
+
+*.sql
+*.sqlite
+*.sqlite3
+
+# ================================
+# NODE (falls später verwendet)
+# ================================
+
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ================================
+# OS DATEIEN
+# ================================
+
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ================================
+# SICHERHEIT
+# ================================
+
+*.key
+*.pem
+.env.production.local
