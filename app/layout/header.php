@@ -1,20 +1,27 @@
 <?php
-// Start session if not already started
+// Error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Session starten
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once '/../lib/session-helper.php';
-requireLogin();
+// Session-Helper mit relativem Pfad laden
+require_once __DIR__ . '/../lib/session-helper.php';
+
+// Login prüfen
+if (!isLoggedIn()) {
+    header('Location: /stammbaum/public/login.php');
+    exit;
+}
 
 $pageTitle = isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Stammbaum';
 
-// Compute URL path to app/layout/ for CSS/JS links
-$_docRoot = rtrim(str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT'])), '/');
-$_layoutUrl = str_replace($_docRoot, '', str_replace('\\', '/', realpath(__DIR__)));
-
-// Compute URL path to project root for navigation links (used by sidebar-menu.php)
-$_projectUrl = rtrim(str_replace($_docRoot, '', str_replace('\\', '/', realpath(dirname(dirname(__DIR__))))), '/');
+// Layouts und URLs definieren
+$_layoutUrl = '/stammbaum/app/layout';
+$_projectUrl = '/stammbaum';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -22,14 +29,14 @@ $_projectUrl = rtrim(str_replace($_docRoot, '', str_replace('\\', '/', realpath(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
-    <link rel="stylesheet" href="<?= htmlspecialchars($_layoutUrl) ?>/style-menu.css">
+    <link rel="stylesheet" href="<?= $_layoutUrl ?>/style-menu.css">
     <?php if (isset($extraHead)) echo $extraHead; ?>
 </head>
 <body>
     <table class="layout-table">
         <tr>
             <td class="sidebar-cell">
-                <?php include 'sidebar-menu.php'; ?>
+                <?php include __DIR__ . '/sidebar-menu.php'; ?>
             </td>
             <td class="content-cell">
                 <main class="main-content">

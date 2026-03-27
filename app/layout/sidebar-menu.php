@@ -1,8 +1,9 @@
 <?php
-// Sidebar Menu - wird auf allen Seiten über header.php includiert
-require_once '/../lib/session-helper.php';
+// Session-Helper laden mit korrektem relativenum Pfad
+require_once __DIR__ . '/../lib/session-helper.php';
+
 // $_projectUrl is set by header.php before this file is included
-$_p = isset($_projectUrl) ? $_projectUrl : '';
+$_p = isset($_projectUrl) ? $_projectUrl : '/stammbaum';
 ?>
 
 <aside class="sidebar">
@@ -36,7 +37,6 @@ $_p = isset($_projectUrl) ? $_projectUrl : '';
             </h3>
             <ul class="nav-menu" style="display:block;">
                 <li><a href="<?= $_p ?>/app/views/user/stammbaum-search.php">👤 Personensuche</a></li>
-                <li><a href="<?= $_p ?>/app/views/user/stammbaum-display.php">📊 Stammbaum anzeigen</a></li>
                 <li><a href="<?= $_p ?>/app/views/user/traubuch-list.php">📚 Traubuch-Liste</a></li>
             </ul>
         </div>
@@ -52,18 +52,20 @@ $_p = isset($_projectUrl) ? $_projectUrl : '';
             </h3>
             <ul class="nav-menu">
                 
-                <!-- Daten verwalten -->
+                <!-- Datenbank verwalten -->
                 <li class="nav-subsection">
-                    <span class="subsection-toggle" onclick="toggleSubsection(event)">
+                    <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)">
                         <span class="subsection-icon">▶</span>
-                        📋 Daten verwalten
+                        🗃️ Datenbank verwalten
                     </span>
                     <ul class="nav-submenu">
-                        <li><a href="<?= $_p ?>/app/views/admin/import-orte.php">➕ Neue Orte importieren</a></li>
-                        <li class="warning-item">
+                        <li><a href="<?= $_p ?>/app/views/admin/recreate-db.php">⛃ Datenbank löschen und neu erstellen</a></li>
+                        <li><a href="<?= $_p ?>/app/views/admin/import-thierbach.php">📝 Thierbach importieren</a></li>
+                        <li><a href="<?= $_p ?>/app/views/admin/import-orte.php">📝 Alle Orte importieren</a></li>
+                        <li class="warning-item"><b>
                             <a href="<?= $_p ?>/app/views/admin/re-create-all.php" onclick="return confirm('⚠️ WARNUNG: Dies löscht ALLE Daten und importiert alles neu. Möchten Sie fortfahren?');">
-                                🔄 Kompletter Neustart
-                            </a>
+                                🔄 Kompletter Neustart (re create)
+                            </a></b>
                         </li>
                     </ul>
                 </li>
@@ -80,38 +82,20 @@ $_p = isset($_projectUrl) ? $_projectUrl : '';
                     </ul>
                 </li>
 
-                <!-- Profil / Ausloggen -->
+                <!-- Profil -->
                 <li class="nav-subsection">
                     <span class="subsection-toggle" onclick="toggleSubsection(event)">
                         <span class="subsection-icon">▶</span>
                         👤 Profil
                     </span>
                     <ul class="nav-submenu">
-                        <li>
-                            <span style="display:block; padding:10px; color:#666; font-size:0.9em;">
-                                Angemeldet als: <strong><?= htmlspecialchars(getCurrentUser()) ?></strong>
-                                <?php if (isAdmin()): ?>
-                                    <br><span style="color:#ff9800;">⭐ Admin</span>
-                                <?php endif; ?>
-                            </span>
-                        </li>
-                        <li><a href="<?= $_p ?>/public/logout.php" style="color:#d32f2f;">🚪 Ausloggen</a></li>
+                        <li><a href="<?= $_p ?>/public/logout.php">🚪 Abmelden</a></li>
                     </ul>
                 </li>
-
             </ul>
         </div>
         <?php endif; ?>
-
     </nav>
-
-    <footer class="sidebar-footer">
-        <p style="font-size:0.8em; color:#999;">
-            <?php if (isLoggedIn()): ?>
-                Angemeldet seit: 
-                <?php echo date('H:i:s', $_SESSION['login_time']); ?>
-            <?php endif; ?>
-        </p>
-    </footer>
-
 </aside>
+
+<script src="<?= $_layoutUrl ?? '/stammbaum/app/layout' ?>/script-menu.js"></script>

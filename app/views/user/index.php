@@ -16,12 +16,6 @@ require_once '../../layout/header.php';
     </div>
 
     <div class="content-card">
-        <h3>📊 Stammbaum anzeigen</h3>
-        <p>Zeigen Sie den Stammbaum für eine bestimmte Person an</p>
-        <a href="stammbaum-display.php" class="btn btn-primary">Stammbaum öffnen</a>
-    </div>
-
-    <div class="content-card">
         <h3>📚 Traubuch-Liste</h3>
         <p>Durchsuchen Sie alle verfügbaren Traubücher</p>
         <a href="traubuch-list.php" class="btn btn-primary">Traubücher ansehen</a>

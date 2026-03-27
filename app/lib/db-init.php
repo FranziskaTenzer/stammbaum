@@ -3,13 +3,13 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once  '../app/lib/session-helper.php';
+require_once  '../../app/lib/session-helper.php';
 requireLogin();
 
 ini_set('display_errors', 1);
 
 if (!function_exists('getPDO')) {
-    include '../app/lib/include.php';
+    include '../../app/lib/include.php';
 }
 
 $pdo = getPDO();

@@ -415,10 +415,9 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
 </script>
 
 <div class="container">
-    <a href="../user/index.php" class="back-link">← Zurück zur Startseite</a>
     
     <h1>🔍 Ähnliche Namen im Stammbaum</h1>
-    
+    <br/>
     <p style="color:#666; margin-bottom:20px;">
         Klicken Sie auf einen Bereich um ihn auf- oder zuzuklappen:
         <br>
@@ -456,7 +455,6 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
     ?>
     
     <br>
-    <a href="../user/index.php" class="back-link">← Zurück zur Startseite</a>
 </div>
 
 <?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>

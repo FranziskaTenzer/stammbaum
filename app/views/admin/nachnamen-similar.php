@@ -417,10 +417,9 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 </script>
 
 <div class="container">
-    <a href="../user/index.php" class="back-link">← Zurück zur Startseite</a>
-    
+   
     <h1>🔍 Ähnliche Nachnamen im Stammbaum</h1>
-    
+    <br/>
     <p style="color:#666; margin-bottom:20px;">
         Diese Seite zeigt Gruppen ähnlicher Familiennamen und vergleicht sie mit dem 
         Tirol-Archiv Familiennamen-Verzeichnis.
@@ -463,7 +462,6 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
     ?>
     
     <br>
-    <a href="../user/index.php" class="back-link">← Zurück zur Startseite</a>
 </div>
 
 <?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
