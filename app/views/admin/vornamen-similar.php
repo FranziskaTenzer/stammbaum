@@ -4,8 +4,8 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 $pageTitle = "Zeige ähnliche Vornamen";
-require_once dirname(__DIR__, 2) . '/layout/header.php';
-require_once dirname(__DIR__, 2) . '/lib/include.php';
+require_once '../../layout/header.php';
+require_once '../../lib/include.php';
 
 if (!isAdmin()) {
     die('❌ Zugriff verweigert! Nur für Administratoren.');

@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../lib/session-helper.php';
+require_once '/../lib/session-helper.php';
 requireLogin();
 
 $pageTitle = isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Stammbaum';
@@ -29,7 +29,7 @@ $_projectUrl = rtrim(str_replace($_docRoot, '', str_replace('\\', '/', realpath(
     <table class="layout-table">
         <tr>
             <td class="sidebar-cell">
-                <?php include __DIR__ . '/sidebar-menu.php'; ?>
+                <?php include 'sidebar-menu.php'; ?>
             </td>
             <td class="content-cell">
                 <main class="main-content">

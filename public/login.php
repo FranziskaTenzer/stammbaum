@@ -11,10 +11,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $valid_username = 'admin';
     $valid_password = 'stammbaum2024';
     
+    $valid_user = 'user';
+    $valid_pass = 'stammbaum2024';
+    
     if ($username === $valid_username && $password === $valid_password) {
         $_SESSION['logged_in'] = true;
         $_SESSION['username'] = $username;
         $_SESSION['is_admin'] = true;
+        $_SESSION['login_time'] = time();
+        
+        header('Location: ../app/views/admin/home.php');
+        exit;
+    } elseif ($username === $valid_user && $password === $valid_pass) {
+        $_SESSION['logged_in'] = true;
+        $_SESSION['username'] = $username;
+        $_SESSION['is_admin'] = false;
         $_SESSION['login_time'] = time();
         
         header('Location: ../app/views/user/index.php');

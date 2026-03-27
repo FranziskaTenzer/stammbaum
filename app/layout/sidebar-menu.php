@@ -1,6 +1,6 @@
 <?php
 // Sidebar Menu - wird auf allen Seiten über header.php includiert
-require_once __DIR__ . '/../lib/session-helper.php';
+require_once '/../lib/session-helper.php';
 // $_projectUrl is set by header.php before this file is included
 $_p = isset($_projectUrl) ? $_projectUrl : '';
 ?>

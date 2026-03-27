@@ -4,14 +4,14 @@ ini_set('display_errors', 1);
 set_time_limit(600);
 ob_start();
 
-require_once dirname(__DIR__, 2) . '/layout/header.php';
+require_once '../../layout/header.php';
 
 if (!isAdmin()) {
     die('❌ Zugriff verweigert! Nur für Administratoren.');
 }
 
 if (!function_exists('getPDO')) {
-    include dirname(__DIR__, 2) . '/lib/include.php';
+    include '../../lib/include.php';
 }
 
 $pdo = getPDO();

@@ -5,7 +5,6 @@ require_once '../../layout/header.php';
 
 <div class="page-header">
     <h1>📚 Traubuch-Liste</h1>
-    <p class="subtitle">Alle verfügbaren Traubücher im Überblick</p>
 </div>
 
 <?php 

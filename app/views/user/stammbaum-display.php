@@ -70,8 +70,8 @@ document.addEventListener("click", function(e){
 });
 </script>';
 
-require_once dirname(__DIR__, 2) . '/layout/header.php';
-require_once dirname(__DIR__, 2) . '/lib/include.php';
+require_once '../../layout/header.php';
+require_once '../../lib/include.php';
 
 ini_set('display_errors', 1);
 

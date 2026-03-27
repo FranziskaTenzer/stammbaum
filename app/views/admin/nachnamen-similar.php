@@ -1,7 +1,7 @@
 <?php
 
 $pageTitle = "Zeige ähnliche Nachnamen";
-require_once dirname(__DIR__, 2) . '/layout/header.php';
+require_once '../../layout/header.php';
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -17,8 +17,8 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 });
     
     try {
-        include dirname(__DIR__, 2) . '/lib/include.php';
-        include dirname(__DIR__, 2) . '/lib/tirol-archiv-helper.php';
+        include '../../lib/include.php';
+        include '../../lib/tirol-archiv-helper.php';
         
         $pdo = getPDO();
     } catch (Exception $e) {

@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "Admin - Startseite";
-require_once dirname(__DIR__, 2) . '/layout/header.php';
+require_once '../../layout/header.php';
 
 if (!isAdmin()) {
     die('❌ Zugriff verweigert! Nur für Administratoren.');

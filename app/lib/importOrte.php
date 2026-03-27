@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 if (!function_exists('getPDO')) {
-    include __DIR__ . '/include.php';
+    include 'include.php';
 }
 
 // ===========================
