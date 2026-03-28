@@ -22,6 +22,10 @@ $pageTitle = isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Stammbaum';
 // Layouts und URLs definieren
 $_layoutUrl = '/stammbaum/app/layout';
 $_projectUrl = '/stammbaum';
+
+$cssFile = $_layoutUrl . '/style-menu.css';
+$cssVersion = file_exists($cssFile) ? filemtime($cssFile) : time();
+
 ?>   
 
 <!DOCTYPE html>
@@ -30,7 +34,7 @@ $_projectUrl = '/stammbaum';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
-    <link rel="stylesheet" href="style-menu.css">
+    <link rel="stylesheet" href="<?= $_layoutUrl; ?>/style-menu.css?v=<?= $cssVersion; ?>">
     <?php if (isset($extraHead)) echo $extraHead; ?>
 </head>
 <body>

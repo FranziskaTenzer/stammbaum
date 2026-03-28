@@ -21,13 +21,6 @@ require_once '../../layout/header.php';
         <a href="traubuch-list.php" class="btn btn-primary">Traubücher ansehen</a>
     </div>
 
-    <?php if (isLoggedIn()): ?>
-    <div class="content-card admin-card">
-        <h3>⚙️ Admin-Bereich</h3>
-        <p>Verwalten Sie die Daten und Importe</p>
-        <a href="#" onclick="document.querySelector('.nav-section:nth-child(3) .nav-section-title').click()" class="btn btn-warning">Admin-Menü öffnen</a>
-    </div>
-    <?php endif; ?>
 </div>
 
 <?php require_once '../../layout/footer.php'; ?>
