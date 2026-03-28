@@ -45,7 +45,6 @@ if (!isAdmin()) {
             <li>Verlinkungen nach der Umstruktierung</li>
             <li>Als Datum auch xx oder 00 erlauben wenn die Zahlen nicht richtig zu erkennen waren</li>
             <li>test user darstellen (so lange so wenige Daten da sind)</li>
-            <li>Farbschema auf lila ändern, wie beim Login</li>
             <li>mobile Version versuchen</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li></li>

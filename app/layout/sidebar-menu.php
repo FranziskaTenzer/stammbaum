@@ -24,7 +24,7 @@ $_p = isset($_projectUrl) ? $_projectUrl : '/stammbaum';
             </h3>
             <ul class="nav-menu" style="display:block;">
                 <li><a href="<?= $_p ?>/app/views/user/index.php">🏠 Startseite</a></li>
-                <li><a href="<?= $_p ?>/app/views/user/index.php">👤 Profil</a></li>
+                <li><a href="<?= $_p ?>/app/views/user/profil.php">👤 Profil</a></li>
                 <li><a href="<?= $_p ?>/public/logout.php">🚪 Abmelden</a></li>
             </ul>
            

@@ -3,12 +3,19 @@
    ================================ */
 
 :root {
+    /* Primary Colors - Lila/Violett Scheme (matching login) */
     --primary-color: #667eea;
-    --primary-dark: #5568d3;
-    --primary-light: #f0f0f5;
+    --primary-dark: #764ba2;
+    --primary-light: #e8e1f5;
+    
+    /* Admin Colors - Changed from Orange to Purple tones */
     --admin-color: #764ba2;
-    --admin-light: #f0e6ff;
+    --admin-light: #f0ebf8;
+    
+    /* Danger/Warning Colors */
     --danger-color: #d32f2f;
+    
+    /* Text Colors */
     --text-primary: #333;
     --text-secondary: #666;
     --border-color: #ddd;
@@ -135,7 +142,7 @@ body {
 }
 
 .nav-section-title:hover {
-    background: var(--primary-color);
+    background: var(--primary-dark);
     color: white;
 }
 
@@ -183,8 +190,8 @@ body {
 
 .nav-menu > li > a:hover {
     background: var(--primary-light);
-    color: var(--primary-color);
-    border-left-color: var(--primary-color);
+    color: var(--primary-dark);
+    border-left-color: var(--primary-dark);
     padding-left: 22px;
 }
 
@@ -212,7 +219,7 @@ body {
 
 .subsection-toggle:hover {
     background: var(--admin-light);
-    color: var(--admin-color);
+    color: var(--primary-dark);
 }
 
 .subsection-icon {
@@ -262,7 +269,7 @@ body {
 
 .nav-submenu a:hover {
     background: var(--admin-light);
-    color: var(--admin-color);
+    color: var(--primary-dark);
     padding-left: 14px;
 }
 
@@ -399,7 +406,7 @@ body {
 }
 
 .btn-warning:hover {
-    background: #6b3fa0;
+    background: var(--primary-dark);
 }
 
 .btn-small {
@@ -508,9 +515,9 @@ body {
 }
 
 .alert-warning {
-    background: #f0e6ff;
+    background: #fff3e0;
     border-left-color: #764ba2;
-    color: #4a2070;
+    color: #764ba2;
 }
 
 .alert-danger {
@@ -582,13 +589,14 @@ body {
 .nav-menu li {
     animation: slideIn 0.2s ease;
 }
+
 /* ================================
    OVERVIEW SECTION TRAUBUCH STYLING
    ================================ */
 
 .overview-section-traubuch {
     background: white;
-    border: 2px solid #007bff;
+    border: 2px solid var(--primary-color);
     border-radius: 8px;
     padding: 20px;
     margin: 30px 0;
@@ -597,8 +605,8 @@ body {
 }
 
 .overview-section-traubuch h2 {
-    color: #007bff;
-    border-bottom: 3px solid #007bff;
+    color: var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
     padding-bottom: 10px;
     margin-top: 0;
     margin-bottom: 15px;
@@ -618,7 +626,7 @@ body {
     color: #555;
     margin-top: 20px;
     margin-bottom: 10px;
-    border-left: 4px solid #28a745;
+    border-left: 4px solid var(--admin-color);
     padding-left: 12px;
     display: flex;
     justify-content: space-between;
@@ -632,7 +640,7 @@ body {
 
 .traubuch-item {
     background: #f9f9f9;
-    border-left: 4px solid #764ba2;
+    border-left: 4px solid var(--admin-color);
     padding: 12px 15px;
     margin: 10px 0;
     border-radius: 4px;
