@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once  '../../app/lib/session-helper.php';
+require_once __DIR__ . '/session-helper.php';
 requireLogin();
 
 ini_set('display_errors', 1);

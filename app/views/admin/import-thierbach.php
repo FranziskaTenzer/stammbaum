@@ -12,7 +12,7 @@ $pdo = getPDO();
 $SKIP_AUTO_IMPORT = true;
 require_once '../../lib/importThierbach.php';
 
-runOrteImport();
+runThierbachImport();
 ?>
 
 <?php require_once '../../layout/footer.php'; ?>

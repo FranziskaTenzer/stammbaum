@@ -12,7 +12,6 @@ $pdo = getPDO();
 $SKIP_AUTO_IMPORT = true;
 require_once '../../lib/db-init.php';
 
-runOrteImport();
 ?>
 
 <?php require_once '../../layout/footer.php'; ?>

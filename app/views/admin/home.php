@@ -33,10 +33,10 @@ if (!isAdmin()) {
         <h3>To Do List:</h3>
         <ul>
             <li>Re-create-all überschreibt Werte, die beim einzelnen aufrufen nicht überschrieben werden</li>
-            
+            <li>Kontakt Formular, für den User, Auflistung der Nachrichten für den Admin inkl. der 
+            	Möglichkeit zu Antworten und Feedback zu geben</li>
             <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
             <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
-            <li>Verlinkungen nach der Umstruktierung</li>
             <li>Als Datum auch xx oder 00 erlauben wenn die Zahlen nicht richtig zu erkennen waren</li>
             <li>mobile Version versuchen</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
