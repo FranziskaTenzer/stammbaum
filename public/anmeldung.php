@@ -28,13 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = '❌ Die Passwörter stimmen nicht überein.';
     } elseif (strlen($password1) < 6) {
         $error = '❌ Das Passwort muss mindestens 6 Zeichen lang sein.';
-    } elseif (!in_array($zahlungstyp, ['KREDITKARTE', 'PAYPAL'], true)) {
+    } 
+    /* elseif (!in_array($zahlungstyp, ['KREDITKARTE', 'PAYPAL'], true)) {
         $error = '❌ Bitte eine gültige Zahlungsart auswählen.';
     } elseif ($zahlungsinfo === '') {
         $error = '❌ Bitte Zahlungsinformation angeben.';
     } elseif ($zahlungstyp === 'PAYPAL' && !filter_var($zahlungsinfo, FILTER_VALIDATE_EMAIL)) {
         $error = '❌ Bitte eine gültige PayPal E-Mail-Adresse eingeben.';
-    } else {
+    }*/ else {
         require_once '../app/lib/include.php';
         $pdo = getPDO();
 
@@ -52,11 +53,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Passwort hashen und Benutzer anlegen
                 $password_hash = password_hash($password1, PASSWORD_DEFAULT);
+                // TODO: falls Zahlungsdaten später mit erfasst werden, dass wieder hinzufügen
+                // vorname, nachname, adresse, zahlungstyp, zahlungsinfo,
+                // ?, ?, ?, ?, ?,
                 $stmt = $pdo->prepare(
-                    "INSERT INTO user_profile (username, email, vorname, nachname, adresse, zahlungstyp, zahlungsinfo, password_hash)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO user_profile (username, email, password_hash)
+                     VALUES (?, ?, ?)"
                 );
-                $stmt->execute([$username, $email, $vorname, $nachname, $adresse, $zahlungstyp, $zahlungsinfo, $password_hash]);
+                // $vorname, $nachname, $adresse, $zahlungstyp, $zahlungsinfo, 
+                $stmt->execute([$username, $email, $password_hash]);
                 $success = '✅ Registrierung erfolgreich! Du wirst zum Login weitergeleitet...';
             }
         }
@@ -280,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="password" id="password2" name="password2" required
                    minlength="6" placeholder="Passwort bestätigen" autocomplete="new-password">
         </div>
-
+<!-- 
         <div class="section-divider">Persönliche Daten</div>
 
         <div class="form-group">
@@ -319,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    value="<?= htmlspecialchars($_POST['zahlungsinfo'] ?? '') ?>"
                    placeholder="1234 5678 9012 3456">
         </div>
-
+ -->
         <button type="submit">Jetzt registrieren</button>
     </form>
 

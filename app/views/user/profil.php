@@ -17,19 +17,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (isset($_POST['update_profile'])) {
         $fields = [
-            'email' => trim($_POST['email']),
+            'email' => trim($_POST['email']) /*,
             'vorname' => trim($_POST['vorname']),
             'nachname' => trim($_POST['nachname']),
             'adresse' => trim($_POST['adresse']),
             'zahlungstyp' => $_POST['zahlungstyp'] === 'KREDITKARTE' ? 'KREDITKARTE' : 'PAYPAL',
-            'zahlungsinfo' => trim($_POST['zahlungsinfo'])
+            'zahlungsinfo' => trim($_POST['zahlungsinfo']) */
         ];
         $stmt = $pdo->prepare(
-            "UPDATE user_profile SET email=?, vorname=?, nachname=?, adresse=?, zahlungstyp=?, zahlungsinfo=? WHERE username=?"
+            "UPDATE user_profile SET email=? WHERE username=?"
         );
-        $stmt->execute([$fields['email'], $fields['vorname'], $fields['nachname'], $fields['adresse'], $fields['zahlungstyp'], $fields['zahlungsinfo'], $username]);
+        // , vorname=?, nachname=?, adresse=?, zahlungstyp=?, zahlungsinfo=?
+        // , $fields['vorname'], $fields['nachname'], $fields['adresse'], $fields['zahlungstyp'], $fields['zahlungsinfo']
+        $stmt->execute([$fields['email'], $username]);
         $message = "Profil erfolgreich gespeichert!";
-    }
+    } 
     // Passwort ändern
     if (isset($_POST['pwchange']) && $_POST['new_password1'] && $_POST['new_password2']) {
         if ($_POST['new_password1'] === $_POST['new_password2']) {
@@ -39,6 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $message = "Passwörter stimmen nicht überein!";
         }
+    }
+    // Account löschen
+    if (isset($_POST['delete_account'])) {
+        // Nutzer muss eingeloggt sein & $pdo muss bereit stehen!
+        $username = $_SESSION['username'];
+        $stmt = $pdo->prepare("DELETE FROM user_profile WHERE username=?");
+        $stmt->execute([$username]);
+        session_destroy();
+        header("Location: /stammbaum/public/login.php?deleted=1");
+        exit;
     }
 }
 
@@ -94,7 +106,7 @@ if (!$user) {
             <label for="email">E-Mail:</label>
             <input type="email" required id="email" name="email" value="<?=htmlspecialchars($user['email'])?>">
         </div>
-        <div class="form-group">
+      <!--   <div class="form-group">
             <label for="vorname">Vorname:</label>
             <input type="text" id="vorname" name="vorname" value="<?=htmlspecialchars($user['vorname'])?>">
         </div>
@@ -118,9 +130,10 @@ if (!$user) {
                 <?= $user['zahlungstyp']=='KREDITKARTE'?'Kreditkartennummer:':'Paypal E-Mail:' ?>
             </label>
             <input type="text" name="zahlungsinfo" id="zahlungsinfo" required value="<?=htmlspecialchars($user['zahlungsinfo'])?>">
-        </div>
+        </div>-->
         <button class="submit-btn" type="submit" name="update_profile">Speichern</button>
     </form>
+    
     <form method="post" autocomplete="off" style="margin-top:28px;">
         <h2 style="color:#764ba2; font-size:1.14em;">Passwort ändern</h2>
         <div class="form-group">
@@ -133,6 +146,12 @@ if (!$user) {
         </div>
         <button class="submit-btn" type="submit" name="pwchange">Passwort ändern</button>
     </form>
+    
+    <form method="post" onsubmit="return confirm('Willst du deinen Account wirklich unwiderruflich löschen?');">
+    <button class="submit-btn" type="submit" name="delete_account" style="background:#d32f2f;margin-top:20px;">
+        Account unwiderruflich löschen
+    </button>
+</form>
 </div>
 <script>switchPaymentFields();</script>
 </body>

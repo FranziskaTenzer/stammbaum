@@ -33,13 +33,7 @@ if (!isAdmin()) {
         <h3>To Do List:</h3>
         <ul>
             <li>Re-create-all überschreibt Werte, die beim einzelnen aufrufen nicht überschrieben werden</li>
-            <li><b>DB Tabelle für User:</b>
-            	<ul>
-            	 <li>Registrierung</li>
-            <li>Löschen</li>
-            	</ul>
-            </li>
-           
+            
             <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
             <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
             <li>Verlinkungen nach der Umstruktierung</li>
@@ -50,6 +44,7 @@ if (!isAdmin()) {
             <li></li>
             <li><b>Für später:</b>
                 <ul>
+                	<li>automatische Emails bei Registrierung</li>
                 	<li>e2e Tests, aktuell noch nicht nötig</li>
                 	<li>paypal Anbindung, abo etc. ODER Stammbaum teilweise mit * ausgeben, für die komplette Ausgabe einmal zahlen (paypal oder creditkarte)</li>
                 </ul>
