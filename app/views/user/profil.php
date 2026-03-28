@@ -2,12 +2,15 @@
 $pageTitle = "Traubuch-Liste";
 require_once '../../layout/header.php';
 
-$username = $_SESSION['username'];
-if (!function_exists('getPDO')) {
-    include '../../lib/include.php';
-    global $pdo;
-    
+require_once '../../lib/include.php';
+
+try {
+    $pdo = getPDO();
+} catch (Exception $e) {
+    die("Datenbankverbindung nicht verfügbar: " . htmlspecialchars($e->getMessage()));
 }
+
+$username = $_SESSION['username'];
 
 // PROFIL UPDATEN
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
