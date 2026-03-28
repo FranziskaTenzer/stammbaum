@@ -4,49 +4,50 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
+    $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    
-    // Beispiel-Anmeldedaten
-    $valid_username = 'admin';
-    $valid_password = 'stammbaum2024';
-    
-    $valid_user = 'user';
-    $valid_pass = 'stammbaum2024';
-    
-    // Compute project URL prefix relative to the web root (same approach as session-helper.php)
-  /*  $realDocRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
-    $realFilePath = realpath(__FILE__);
-    $docRoot = $realDocRoot !== false ? rtrim(str_replace('\\', '/', $realDocRoot), '/') : '';
-    $projectPath = $realFilePath !== false ? str_replace('\\', '/', dirname(dirname($realFilePath))) : dirname(dirname(__FILE__));
-    $projectUrl = rtrim(str_replace($docRoot, '', $projectPath), '/');
-    // Strip any newline characters to prevent header injection
-    $projectUrl = str_replace(["\r", "\n"], '', $projectUrl);
-    */
+
     $projectUrl = '';
-    
-    if ($username === $valid_username && $password === $valid_password) {
+
+    require_once '../app/lib/include.php';
+    $pdo = getPDO();
+
+    // Ensure is_admin column exists in user_profile (safe one-time migration)
+    try {
+        $colCheck = $pdo->query(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'user_profile'
+               AND COLUMN_NAME = 'is_admin'"
+        );
+        if ($colCheck->fetchColumn() == 0) {
+            $pdo->exec("ALTER TABLE user_profile ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0");
+        }
+    } catch (PDOException $e) {
+        // Table may not exist yet – proceed normally
+        error_log('login.php migration check failed: ' . $e->getMessage());
+    }
+
+    $stmt = $pdo->prepare("SELECT username, password_hash, is_admin FROM user_profile WHERE username = ?");
+    $stmt->execute([$username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Always run password_verify to prevent timing-based username enumeration
+    $hashToCheck = $user ? $user['password_hash'] : '$2y$10$invalidhashforenumerationprotection00000000000000000000';
+    if ($user && password_verify($password, $hashToCheck)) {
         $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $username;
-        $_SESSION['is_admin'] = true;
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['is_admin'] = (bool)$user['is_admin'];
         $_SESSION['login_time'] = time();
-        
-        //header('Location: ../app/views/admin/home.php');
-        
-        header('Location: ' . $projectUrl . '/stammbaum/app/views/admin/home.php');
-        exit;
-    } elseif ($username === $valid_user && $password === $valid_pass) {
-        $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $username;
-        $_SESSION['is_admin'] = false;
-        $_SESSION['login_time'] = time();
-        
-       // header('Location: ../app/views/user/index.php');
-        
-        header('Location: ' . $projectUrl . '/stammbaum/app/views/user/index.php');
+
+        if ($user['is_admin']) {
+            header('Location: ' . $projectUrl . '/stammbaum/app/views/admin/home.php');
+        } else {
+            header('Location: ' . $projectUrl . '/stammbaum/app/views/user/index.php');
+        }
         exit;
     } else {
-        $error = '❌ Ungültige Anmeldedaten!';
+        $error = '❌ Benutzername oder Passwort ist falsch!';
     }
 }
 ?>
@@ -151,19 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-left: 4px solid #d32f2f;
         }
         
-        .credentials-hint {
-            background: #f0f0f5;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 20px;
-            font-size: 0.85em;
-            color: #666;
-        }
-        
-        .credentials-hint strong {
-            color: #333;
-        }
-        
         .register-link {
             text-align: center;
             margin-top: 18px;
@@ -196,22 +184,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form method="POST" action="">
         <div class="form-group">
             <label for="username">Benutzername:</label>
-            <input type="text" id="username" name="username" required autofocus value="admin">
+            <input type="text" id="username" name="username" required autofocus>
         </div>
         
         <div class="form-group">
             <label for="password">Passwort:</label>
-            <input type="password" id="password" name="password" required value="stammbaum2024">
+            <input type="password" id="password" name="password" required>
         </div>
         
         <button type="submit">Anmelden</button>
     </form>
-    
-    <div class="credentials-hint">
-        <strong>Demo-Anmeldedaten:</strong><br>
-        Benutzername: <code>admin</code><br>
-        Passwort: <code>stammbaum2024</code>
-    </div>
     
     <div class="register-link">
         Noch kein Account? <a href="anmeldung.php">Jetzt registrieren</a>
