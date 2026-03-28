@@ -49,11 +49,10 @@ if (!isAdmin()) {
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li></li>
             <li><b>Für später:</b>
-            <ul>
-             <li>e2e Tests, aktuell noch nicht nötig</li>
-            <li>paypal Anbindung, abo etc. ODER Stammbaum teilweise mit * ausgeben, für die komplette Ausgabe einmal zahlen (paypal oder creditkarte)</li>
-        
-            </ul>
+                <ul>
+                	<li>e2e Tests, aktuell noch nicht nötig</li>
+                	<li>paypal Anbindung, abo etc. ODER Stammbaum teilweise mit * ausgeben, für die komplette Ausgabe einmal zahlen (paypal oder creditkarte)</li>
+                </ul>
             </li>
             
             </ul>
