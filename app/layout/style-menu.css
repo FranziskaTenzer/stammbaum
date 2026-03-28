@@ -383,7 +383,7 @@ body {
     display: inline-block;
     padding: 10px 20px;
     border-radius: 6px;
-    text-decoration: none;
+    text-decoration: none;  /* ← WICHTIG: entfernt Unterstriche */
     transition: var(--transition);
     font-weight: 500;
     border: none;
@@ -392,26 +392,61 @@ body {
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  /* ← FARBVERLAUF */
     color: white;
 }
 
 .btn-primary:hover {
-    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .btn-warning {
-    background: var(--admin-color);
+    background: linear-gradient(135deg, #764ba2 0%, #5568d3 100%);  /* ← FARBVERLAUF */
     color: white;
 }
 
 .btn-warning:hover {
-    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(118, 75, 162, 0.3);
 }
 
 .btn-small {
     padding: 6px 12px;
     font-size: 0.9em;
+}
+
+/* Optional: Alle Links als Button formatieren */
+a.btn {
+    text-decoration: none !important;  /* ← Doppelt sicherstellen */
+    display: inline-block;
+}
+
+a.btn:visited {
+    color: white;  /* ← Besuchte Links auch weiß */
+}
+
+.submit-btn { 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+    color:#fff; 
+    border:none; 
+    font-weight:600; 
+    cursor:pointer; 
+    margin-top:10px;
+    
+    /* Größer machen */
+    padding: 14px 24px;        /* Vertikale und horizontale Innenabstände */
+    font-size: 16px;            /* Schriftgröße erhöhen */
+    min-height: 45px;           /* Mindesthöhe */
+    border-radius: 8px;         /* Optionales Rounding */
+    width: 100%;                /* Volle Breite ausnutzen */
+    transition: all 0.3s ease;  /* Sanfte Animation */
+}
+
+/* Optional: Hover-Effekt */
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 /* ================================
