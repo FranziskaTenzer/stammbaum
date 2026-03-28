@@ -236,8 +236,25 @@ function parseLine($line) {
 function runThierbachImport() {
     global $pdo;
     
+    // Versuche, Daten aus POST zu bekommen, sonst aus Datei
     $daten = $_POST['daten_import'] ?? '';
-    if (!$daten) return ['imported' => 0, 'errors' => 0];
+    
+    // Wenn keine POST-Daten, versuche aus Datei zu lesen
+    if (!$daten) {
+        // Pfad zur Thierbach-Datei
+        $filePath = dirname(dirname(dirname(__DIR__))) . '/stammbaum-daten/Thierbach-komplett.txt';
+        
+        if (!file_exists($filePath)) {
+            echo "❌ Datei nicht gefunden: $filePath";
+            return ['imported' => 0, 'errors' => 0];
+        }
+        
+        $daten = file_get_contents($filePath);
+        if (!$daten) {
+            echo "❌ Fehler beim Lesen der Datei: $filePath";
+            return ['imported' => 0, 'errors' => 0];
+        }
+    }
     
     $lines = preg_split("/\r\n|\n|\r/", $daten);
     $imported = 0;
@@ -324,8 +341,13 @@ if (!isset($SKIP_AUTO_IMPORT)) {
     $pdo = getPDO();
     
     echo "<br /><br />";
-    runThierbachImport();
+    $result = runThierbachImport();
     
-    echo "<hr><strong><h2>Import Thierbach erfolgreich</h2></strong><br /><br /><br />";
+    echo "<hr><strong><h2>Import Thierbach erfolgreich</h2></strong><br />";
+    echo "✅ Importiert: " . $result['imported'] . " Einträge";
+    if ($result['errors'] > 0) {
+        echo " | ❌ Fehler: " . $result['errors'];
+    }
+    echo "<br /><br /><br />";
     echo "<a href='../../views/user/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a><br /><br />";
 }

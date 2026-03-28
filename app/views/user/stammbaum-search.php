@@ -78,9 +78,7 @@ AND p.nachname LIKE :nachname
         
         <div class="form-group">
             <label for="geburtsdatum">Geburtsdatum (optional):</label>
-            <input type="text" id="geburtsdatum" name="geburtsdatum" placeholder="z.B. 25.12.1982 oder xx.12.1982" value="<?= htmlspecialchars($geburtsdatum) ?>">
-            <small>Erlaubte Formate: TT.MM.JJJJ, xx.MM.JJJJ, xx.xx.JJJJ, 00.00.JJJJ oder JJJJ-MM-TT, JJJJ-MM-xx, JJJJ-xx-xx</small>
-        </div>
+      		<input type="text" id="geburtsdatum" name="geburtsdatum" placeholder="z.B. 25.12.1982 oder xx.12.1982" value="<?= htmlspecialchars($geburtsdatum ?? '') ?>">  </div>
         
         <button type="submit" class="btn btn-primary">🔍 Suchen</button>
     </form>
