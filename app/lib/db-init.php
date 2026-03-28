@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS ehe (
     mutter_id INT,
     mutter_alter INT,
     
-    heiratsdatum DATE NULL,
+    heiratsdatum VARCHAR(10) NULL,
     traubuch VARCHAR(255),
     
     CONSTRAINT unique_ehe UNIQUE (vater_id, mutter_id, heiratsdatum)
@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS person (
     vater_id INT NULL,
     mutter_id INT NULL,
     
-    geburtsdatum DATE NULL,
-    sterbedatum DATE NULL,
+    geburtsdatum VARCHAR(10) NULL,
+    sterbedatum VARCHAR(10) NULL,
     geburtsort VARCHAR(255) NULL,
     sterbeort VARCHAR(255) NULL,
     hof VARCHAR(255) NULL,

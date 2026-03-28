@@ -14,7 +14,15 @@ if (!function_exists('getPDO')) {
 function parseDate($text) {
     if (!$text) return null;
     try {
-        return date("Y-m-d", strtotime(str_replace('.', '-', $text)));
+        // Handle flexible date formats with xx or 00 for unknown day/month
+        if (preg_match('/^(0[1-9]|[12]\d|3[01]|xx|00)\.(0[1-9]|1[0-2]|xx|00)\.(\d{4})$/', $text, $m)) {
+            $day   = ($m[1] === '00') ? 'xx' : $m[1];
+            $month = ($m[2] === '00') ? 'xx' : $m[2];
+            $year  = $m[3];
+            return "$year-$month-$day";
+        }
+        $timestamp = strtotime(str_replace('.', '-', $text));
+        return ($timestamp !== false) ? date("Y-m-d", $timestamp) : null;
     } catch (Exception $e) {
         return null;
     }
