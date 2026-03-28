@@ -163,6 +163,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .credentials-hint strong {
             color: #333;
         }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .register-link a {
+            color: #764ba2;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .register-link a:hover {
+            color: #5a3a8a;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -193,6 +211,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <strong>Demo-Anmeldedaten:</strong><br>
         Benutzername: <code>admin</code><br>
         Passwort: <code>stammbaum2024</code>
+    </div>
+    
+    <div class="register-link">
+        Noch kein Account? <a href="anmeldung.php">Jetzt registrieren</a>
     </div>
 </div>
 
