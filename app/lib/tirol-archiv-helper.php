@@ -199,9 +199,9 @@ function parseNamesFromHtml($html, $prefix) {
         }
     }
     
-    // Muster 2: <p>Name (Ort1, Ort2)</p>
+    // Muster 2: <p>Name: Ort1, Ort2</p> oder <p>Name (Ort1, Ort2)</p>
     if (empty($names)) {
-        if (preg_match_all('/<p[^>]*>([^<]+(?:' . preg_quote($prefix, '/') . ')[^<]*)<\/p>/i', $html, $matches)) {
+        if (preg_match_all('/<p[^>]*>([^<]*(?::|[(\-–])[^<]+)<\/p>/i', $html, $matches)) {
             foreach ($matches[1] as $match) {
                 $entry = parseNameEntry($match, $prefix);
                 if ($entry) {
@@ -250,6 +250,12 @@ function parseNameEntry($text, $prefix) {
     }
     // Muster 2: "Name – Ort1, Ort2" oder "Name - Ort1, Ort2"
     elseif (preg_match('/^([^–-]+)\s*[–-]\s*(.+)$/', $text, $m)) {
+        $name = trim($m[1]);
+        $places = array_map('trim', explode(',', $m[2]));
+        $places = array_filter($places);
+    }
+    // Muster 3: "Name: Ort1, Ort2" (Name ohne Leerzeichen, gefolgt von Doppelpunkt)
+    elseif (preg_match('/^([\p{L}\'-]+)\s*:\s*(.+)$/u', $text, $m)) {
         $name = trim($m[1]);
         $places = array_map('trim', explode(',', $m[2]));
         $places = array_filter($places);
