@@ -134,4 +134,4 @@ AND p.nachname LIKE :nachname
 </div>
 <?php endif; ?>
 
-<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
+<?php require_once '../../layout/footer.php'; ?>

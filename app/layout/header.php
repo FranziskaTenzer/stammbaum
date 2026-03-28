@@ -22,21 +22,22 @@ $pageTitle = isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Stammbaum';
 // Layouts und URLs definieren
 $_layoutUrl = '/stammbaum/app/layout';
 $_projectUrl = '/stammbaum';
-?>
+?>   
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
-    <link rel="stylesheet" href="<?= $_layoutUrl ?>/style-menu.css">
+    <link rel="stylesheet" href="style-menu.css">
     <?php if (isset($extraHead)) echo $extraHead; ?>
 </head>
 <body>
     <table class="layout-table">
         <tr>
             <td class="sidebar-cell">
-                <?php include __DIR__ . '/sidebar-menu.php'; ?>
+                <?php include 'sidebar-menu.php'; ?>
             </td>
             <td class="content-cell">
                 <main class="main-content">

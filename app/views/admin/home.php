@@ -32,15 +32,32 @@ if (!isAdmin()) {
     <div class="content-card admin-card">
         <h3>To Do List:</h3>
         <ul>
-        <li>Re-create-all überschreibt Werte, die beim einzelnen aufrufen nicht überschrieben werden</li>
-        <li>DB Tabelle für User</li>
-        <li>- Registrierung (Bezahlung?)</li>
-        <li>- Löschen</li>
-        <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
-        <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
-        <li>Verlinkungen nach der Umstruktierung</li>
-        <li>Als Datum auch xx oder 00 erlauben wenn die Zahlen nicht richtig zu erkennen waren</li>
-        </ul>
+            <li>Re-create-all überschreibt Werte, die beim einzelnen aufrufen nicht überschrieben werden</li>
+            <li><b>DB Tabelle für User:</b>
+            	<ul>
+            	 <li>Registrierung</li>
+            <li>Löschen</li>
+            	</ul>
+            </li>
+           
+            <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
+            <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
+            <li>Verlinkungen nach der Umstruktierung</li>
+            <li>Als Datum auch xx oder 00 erlauben wenn die Zahlen nicht richtig zu erkennen waren</li>
+            <li>test user darstellen (so lange so wenige Daten da sind)</li>
+            <li>Farbschema auf lila ändern, wie beim Login</li>
+            <li>mobile Version versuchen</li>
+            <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
+            <li></li>
+            <li><b>Für später:</b>
+            <ul>
+             <li>e2e Tests, aktuell noch nicht nötig</li>
+            <li>paypal Anbindung, abo etc. ODER Stammbaum teilweise mit * ausgeben, für die komplette Ausgabe einmal zahlen (paypal oder creditkarte)</li>
+        
+            </ul>
+            </li>
+            
+            </ul>
     </div>
     <br />
     <div class="content-card admin-card">
@@ -72,4 +89,4 @@ if (!isAdmin()) {
 
 </div>
 
-<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
+<?php require_once '../../layout/footer.php'; ?>

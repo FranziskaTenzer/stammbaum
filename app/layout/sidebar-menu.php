@@ -24,7 +24,11 @@ $_p = isset($_projectUrl) ? $_projectUrl : '/stammbaum';
             </h3>
             <ul class="nav-menu" style="display:block;">
                 <li><a href="<?= $_p ?>/app/views/user/index.php">🏠 Startseite</a></li>
+                <li><a href="<?= $_p ?>/app/views/user/index.php">👤 Profil</a></li>
+                <li><a href="<?= $_p ?>/public/logout.php">🚪 Abmelden</a></li>
             </ul>
+           
+          
         </div>
 
         <!-- ================================
@@ -82,19 +86,11 @@ $_p = isset($_projectUrl) ? $_projectUrl : '/stammbaum';
                     </ul>
                 </li>
 
-                <!-- Profil -->
-                <li class="nav-subsection">
-                    <span class="subsection-toggle" onclick="toggleSubsection(event)">
-                        <span class="subsection-icon">▶</span>
-                        👤 Profil
-                    </span>
-                    <ul class="nav-submenu">
-                        <li><a href="<?= $_p ?>/public/logout.php">🚪 Abmelden</a></li>
-                    </ul>
-                </li>
+              
             </ul>
         </div>
         <?php endif; ?>
+        
     </nav>
 </aside>
 

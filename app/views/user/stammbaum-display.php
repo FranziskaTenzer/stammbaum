@@ -493,7 +493,7 @@ $visitedDesc = [];
 $p = $personsById[$startId];
 
 ?>
-<a href="stammbaum-search.php?vorname=<?= $p['vorname']; ?>&nachname=<?= $p['nachname']?>&geburtsdatum=<?= $p['geburtsdatum']?>" class="btn btn-primary">Zurück zur Übersicht</a>
+<a href="stammbaum-search.php?vorname=<?= $p['vorname']; ?>&nachname=<?= $p['nachname']?>" class="btn btn-primary">Zurück zur Übersicht</a>
 <br />
 
 <h2 style="text-align:center;">Stammbaum</h2>
