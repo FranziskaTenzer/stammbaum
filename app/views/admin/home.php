@@ -36,13 +36,11 @@ if (!isAdmin()) {
             <li>Kontakt Formular, für den User, Auflistung der Nachrichten für den Admin inkl. der 
             	Möglichkeit zu Antworten und Feedback zu geben</li>
             <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
-            <li>Personensuche: stammbaum-search.php Eltern mit anzeigen in der Tabelle</li>
             <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
-            <li>mobile Version versuchen</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li>cookies</li>
             <li>Impressum und Datenschutz</li>
-            <li></li>
+            <li>Spenden Info</li>
             <li></li>
             
             <li><b>Für später:</b>
@@ -55,18 +53,7 @@ if (!isAdmin()) {
                 	
                 </ul>
             </li>
-            
-            Software:
-Cookies
-Impressum
-Datenschutz
-Spenden Info
-
-
-Admin sieht alles ohne bezahlen
-
-Prüfen ob beim Drop table nur die Stammbaumtabellen gelöscht werden und nicht die User etc.
-            
+         
             </ul>
     </div>
     <br />
