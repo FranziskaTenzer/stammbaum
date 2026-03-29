@@ -7,7 +7,7 @@ $_p = isset($_projectUrl) ? $_projectUrl : '/stammbaum';
 $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
 ?>
 
-<!-- ← Header wird jetzt OBEN angezeigt (nur auf Mobile) -->
+<!-- ← Header wird jetzt OBEN angezeigt (unter dem X) -->
 <div class="sidebar-header">
     <h1>🌳 Stammbaum</h1>
 </div>

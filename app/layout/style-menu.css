@@ -53,7 +53,6 @@ body {
     width: 100%;
     overflow: hidden;
 }
-
 /* ================================
    HAMBURGER BUTTON (Desktop Hidden)
    ================================ */
@@ -76,6 +75,7 @@ body {
     gap: 5px;
     transition: var(--transition);
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    padding: 0;
 }
 
 .hamburger-menu:hover {
@@ -89,6 +89,7 @@ body {
     background: white;
     border-radius: 2px;
     transition: var(--transition);
+    display: block;
 }
 
 .hamburger-menu.active span:nth-child(1) {
@@ -718,28 +719,80 @@ a.btn:visited {
     margin-left: auto;
     font-weight: normal;
 }
-
 /* ================================
    RESPONSIVE DESIGN (< 768px)
    ================================ */
 
 @media (max-width: 768px) {
-    /* Hamburger Button zeigen */
-    .hamburger-menu {
-        display: flex;
+    /* ← LAYOUT WRAPPER - FLEX COLUMN auf Mobile */
+    .layout-wrapper {
+        flex-direction: column;
     }
     
-    /* ← SIDEBAR POSITIONIERUNG FÜR MOBILE */
+    /* ← Hamburger Button zeigen */
+    .hamburger-menu {
+        display: flex;
+        position: relative;
+        top: auto;
+        left: auto;
+        width: 100%;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        border: none;
+        border-radius: 0;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        z-index: 100;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        padding: 0;
+        margin: 0;
+        transition: var(--transition);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .hamburger-menu:hover {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .hamburger-menu span {
+        width: 24px;
+        height: 3px;
+        background: white;
+        border-radius: 2px;
+        transition: var(--transition);
+        display: block;
+    }
+
+    .hamburger-menu.active span:nth-child(1) {
+        transform: rotate(45deg) translate(8px, 8px);
+    }
+
+    .hamburger-menu.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .hamburger-menu.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+    }
+    
+    /* ← SIDEBAR auf Mobile - VERSTECKT */
     .sidebar {
-        position: fixed;
+        position: absolute;
         left: 0;
-        top: 0;
-        height: 100vh;
+        top: 50px;
+        height: calc(100vh - 50px);
         width: 280px;
         transform: translateX(-100%);
         z-index: 1400;
         background: white;
-        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column;
     }
     
     /* ← SIDEBAR SICHTBAR WENN AKTIV */
@@ -747,22 +800,24 @@ a.btn:visited {
         transform: translateX(0);
     }
     
-    /* ← SIDEBAR HEADER OBEN POSITIONIERT */
+    /* ← SIDEBAR HEADER - MIT WEISSER SCHRIFT */
     .sidebar .sidebar-header {
         padding: 20px 15px;
         background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
         color: white;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
         flex-shrink: 0;
         position: relative;
+        border-bottom: 1px solid var(--border-color);
     }
     
     .sidebar .sidebar-header h1 {
-        font-size: 1.5em;
+        font-size: 1.3em;
         font-weight: 600;
         margin: 0;
+        color: white;  /* ← WEISSE SCHRIFT */
     }
     
     /* ← SIDEBAR NAV SCROLLBAR */
@@ -783,10 +838,19 @@ a.btn:visited {
         flex-shrink: 0;
     }
     
+    /* ← CONTENT WRAPPER - FULL WIDTH */
+    .content-wrapper {
+        width: 100%;
+        flex: 1;
+    }
+    
     /* Main Content anpassen */
     .main-content {
         padding: 20px;
-        padding-top: 80px;
+        padding-top: 20px;
+        width: 100%;
+        height: calc(100vh - 50px);
+        overflow-y: auto;
     }
     
     /* Seiten Inhalte anpassen */
@@ -821,9 +885,20 @@ a.btn:visited {
 }
 
 @media (max-width: 480px) {
+    .hamburger-menu {
+        height: 45px;
+        gap: 4px;
+    }
+    
+    .hamburger-menu span {
+        width: 20px;
+        height: 2px;
+    }
+    
     .main-content {
         padding: 15px;
-        padding-top: 70px;
+        padding-top: 15px;
+        height: calc(100vh - 45px);
     }
     
     .page-header h1 {
@@ -837,5 +912,12 @@ a.btn:visited {
     
     .sidebar {
         width: 250px;
+        top: 45px;
+        height: calc(100vh - 45px);
+    }
+    
+    .sidebar .sidebar-header h1 {
+        font-size: 1.2em;
+        color: white;  /* ← WEISSE SCHRIFT */
     }
 }

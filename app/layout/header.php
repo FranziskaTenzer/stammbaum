@@ -38,14 +38,14 @@ $cssVersion = file_exists($cssFile) ? filemtime($cssFile) : time();
     <?php if (isset($extraHead)) echo $extraHead; ?>
 </head>
 <body>
-    <!-- ← Hamburger Button für Mobile (mit Close-Button X) -->
-    <button class="hamburger-menu" id="hamburgerBtn" aria-label="Menu toggle">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
-
     <div class="layout-wrapper">
+        <!-- ← Hamburger Button JETZT HIER (nicht fixed/absolute) -->
+        <button class="hamburger-menu" id="hamburgerBtn" aria-label="Menu toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        
         <!-- ← Sidebar mit Navigation -->
         <aside class="sidebar" id="sidebar">
             <?php include 'sidebar-menu.php'; ?>
