@@ -36,18 +36,42 @@ if (!isAdmin()) {
             <li>Kontakt Formular, für den User, Auflistung der Nachrichten für den Admin inkl. der 
             	Möglichkeit zu Antworten und Feedback zu geben</li>
             <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
+            <li>Personensuche: stammbaum-search.php Eltern mit anzeigen in der Tabelle</li>
             <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
-            <li>Als Datum auch xx oder 00 erlauben wenn die Zahlen nicht richtig zu erkennen waren</li>
             <li>mobile Version versuchen</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
+            <li>cookies</li>
+            <li>Impressum und Datenschutz</li>
+            <li>Test User 
+                <ul>
+                 <li>-> Profil nicht bearbeitbar, pw nicht zu ändern</li>
+                <li>-> sieht Namen Ende nur mit *** Daten stehen auf der Login Seite</li>
+                </ul>
+            </li>
             <li></li>
+            <li></li>
+            
             <li><b>Für später:</b>
                 <ul>
                 	<li>automatische Emails bei Registrierung</li>
                 	<li>e2e Tests, aktuell noch nicht nötig</li>
-                	<li>paypal Anbindung, abo etc. ODER Stammbaum teilweise mit * ausgeben, für die komplette Ausgabe einmal zahlen (paypal oder creditkarte)</li>
+                	<li>paypal Anbindung bzw. Kreditkarte</li>
+                	<li>kompletten Stammbaum wenn 100€ bezahlt wurden</li>
+                	<li>Stammbaum inkl. Tanten und Onkel 200€</li>
+                	
                 </ul>
             </li>
+            
+            Software:
+Cookies
+Impressum
+Datenschutz
+Spenden Info
+
+
+Admin sieht alles ohne bezahlen
+
+Prüfen ob beim Drop table nur die Stammbaumtabellen gelöscht werden und nicht die User etc.
             
             </ul>
     </div>

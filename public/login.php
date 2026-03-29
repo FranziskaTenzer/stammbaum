@@ -193,6 +193,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <button type="submit">Anmelden</button>
+        <div style="background:#f3f3f3; padding:10px; margin-top:10px; border-radius:5px;">
+          <strong>Testzugang:</strong><br>
+          Benutzername: TestAccount<br>
+          Passwort: Test123
+        </div>
     </form>
     
     <div class="register-link">

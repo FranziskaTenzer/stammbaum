@@ -20,7 +20,7 @@ $sqlDeleteDB = " SET FOREIGN_KEY_CHECKS = 0;
 SET @tables = (
   SELECT GROUP_CONCAT(CONCAT('`', table_name, '`'))
   FROM information_schema.tables
-  WHERE table_schema = 'stammbaum'
+  WHERE table_name in ('ehe', 'person')
 );
     
 SET @sql = CONCAT('DROP TABLE IF EXISTS ', @tables);
@@ -95,8 +95,7 @@ CREATE TABLE IF NOT EXISTS person (
 $stmt = $pdo->prepare($sqlCreatePerson);
 $stmt->execute();
 
-$sqlMultiEhe = "
-    
+$sqlMultiEhe = "    
 CREATE UNIQUE INDEX unique_ehe_multi
 ON ehe (externe_id, vater_id, mutter_id, heiratsdatum);
 ";
