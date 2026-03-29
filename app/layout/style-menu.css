@@ -719,6 +719,38 @@ a.btn:visited {
     margin-left: auto;
     font-weight: normal;
 }
+/* Delete Button - Solid Red */
+.delete-btn {
+    background: #d32f2f !important;
+    color: white !important;
+    border: none !important;
+}
+
+.delete-btn:hover:not(:disabled) {
+    background: #b71c1c !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.delete-btn:disabled {
+    background: #999 !important;
+    color: #333 !important;
+    opacity: 0.5 !important;
+}
+
+/* Test Account Overlay - Only covers main content, NOT the sidebar */
+.test-account-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(200, 200, 200, 0.4);
+    z-index: 9998;
+    pointer-events: auto;
+    cursor: not-allowed;
+}
+
 /* ================================
    RESPONSIVE DESIGN (< 768px)
    ================================ */

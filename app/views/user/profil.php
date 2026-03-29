@@ -76,6 +76,10 @@ $extraHead = '<style>
         font-size: 1.3em;
     }
     
+    .profile-form-wrapper {
+        position: relative;
+    }
+    
     .profile-form {
         background: white;
         padding: 25px;
@@ -121,13 +125,15 @@ $extraHead = '<style>
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     
+    /* Disabled State für Formularfelder - DEUTLICH AUSGEGRAUT */
     .form-group input:disabled,
     .form-group select:disabled,
     .form-group textarea:disabled {
-        background-color: #f9f9f9;
-        cursor: not-allowed;
-        opacity: 0.7;
-        color: #999;
+        background-color: #d9d9d9 !important;
+        color: #999 !important;
+        cursor: not-allowed !important;
+        opacity: 1 !important;
+        border-color: #999 !important;
     }
     
     .test-account-notice {
@@ -150,39 +156,53 @@ $extraHead = '<style>
         color: #2e7d32;
     }
     
+    /* Delete Button - Rot OHNE Gradient */
     button.delete-btn {
         background: #d32f2f !important;
         color: white !important;
         border: none !important;
     }
     
-    button.delete-btn:hover:not(:disabled) {
+    button.delete-btn:not(:disabled):hover {
         background: #b71c1c !important;
-        box-shadow: none !important;
+        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4) !important;
+        transform: translateY(-2px) !important;
     }
     
     button.delete-btn:disabled {
-        background: #ccc !important;
+        background: #999 !important;
+        color: #555 !important;
         opacity: 0.6 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    
+    /* Primary Buttons - Disabled State */
+    button.btn-primary:disabled {
+        background: #999 !important;
+        color: #555 !important;
+        opacity: 0.6 !important;
+        cursor: not-allowed !important;
+    }
+    
+    /* OVERLAY LAYER */
+    .form-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(200, 200, 200, 0.4);
+        border-radius: 8px;
+        z-index: 100;
+        pointer-events: none;
     }
     
     .divider-text {
         color: var(--text-secondary);
         margin-bottom: 20px;
         line-height: 1.6;
-    }
-    
-    /* Overlay für TestAccount */
-    .test-account-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(200, 200, 200, 0.4);
-        z-index: 9999;
-        pointer-events: auto;
-        cursor: not-allowed;
     }
     
     @media (max-width: 768px) {
@@ -222,26 +242,31 @@ $extraHead = '<style>
         <br>
     </div>
     
-    <form method="post" autocomplete="off" class="profile-form">
-        <div class="profile-search-form">
-            <div class="form-group">
-                <label for="username">Benutzername:</label>
-                <input type="text" id="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" readonly>
+    <div class="profile-form-wrapper">
+        <form method="post" autocomplete="off" class="profile-form">
+            <div class="profile-search-form">
+                <div class="form-group">
+                    <label for="username">Benutzername:</label>
+                    <input type="text" id="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" readonly>
+                </div>
+                <br>
+                <div class="form-group">
+                    <label for="email">E-Mail:</label>
+                    <input type="email" required id="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+                </div>
             </div>
+            
             <br>
-            <div class="form-group">
-                <label for="email">E-Mail:</label>
-                <input type="email" required id="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-            </div>
-        </div>
-        
-        <br>
-        <br>
-        
-        <button class="btn btn-primary" type="submit" name="update_profile" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-            💾 Änderungen speichern
-        </button>
-    </form>
+            <br>
+            
+            <button class="btn btn-primary" type="submit" name="update_profile" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+                💾 Änderungen speichern
+            </button>
+        </form>
+        <?php if ($isTestAccount): ?>
+            <div class="form-overlay"></div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <br>
@@ -255,26 +280,31 @@ $extraHead = '<style>
         <br>
     </div>
     
-    <form method="post" autocomplete="off" class="profile-form">
-        <div class="profile-search-form">
-            <div class="form-group">
-                <label for="new_password1">Neues Passwort:</label>
-                <input type="password" id="new_password1" name="new_password1" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+    <div class="profile-form-wrapper">
+        <form method="post" autocomplete="off" class="profile-form">
+            <div class="profile-search-form">
+                <div class="form-group">
+                    <label for="new_password1">Neues Passwort:</label>
+                    <input type="password" id="new_password1" name="new_password1" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+                </div>
+                <br>
+                <div class="form-group">
+                    <label for="new_password2">Passwort wiederholen:</label>
+                    <input type="password" id="new_password2" name="new_password2" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+                </div>
             </div>
+            
             <br>
-            <div class="form-group">
-                <label for="new_password2">Passwort wiederholen:</label>
-                <input type="password" id="new_password2" name="new_password2" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-            </div>
-        </div>
-        
-        <br>
-        <br>
-        
-        <button class="btn btn-primary" type="submit" name="pwchange" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-            🔄 Passwort ändern
-        </button>
-    </form>
+            <br>
+            
+            <button class="btn btn-primary" type="submit" name="pwchange" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+                🔄 Passwort ändern
+            </button>
+        </form>
+        <?php if ($isTestAccount): ?>
+            <div class="form-overlay"></div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <br>
@@ -288,25 +318,26 @@ $extraHead = '<style>
         <br>
     </div>
     
-    <form method="post" onsubmit="return confirm('Willst du deinen Account wirklich unwiderruflich löschen?');" class="profile-form">
-        <p class="divider-text">
-            Diese Aktion kann nicht rückgängig gemacht werden. Bitte sei sicher, dass du dies wirklich möchtest.
-        </p>
-        
-        <br>
-        
-        <button class="btn btn-primary delete-btn" type="submit" name="delete_account" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-            🗑️ Account unwiderruflich löschen
-        </button>
-    </form>
+    <div class="profile-form-wrapper">
+        <form method="post" onsubmit="return confirm('Willst du deinen Account wirklich unwiderruflich löschen?');" class="profile-form">
+            <p class="divider-text">
+                Diese Aktion kann nicht rückgängig gemacht werden. Bitte sei sicher, dass du dies wirklich möchtest.
+            </p>
+            
+            <br>
+            
+            <button class="btn btn-primary delete-btn" type="submit" name="delete_account" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+                🗑️ Account unwiderruflich löschen
+            </button>
+        </form>
+        <?php if ($isTestAccount): ?>
+            <div class="form-overlay"></div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <br>
 <br>
 <br>
-
-<?php if ($isTestAccount): ?>
-    <div class="test-account-overlay"></div>
-<?php endif; ?>
 
 <?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
