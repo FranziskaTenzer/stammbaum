@@ -41,7 +41,15 @@ if (!isAdmin()) {
             <li>cookies</li>
             <li>Impressum und Datenschutz</li>
             <li>Spenden Info</li>
-            <li></li>
+            <li>Import prüfen lassen
+            MariaDB [stammbaum]> select * from person where id=7820; (ebenfalls 7883)
++------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
+| id   | vorname                                      | nachname    | vater_id | mutter_id | geburtsdatum | sterbedatum | geburtsort | sterbeort | hof  | ort  | bemerkung | referenz_ehe_id |
++------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
+| 7820 | Maria Gwiggner, uneheliche Tochter von Jakob | Lohrstaller |     NULL |      NULL | NULL         | NULL        | NULL       | NULL      | NULL | NULL |           |            NULL |
++------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
+            
+            </li>
             
             <li><b>Für später:</b>
                 <ul>

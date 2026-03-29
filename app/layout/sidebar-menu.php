@@ -54,7 +54,9 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
             ⚙️ Admin
         </h3>
         <ul class="nav-menu">
-            
+            <li class="nav-subsection">
+           		<a href="<?= $_p ?>/app/views/admin/home.php">👨🏻‍💻 Admin Startseite</a>
+           </li>
             <!-- Datenbank verwalten -->
             <li class="nav-subsection">
                 <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)">
