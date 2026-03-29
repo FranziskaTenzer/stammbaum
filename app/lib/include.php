@@ -92,16 +92,8 @@ function sanitizeInput($input) {
 
 // Ensures the nachrichten table exists (safe to call multiple times)
 function ensureNachrichtenTable($pdo) {
-    $pdo->exec("
-CREATE TABLE IF NOT EXISTS nachrichten (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user VARCHAR(255) NOT NULL,
-    betreff VARCHAR(255) NOT NULL,
-    nachricht TEXT NOT NULL,
-    zeitstempel DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    antwort TEXT NULL,
-    antwort_zeitstempel DATETIME NULL
-)");
+    $sql = file_get_contents(__DIR__ . '/nachrichten.sql');
+    $pdo->exec($sql);
 }
 
 // Other helper functions can be added here

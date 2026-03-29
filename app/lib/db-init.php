@@ -100,22 +100,7 @@ CREATE UNIQUE INDEX unique_ehe_multi
 ON ehe (externe_id, vater_id, mutter_id, heiratsdatum);
 ";
 
-$sqlCreateNachrichten = "
-CREATE TABLE IF NOT EXISTS nachrichten (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user VARCHAR(255) NOT NULL,
-    betreff VARCHAR(255) NOT NULL,
-    nachricht TEXT NOT NULL,
-    zeitstempel DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    antwort TEXT NULL,
-    antwort_zeitstempel DATETIME NULL
-);
-";
-
 $stmt = $pdo->prepare($sqlMultiEhe);
-$stmt->execute();
-
-$stmt = $pdo->prepare($sqlCreateNachrichten);
 $stmt->execute();
 
 echo "<h2>Datenbank erfolgreich gelöscht und neu erstellt</h2><br />";
