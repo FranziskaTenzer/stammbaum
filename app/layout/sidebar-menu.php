@@ -5,6 +5,10 @@ require_once __DIR__ . '/../lib/session-helper.php';
 // $_projectUrl is set by header.php before this file is included
 $_p = isset($_projectUrl) ? $_projectUrl : '/stammbaum';
 $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
+
+// Aktuelle Seite ermitteln
+$currentPage = basename($_SERVER['PHP_SELF']);
+$currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
 ?>
 
 <!-- ← Header wird jetzt OBEN angezeigt (unter dem X) -->
@@ -23,9 +27,9 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
             🏠 Home
         </h3>
         <ul class="nav-menu" style="display:block;">
-            <li><a href="<?= $_p ?>/app/views/user/index.php">🏠 Startseite</a></li>
-            <li><a href="<?= $_p ?>/app/views/user/profil.php">👤 Profil</a></li>
-            <li><a href="<?= $_p ?>/public/logout.php">🚪 Abmelden</a></li>
+            <li><a href="<?= $_p ?>/app/views/user/index.php" <?= $currentPage === 'index.php' ? 'class="active"' : '' ?>>🏠 Startseite</a></li>
+            <li><a href="<?= $_p ?>/app/views/user/profil.php" <?= $currentPage === 'profil.php' ? 'class="active"' : '' ?>>👤 Profil</a></li>
+            <li><a href="<?= $_p ?>/public/logout.php" <?= $currentPage === 'logout.php' ? 'class="active"' : '' ?>>🚪 Abmelden</a></li>
         </ul>
     </div>
 
@@ -38,9 +42,9 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
             🔍 Stammbaum
         </h3>
         <ul class="nav-menu" style="display:block;">
-            <li><a href="<?= $_p ?>/app/views/user/stammbaum-search.php">👤 Personensuche</a></li>
-            <li><a href="<?= $_p ?>/app/views/user/traubuch-list.php">📚 Traubuch-Liste</a></li>
-            <li><a href="<?= $_p ?>/app/views/user/nachrichten.php">✉️ Nachrichten</a></li>
+            <li><a href="<?= $_p ?>/app/views/user/stammbaum-search.php" <?= $currentPage === 'stammbaum-search.php' ? 'class="active"' : '' ?>>👤 Personensuche</a></li>
+            <li><a href="<?= $_p ?>/app/views/user/traubuch-list.php" <?= $currentPage === 'traubuch-list.php' ? 'class="active"' : '' ?>>📚 Traubuch-Liste</a></li>
+            <li><a href="<?= $_p ?>/app/views/user/nachrichten.php" <?= $currentPage === 'nachrichten.php' ? 'class="active"' : '' ?>>✉️ Nachrichten</a></li>
         </ul>
     </div>
 
@@ -55,8 +59,8 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
         </h3>
         <ul class="nav-menu">
             <li class="nav-subsection">
-           		<a href="<?= $_p ?>/app/views/admin/home.php">👨🏻‍💻 Admin Startseite</a>
-           </li>
+               <a href="<?= $_p ?>/app/views/admin/home.php" <?= $currentPage === 'home.php' && empty($currentFilter) ? 'class="active"' : '' ?>>👨🏻‍💻 Admin Startseite</a>
+            </li>
             <!-- Datenbank verwalten -->
             <li class="nav-subsection">
                 <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)">
@@ -64,11 +68,11 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
                     🗃️ Datenbank verwalten
                 </span>
                 <ul class="nav-submenu">
-                    <li><a href="<?= $_p ?>/app/views/admin/recreate-db.php">⛃ Datenbank löschen und neu erstellen</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/import-thierbach.php">📝 Thierbach importieren</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/import-orte.php">📝 Alle Orte importieren</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/recreate-db.php" <?= $currentPage === 'recreate-db.php' ? 'class="active"' : '' ?>>⛃ Datenbank löschen und neu erstellen</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/import-thierbach.php" <?= $currentPage === 'import-thierbach.php' ? 'class="active"' : '' ?>>📝 Thierbach importieren</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/import-orte.php" <?= $currentPage === 'import-orte.php' ? 'class="active"' : '' ?>>📝 Alle Orte importieren</a></li>
                     <li class="warning-item"><b>
-                        <a href="<?= $_p ?>/app/views/admin/re-create-all.php" onclick="return confirm('⚠️ WARNUNG: Dies löscht ALLE Daten und importiert alles neu. Möchten Sie fortfahren?');">
+                        <a href="<?= $_p ?>/app/views/admin/re-create-all.php" onclick="return confirm('⚠️ WARNUNG: Dies löscht ALLE Daten und importiert alles neu. Möchten Sie fortfahren?');" <?= $currentPage === 're-create-all.php' ? 'class="active"' : '' ?>>
                             🔄 Kompletter Neustart (re create)
                         </a></b>
                     </li>
@@ -82,10 +86,10 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
                     🛠️ Verwaltung
                 </span>
                 <ul class="nav-submenu">
-                    <li><a href="<?= $_p ?>/app/views/admin/vornamen-similar.php">👨≈👨 Ähnliche Vornamen</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php">👤≈👤 Ähnliche Nachnamen</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen">📬 offene Nachrichten</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet">✅ beantwortete Nachrichten</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/vornamen-similar.php" <?= $currentPage === 'vornamen-similar.php' ? 'class="active"' : '' ?>>👨≈👨 Ähnliche Vornamen</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php" <?= $currentPage === 'nachnamen-similar.php' ? 'class="active"' : '' ?>>👤≈👤 Ähnliche Nachnamen</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?>>📬 offene Nachrichten</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
                 </ul>
             </li>
             

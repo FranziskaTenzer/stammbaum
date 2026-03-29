@@ -646,6 +646,13 @@ a.btn:visited {
     animation: slideIn 0.2s ease;
 }
 
+.nav-menu a.active,
+.nav-submenu a.active {
+    background: var(--primary-color, #667eea) !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+
 /* ================================
    OVERVIEW SECTION TRAUBUCH STYLING
    ================================ */

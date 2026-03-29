@@ -86,12 +86,30 @@ document.addEventListener('DOMContentLoaded', function() {
  * Highlight link of current page
  */
 function highlightCurrentPage() {
-    const currentPage = window.location.pathname.split('/').pop() || 'index.php';
+    // Get current URL without domain
+    const currentPathname = window.location.pathname;
+    const currentSearch = window.location.search;
     
+    // Compare each link
     document.querySelectorAll('.nav-menu a, .nav-submenu a').forEach(link => {
-        const href = link.getAttribute('href').split('/').pop();
+        const href = link.getAttribute('href');
         
-        if (href === currentPage) {
+        // Create a URL object to parse the href properly
+        let linkPathname, linkSearch;
+        
+        if (href.startsWith('http')) {
+            const url = new URL(href);
+            linkPathname = url.pathname;
+            linkSearch = url.search;
+        } else {
+            // Relative URL
+            const parts = href.split('?');
+            linkPathname = parts[0];
+            linkSearch = parts[1] ? '?' + parts[1] : '';
+        }
+        
+        // Check if pathname and search match
+        if (linkPathname === currentPathname && linkSearch === currentSearch) {
             link.style.background = 'var(--primary-color, #667eea)';
             link.style.color = 'white';
             link.style.fontWeight = 'bold';
