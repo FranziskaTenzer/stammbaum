@@ -239,16 +239,17 @@ $extraHead = '<style>
             <?php foreach ($nachrichten as $n): ?>
                 <div class="nachricht-card">
                     <div class="nachricht-header">
-                        <h4>📌 <?= htmlspecialchars($n['betreff']) ?></h4>
+                        <h4>📌 <?= htmlspecialchars($n['betreff']) ?></h4><br/>
                         <span class="zeitstempel">🕐 <?= formatDatum($n['zeitstempel']); ?></span>
                     </div>
+                    <br/>
                     <div class="nachricht-body">
                         <p><?= htmlspecialchars($n['nachricht']) ?></p>
                     </div><br>
                     <?php if ($n['antwort'] !== null): ?>
                         <div class="nachricht-antwort">
-                            <div class="antwort-label">💬 Antwort vom Admin:</div>
-                            <p><?= htmlspecialchars($n['antwort']) ?></p>
+                            <div class="antwort-label">💬 Antwort vom Admin:</div><br/>
+                            <p><?= htmlspecialchars($n['antwort']) ?></p><br/>
                             <?php if ($n['antwort_zeitstempel']): ?>
                                 <div class="antwort-zeit">🕐 <?= formatDatum($n['antwort_zeitstempel']); ?></div>
                             <?php endif; ?>
