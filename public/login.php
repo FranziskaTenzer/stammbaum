@@ -12,6 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once '../app/lib/include.php';
     $pdo = getPDO();
 
+    // Ensure required columns exist (safe one-time migration)
+    ensureEmailVerificationColumns($pdo);
+
     // Ensure is_admin column exists in user_profile (safe one-time migration)
     try {
         $colCheck = $pdo->query(
@@ -28,24 +31,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log('login.php migration check failed: ' . $e->getMessage());
     }
 
-    $stmt = $pdo->prepare("SELECT username, password_hash, is_admin FROM user_profile WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT username, password_hash, is_admin, email_verified FROM user_profile WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Always run password_verify to prevent timing-based username enumeration
     $hashToCheck = $user ? $user['password_hash'] : '$2y$10$invalidhashforenumerationprotection00000000000000000000';
     if ($user && password_verify($password, $hashToCheck)) {
-        $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['is_admin'] = (bool)$user['is_admin'];
-        $_SESSION['login_time'] = time();
-
-        if ($user['is_admin']) {
-            header('Location: ' . $projectUrl . '/stammbaum/app/views/admin/home.php');
+        // Prüfe ob E-Mail bestätigt wurde
+        if (!$user['email_verified']) {
+            $error = '❌ Bitte bestätige zuerst deine E-Mail-Adresse. Prüfe dein Postfach (auch Spam-Ordner).';
         } else {
-            header('Location: ' . $projectUrl . '/stammbaum/app/views/user/index.php');
+            $_SESSION['logged_in'] = true;
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['is_admin'] = (bool)$user['is_admin'];
+            $_SESSION['login_time'] = time();
+
+            if ($user['is_admin']) {
+                header('Location: ' . $projectUrl . '/stammbaum/app/views/admin/home.php');
+            } else {
+                header('Location: ' . $projectUrl . '/stammbaum/app/views/user/index.php');
+            }
+            exit;
         }
-        exit;
     } else {
         $error = '❌ Benutzername oder Passwort ist falsch!';
     }
@@ -193,6 +201,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <button type="submit">Anmelden</button>
+        <div style="text-align:center; margin-top:12px; font-size:0.9em;">
+            <a href="forgot-password.php" style="color:#764ba2; text-decoration:none; font-weight:600;">
+                Passwort vergessen?
+            </a>
+        </div>
         <div style="background:#f3f3f3; padding:10px; margin-top:10px; border-radius:5px;">
           <strong>Testzugang:</strong><br>
           Benutzername: TestAccount<br>

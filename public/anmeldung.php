@@ -36,8 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($zahlungstyp === 'PAYPAL' && !filter_var($zahlungsinfo, FILTER_VALIDATE_EMAIL)) {
         $error = '❌ Bitte eine gültige PayPal E-Mail-Adresse eingeben.';
     }*/ else {
-        require_once '../app/lib/include.php';
+        require_once '../app/lib/email-handler.php';
         $pdo = getPDO();
+        ensureEmailVerificationColumns($pdo);
 
         // Prüfe auf doppelten Benutzernamen
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM user_profile WHERE username = ?");
@@ -53,16 +54,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Passwort hashen und Benutzer anlegen
                 $password_hash = password_hash($password1, PASSWORD_DEFAULT);
+
+                // Verifikationstoken generieren
+                $token     = generateToken();
+                $tokenHash = hashToken($token);
+                $expires   = date('Y-m-d H:i:s', time() + 86400); // 24 Stunden
+
                 // TODO: falls Zahlungsdaten später mit erfasst werden, dass wieder hinzufügen
                 // vorname, nachname, adresse, zahlungstyp, zahlungsinfo,
                 // ?, ?, ?, ?, ?,
                 $stmt = $pdo->prepare(
-                    "INSERT INTO user_profile (username, email, password_hash)
-                     VALUES (?, ?, ?)"
+                    "INSERT INTO user_profile
+                         (username, email, password_hash,
+                          email_verified, verification_token, verification_token_expires)
+                     VALUES (?, ?, ?, 0, ?, ?)"
                 );
-                // $vorname, $nachname, $adresse, $zahlungstyp, $zahlungsinfo, 
-                $stmt->execute([$username, $email, $password_hash]);
-                $success = '✅ Registrierung erfolgreich! Du wirst zum Login weitergeleitet...';
+                // $vorname, $nachname, $adresse, $zahlungstyp, $zahlungsinfo,
+                $stmt->execute([$username, $email, $password_hash, $tokenHash, $expires]);
+
+                // Bestätigungsemail versenden
+                sendRegistrationConfirmation($pdo, $username, $email, $token);
+
+                $success = '✅ Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse. '
+                         . 'Du erhältst in Kürze eine E-Mail mit einem Bestätigungslink.';
             }
         }
     }
@@ -241,12 +255,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="register-container">
     <h1>🌳 Stammbaum</h1>
     <div class="success"><?= htmlspecialchars($success) ?></div>
-    <p style="text-align:center; color:#555;">Du wirst in wenigen Sekunden weitergeleitet.</p>
+    <p style="text-align:center; color:#555;">Bitte prüfe auch deinen Spam-Ordner.</p>
     <div class="login-link" style="margin-top:18px;">
-        <a href="login.php">Jetzt anmelden →</a>
+        <a href="login.php">Zum Login →</a>
     </div>
 </div>
-<script>setTimeout(function(){ window.location.href = 'login.php'; }, 5000);</script>
 <?php else: ?>
 <div class="register-container">
     <h1>🌳 Stammbaum</h1>

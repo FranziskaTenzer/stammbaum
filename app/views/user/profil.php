@@ -46,8 +46,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isTestAccount) {
     // Account löschen
     if (isset($_POST['delete_account'])) {
         $username = $_SESSION['username'];
+        // E-Mail-Adresse vor der Löschung auslesen
+        $stmtEmail = $pdo->prepare("SELECT email FROM user_profile WHERE username = ?");
+        $stmtEmail->execute([$username]);
+        $userRow = $stmtEmail->fetch(PDO::FETCH_ASSOC);
+
         $stmt = $pdo->prepare("DELETE FROM user_profile WHERE username=?");
         $stmt->execute([$username]);
+
+        // Bestätigungsemail versenden (nach der Löschung)
+        if ($userRow && !empty($userRow['email'])) {
+            require_once '../../lib/email-handler.php';
+            sendAccountDeleted($pdo, $username, $userRow['email']);
+        }
+
         session_destroy();
         header("Location: /stammbaum/public/login.php?deleted=1");
         exit;

@@ -100,4 +100,55 @@ function ensureNachrichtenTable($pdo) {
     $pdo->exec($sql);
 }
 
+// Ensures the email_log table exists (safe to call multiple times)
+function ensureEmailLogTable($pdo) {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS email_log (
+        id              INT AUTO_INCREMENT PRIMARY KEY,
+        email_type      ENUM('registration', 'password_reset', 'account_deleted') NOT NULL,
+        recipient_email VARCHAR(255) NOT NULL,
+        sent_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        status          ENUM('pending', 'sent', 'failed') NOT NULL DEFAULT 'pending',
+        metadata        JSON NULL
+    )");
+}
+
+// Ensures that the email-verification and password-reset columns exist in user_profile.
+// When the columns are added for the first time all existing users are marked as verified
+// so they can continue to log in without having to re-verify their e-mail address.
+function ensureEmailVerificationColumns($pdo) {
+    $columns = [
+        'email_verified'               => "TINYINT(1) NOT NULL DEFAULT 0",
+        'verification_token'           => "VARCHAR(255) NULL",
+        'verification_token_expires'   => "TIMESTAMP NULL",
+        'password_reset_token'         => "VARCHAR(255) NULL",
+        'password_reset_token_expires' => "TIMESTAMP NULL",
+    ];
+
+    $emailVerifiedJustCreated = false;
+
+    foreach ($columns as $col => $definition) {
+        try {
+            $check = $pdo->query(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME   = 'user_profile'
+                   AND COLUMN_NAME  = " . $pdo->quote($col)
+            );
+            if ($check->fetchColumn() == 0) {
+                $pdo->exec("ALTER TABLE user_profile ADD COLUMN $col $definition");
+                if ($col === 'email_verified') {
+                    $emailVerifiedJustCreated = true;
+                }
+            }
+        } catch (PDOException $e) {
+            error_log("ensureEmailVerificationColumns failed for $col: " . $e->getMessage());
+        }
+    }
+
+    // Mark all previously existing users as verified so they can still log in.
+    if ($emailVerifiedJustCreated) {
+        $pdo->exec("UPDATE user_profile SET email_verified = 1");
+    }
+}
+
 // Other helper functions can be added here

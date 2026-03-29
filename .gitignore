@@ -52,6 +52,9 @@ composer.lock
 *.sqlite
 *.sqlite3
 
+# Migrationen sind kein DB-Dump, sondern Quellcode
+!app/lib/migrations/*.sql
+
 # ================================
 # NODE (falls später verwendet)
 # ================================
