@@ -146,15 +146,20 @@ $extraHead = '<style>
         color: #2e7d32;
     }
     
-    .delete-btn {
+    button.delete-btn {
         background: #d32f2f !important;
         color: white !important;
     }
     
-    .delete-btn:hover:not(:disabled) {
+    button.delete-btn:hover:not(:disabled) {
         background: #b71c1c !important;
         box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4) !important;
         transform: translateY(-2px) !important;
+    }
+    
+    button.delete-btn:disabled {
+        background: #ccc !important;
+        opacity: 0.6 !important;
     }
     
     .divider-text {
