@@ -44,7 +44,6 @@ if (!isAdmin()) {
             <li>Impressum und Datenschutz</li>
             <li>Test User 
                 <ul>
-                 <li>-> Profil nicht bearbeitbar, pw nicht zu ändern</li>
                 <li>-> sieht Namen Ende nur mit *** Daten stehen auf der Login Seite</li>
                 </ul>
             </li>

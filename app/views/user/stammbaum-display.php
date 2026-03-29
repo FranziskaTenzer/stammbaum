@@ -7,7 +7,7 @@ $extraHead = '<style>
     gap:20px;
     justify-content:center;
 }
-
+    
 .column {
     width:30%;
     background:white;
@@ -16,11 +16,11 @@ $extraHead = '<style>
     box-shadow:0 0 10px rgba(0,0,0,0.1);
     overflow:auto;
 }
-
+    
 .center { text-align:center; max-width: 300px; }
-
+    
 ul { list-style:none; padding-left:20px; }
-
+    
 .person {
     background:#fff;
     padding:6px;
@@ -28,19 +28,19 @@ ul { list-style:none; padding-left:20px; }
     border-radius:6px;
     cursor:pointer;
 }
-
+    
 .node > ul { display:none; }
 .node.open > ul { display:block; }
-
+    
 .person:hover { background:#e3f2fd; }
-
+    
 /* Vorfahren Layout */
 .ancestor-flex {
     display: flex;
     gap: 40px;
     align-items: center;
 }
-
+    
 .ancestor-col {
     display: flex;
     flex-direction: column;
@@ -48,7 +48,7 @@ ul { list-style:none; padding-left:20px; }
     height: 100%;
     min-height: 400px;
 }
-
+    
 /* Linie zwischen Elternpaaren */
 .ancestor-line {
     height: 2px;
@@ -56,9 +56,17 @@ ul { list-style:none; padding-left:20px; }
     margin: 6px 0;
     width: 100%;
 }
-
+    
 .placeholder {
     visibility: hidden;
+}
+    
+/* ← NEUE ZEILE: Verschmiert-Effekt für TestAccount */
+.blurred-text {
+    color: transparent;
+    text-shadow: 0 0 8px rgba(0,0,0,0.5);
+    filter: blur(4px);
+    user-select: none;
 }
 </style>
 <script>
@@ -79,6 +87,11 @@ $pdo = getPDO();
 
 $startId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
+// Username für Prüfung laden
+$username = $_SESSION['username'];
+$isTestAccount = ($username === 'TestAccount'); 
+
+
 function getCommonChildren($ehe, $childrenMap) {
     
     $children = [];
@@ -98,6 +111,11 @@ function getCommonChildren($ehe, $childrenMap) {
     }
     
     return $children;
+}
+
+// ← NEUE HILFSFUNKTION: Gibt CSS-Klasse zurück für Verschmieren
+function getBlurClass($isTestAccount) {
+    return $isTestAccount ? ' class="blurred-text"' : '';
 }
 
 function formatSpouse($name, $geb, $tod) {
@@ -257,7 +275,7 @@ function formatPerson($p, $spouseMap = []) {
 // =========================
 // VORFAHREN
 // =========================
-function renderAncestors($id, $personsById, $spouseMap, &$visited, $depth = 0, $maxDepth = 6){
+function renderAncestors($id, $personsById, $spouseMap, &$visited, $depth = 0, $maxDepth = 6, $isTestAccount = false) {  // ← GEÄNDERT
     
     if ($depth > $maxDepth) return "";
     if (!isset($personsById[$id])) return "";
@@ -283,13 +301,16 @@ function renderAncestors($id, $personsById, $spouseMap, &$visited, $depth = 0, $
                 $father['sterbedatum']
                 );
             
+            // ← GEÄNDERT: Blur-Klasse hinzugefügt
+            $blurClass = getBlurClass($isTestAccount);
+            
             $html .= "<li class='node open'>";
-            $html .= "<div class='person' style='margin-left:" . ($depth * 20) . "px'>
+            $html .= "<div class='person' style='margin-left:" . ($depth * 20) . "px'{$blurClass}>
                 👨 {$fatherText}
              </div>";
             
             // ✅ Rekursion Vater
-            $html .= renderAncestors($father['id'], $personsById, $spouseMap, $visited, $depth + 1, $maxDepth);
+            $html .= renderAncestors($father['id'], $personsById, $spouseMap, $visited, $depth + 1, $maxDepth, $isTestAccount);  // ← GEÄNDERT
             
             $html .= "</li>";
         }
@@ -304,13 +325,16 @@ function renderAncestors($id, $personsById, $spouseMap, &$visited, $depth = 0, $
                 $mother['sterbedatum']
                 );
             
+            // ← GEÄNDERT: Blur-Klasse hinzugefügt
+            $blurClass = getBlurClass($isTestAccount);
+            
             $html .= "<li class='node open'>";
-            $html .= "<div class='person' style='margin-left:" . ($depth * 20) . "px'>
+            $html .= "<div class='person' style='margin-left:" . ($depth * 20) . "px'{$blurClass}>
                 👩 {$motherText}
              </div>";
             
             // ✅ Rekursion Mutter (NEU!)
-            $html .= renderAncestors($mother['id'], $personsById, $spouseMap, $visited, $depth + 1, $maxDepth);
+            $html .= renderAncestors($mother['id'], $personsById, $spouseMap, $visited, $depth + 1, $maxDepth, $isTestAccount);  // ← GEÄNDERT
             
             $html .= "</li>";
         }
@@ -326,7 +350,7 @@ function renderAncestors($id, $personsById, $spouseMap, &$visited, $depth = 0, $
 // =========================
 // NACHKOMMEN
 // =========================
-function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap, &$visited = [], $depth = 0, $maxDepth = 6) {
+function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap, &$visited = [], $depth = 0, $maxDepth = 6, $isTestAccount = false) {  // ← GEÄNDERT
     
     if ($depth > $maxDepth) return "";
     if (!isset($personsById[$personId])) return "";
@@ -343,7 +367,10 @@ function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap
         
         $html .= "<li class='node open'>";
         
-        $html .= "<div class='person' style='margin-left:".($depth * 20)."px'>
+        // ← GEÄNDERT: Blur-Klasse hinzugefügt
+        $blurClass = getBlurClass($isTestAccount);
+        
+        $html .= "<div class='person' style='margin-left:".($depth * 20)."px'{$blurClass}>
                     👶 {$child['vorname']} {$child['nachname']}
                     " . (!empty($child['geburtsdatum']) ? " * ".formatDBDateOrNull($child['geburtsdatum']) : "") . "
                     " . (!empty($child['sterbedatum']) ? " † ".formatDBDateOrNull($child['sterbedatum']) : "") . "
@@ -372,7 +399,10 @@ function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap
             ? formatDBDateOrNull($ehe['heiratsdatum'])
             : "";
             
-            $html .= "<div class='ehe' style='margin-left:".(($depth * 20) + 20)."px'>
+            // ← GEÄNDERT: Blur-Klasse hinzugefügt
+            $blurClass = getBlurClass($isTestAccount);
+            
+            $html .= "<div class='ehe' style='margin-left:".(($depth * 20) + 20)."px'{$blurClass}>
                         💍 {$partnerName} (⚭ {$hochzeit})
                      </div>";
         }
@@ -385,7 +415,8 @@ function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap
             $spouseMap,
             $visited,
             $depth + 1,
-            $maxDepth
+            $maxDepth,
+            $isTestAccount  // ← GEÄNDERT
             );
         
         $html .= "</li>";
@@ -440,7 +471,9 @@ function buildAncestorColumns($startId, $personsById, $maxDepth = 3) {
     
     return array_reverse($columns);
 }
-function renderAncestorColumns($columns) {
+
+// ← GEÄNDERT: Parameter hinzugefügt
+function renderAncestorColumns($columns, $isTestAccount = false) {
     
     $html = "<div class='ancestor-flex'>";
     
@@ -457,7 +490,10 @@ function renderAncestorColumns($columns) {
             if ($p === null) {
                 $html .= "<div class='person placeholder'></div>";
             } else {
-                $html .= "<div class='person'>
+                // ← GEÄNDERT: Blur-Klasse hinzugefügt
+                $blurClass = getBlurClass($isTestAccount);
+                
+                $html .= "<div class='person'{$blurClass}>
                     👤 {$p['vorname']} {$p['nachname']}<br>
                     " . (!empty($p['geburtsdatum']) ? " * ". formatDBDateOrNull($p['geburtsdatum']) : "") . "<br>
                     " . (!empty($p['sterbedatum']) ? " † ". formatDBDateOrNull($p['sterbedatum']) : "") . "
@@ -498,6 +534,7 @@ $p = $personsById[$startId];
 
 <h2 style="text-align:center;">Stammbaum</h2>
 <br />
+Testaccount:  <?= $isTestAccount;?>
 <br />
 <div class="container">
 
@@ -505,7 +542,7 @@ $p = $personsById[$startId];
         <h3>⬆ Vorfahren</h3>
         <?php 
         $columns = buildAncestorColumns($startId, $personsById, 3);
-        echo renderAncestorColumns($columns);
+        echo renderAncestorColumns($columns, $isTestAccount);  // ← GEÄNDERT
         ?>
     </div>
 
@@ -556,7 +593,7 @@ $p = $personsById[$startId];
         <h3>⬇ Nachkommen</h3>
         <?php 
             $visitedDesc = [];
-            echo renderDescendantsTree($startId, $personsById, $childrenMap, $spouseMap, $visitedDesc); 
+            echo renderDescendantsTree($startId, $personsById, $childrenMap, $spouseMap, $visitedDesc, 0, 6, $isTestAccount);  // ← GEÄNDERT
         ?>
     </div>
 
