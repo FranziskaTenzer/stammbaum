@@ -40,6 +40,7 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
         <ul class="nav-menu" style="display:block;">
             <li><a href="<?= $_p ?>/app/views/user/stammbaum-search.php">👤 Personensuche</a></li>
             <li><a href="<?= $_p ?>/app/views/user/traubuch-list.php">📚 Traubuch-Liste</a></li>
+            <li><a href="<?= $_p ?>/app/views/user/nachrichten.php">✉️ Nachrichten</a></li>
         </ul>
     </div>
 
@@ -81,6 +82,7 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
                 <ul class="nav-submenu">
                     <li><a href="<?= $_p ?>/app/views/admin/vornamen-similar.php">👨≈👨 Ähnliche Vornamen</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php">👤≈👤 Ähnliche Nachnamen</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/nachrichten.php">✉️ Nachrichten</a></li>
                 </ul>
             </li>
             
