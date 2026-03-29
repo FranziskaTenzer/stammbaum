@@ -154,5 +154,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="back-link"><a href="login.php">← Zurück zum Login</a></div>
     <?php endif; ?>
 </div>
+
+<footer style="text-align:center; padding:14px 20px; font-size:0.85em; color:#aaa; background:rgba(255,255,255,0.1); margin-top:20px;">
+    <a href="datenschutz.php" style="color:#b39ddb; text-decoration:none; margin:0 8px;">Datenschutz</a>
+    &middot;
+    <a href="impressum.php" style="color:#b39ddb; text-decoration:none; margin:0 8px;">Impressum</a>
+</footer>
+
+<?php include __DIR__ . '/../app/layout/cookie-consent.php'; ?>
 </body>
 </html>
