@@ -49,154 +49,147 @@ $extraHead = '<style>
     .nachrichten-list {
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 20px;
+        margin-bottom: 40px;
     }
-
+    
     .nachricht-card {
         background: white;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         overflow: hidden;
     }
-
+    
     .nachricht-header {
         background: var(--primary-color);
         color: white;
-        padding: 12px 20px;
+        padding: 16px 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 12px;
     }
-
+    
     .nachricht-header h4 {
         margin: 0;
-        font-size: 1em;
+        font-size: 1.05em;
+        line-height: 1.4;
     }
-
-    .nachricht-header .meta {
+    
+    .nachricht-header .zeitstempel {
         font-size: 0.85em;
         opacity: 0.85;
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
     }
-
+    
     .nachricht-body {
-        padding: 16px 20px;
+        padding: 24px 20px;
         border-bottom: 1px solid #eee;
     }
-
+    
     .nachricht-body p {
         margin: 0;
-        line-height: 1.6;
+        line-height: 1.8;
         white-space: pre-wrap;
         word-break: break-word;
-    }
-
-    .nachricht-antwort-bereich {
-        padding: 16px 20px;
-        background: #f8f9ff;
-    }
-
-    .antwort-vorhanden {
-        background: #f0f4ff;
-        border-left: 4px solid var(--primary-color);
-        padding: 12px 16px;
-        border-radius: 4px;
-        margin-bottom: 14px;
-    }
-
-    .antwort-vorhanden .antwort-label {
-        font-weight: 700;
-        color: var(--primary-color);
-        margin-bottom: 6px;
-        font-size: 0.9em;
-    }
-
-    .antwort-vorhanden p {
-        margin: 0;
-        line-height: 1.6;
-        white-space: pre-wrap;
-        word-break: break-word;
-    }
-
-    .antwort-vorhanden .antwort-zeit {
-        font-size: 0.8em;
-        color: #888;
-        margin-top: 6px;
-    }
-
-    .reply-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .reply-form label {
-        font-weight: 600;
-        color: var(--text-primary);
         font-size: 0.95em;
     }
-
-    .reply-form textarea {
-        padding: 10px;
-        border: 2px solid var(--border-color);
-        border-radius: 4px;
-        font-size: 1em;
-        font-family: inherit;
-        transition: var(--transition);
-        resize: vertical;
+    
+    .nachricht-antwort {
+        padding: 20px 20px;
+        background: #f0f4ff;
+        border-left: 4px solid var(--primary-color);
     }
-
-    .reply-form textarea:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    
+    .nachricht-antwort .antwort-label {
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 12px;
+        font-size: 0.9em;
     }
-
+    
+    .nachricht-antwort p {
+        margin: 0 0 12px 0;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.95em;
+    }
+    
+    .nachricht-antwort .antwort-zeit {
+        font-size: 0.8em;
+        color: #888;
+        margin-top: 12px;
+    }
+    
     .no-messages {
         color: var(--text-secondary);
         font-style: italic;
         padding: 20px 0;
     }
-
+    
+    .neue-nachricht-form {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-width: 600px;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 24px;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+        font-size: 0.95em;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        padding: 12px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1em;
+        line-height: 1.6;
+        transition: var(--transition);
+        font-family: inherit;
+    }
+    
+    .form-group textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
     .alert {
-        padding: 15px;
+        padding: 16px 18px;
         border-radius: 6px;
         margin: 20px 0;
         border-left: 4px solid;
+        line-height: 1.6;
     }
-
+    
     .alert-success {
         background: #e8f5e9;
         border-left-color: #4caf50;
         color: #2e7d32;
     }
-
+    
     .alert-warning {
         background: #fff3cd;
         border-left-color: #ffc107;
         color: #856404;
-    }
-
-    .badge-unanswered {
-        background: #ff7043;
-        color: white;
-        font-size: 0.75em;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-weight: 600;
-    }
-
-    .badge-answered {
-        background: #4caf50;
-        color: white;
-        font-size: 0.75em;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-weight: 600;
     }
 </style>';
 ?>
