@@ -1,21 +1,14 @@
 /* ================================
-   STAMMBAUM MENU STYLING
+   STAMMBAUM MENU STYLING - RESPONSIVE
    ================================ */
 
 :root {
-    /* Primary Colors - Lila/Violett Scheme (matching login) */
     --primary-color: #667eea;
     --primary-dark: #764ba2;
     --primary-light: #e8e1f5;
-    
-    /* Admin Colors - Changed from Orange to Purple tones */
     --admin-color: #764ba2;
     --admin-light: #f0ebf8;
-    
-    /* Danger/Warning Colors */
     --danger-color: #d32f2f;
-    
-    /* Text Colors */
     --text-primary: #333;
     --text-secondary: #666;
     --border-color: #ddd;
@@ -40,38 +33,74 @@ body {
     padding: 0;
     height: 100vh;
     width: 100%;
+    overflow: hidden;
 }
 
 /* ================================
-   LAYOUT TABLE
+   LAYOUT WRAPPER
    ================================ */
 
-.layout-table {
+.layout-wrapper {
+    display: flex;
+    height: 100vh;
     width: 100%;
-    height: 100vh;
-    table-layout: fixed;
-    border-collapse: collapse;
-    border-spacing: 0;
 }
 
-.layout-table tr {
-    height: 100vh;
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
 }
 
-.sidebar-cell {
-    width: 280px;
-    height: 100vh;
-    vertical-align: top;
-    padding: 0;
-    margin: 0;
+/* ================================
+   HAMBURGER BUTTON (Desktop Hidden)
+   ================================ */
+
+.hamburger-menu {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 1500;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-.content-cell {
-    width: auto;
-    height: 100vh;
-    vertical-align: top;
-    padding: 0;
-    margin: 0;
+.hamburger-menu:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.hamburger-menu span {
+    width: 24px;
+    height: 3px;
+    background: white;
+    border-radius: 2px;
+    transition: var(--transition);
+}
+
+.hamburger-menu.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+}
+
+.hamburger-menu.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
 }
 
 /* ================================
@@ -87,6 +116,8 @@ body {
     z-index: 1000;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
+    transition: transform 0.3s ease, width 0.3s ease;
 }
 
 .sidebar-header {
@@ -102,12 +133,6 @@ body {
 .sidebar-header h1 {
     font-size: 1.5em;
     font-weight: 600;
-}
-
-.mobile-toggle {
-    display: none;
-    cursor: pointer;
-    font-size: 1.5em;
 }
 
 /* ================================
@@ -273,7 +298,6 @@ body {
     padding-left: 14px;
 }
 
-/* Warning Items */
 .warning-item a {
     color: var(--danger-color);
 }
@@ -307,7 +331,7 @@ body {
 
 .main-content {
     width: 100%;
-    height: 100vh;
+    flex: 1;
     overflow-y: auto;
     overflow-x: auto;
     background: #f5f5f5;
@@ -383,7 +407,7 @@ body {
     display: inline-block;
     padding: 10px 20px;
     border-radius: 6px;
-    text-decoration: none;  /* ← WICHTIG: entfernt Unterstriche */
+    text-decoration: none;
     transition: var(--transition);
     font-weight: 500;
     border: none;
@@ -392,7 +416,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  /* ← FARBVERLAUF */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
 }
 
@@ -402,7 +426,7 @@ body {
 }
 
 .btn-warning {
-    background: linear-gradient(135deg, #764ba2 0%, #5568d3 100%);  /* ← FARBVERLAUF */
+    background: linear-gradient(135deg, #764ba2 0%, #5568d3 100%);
     color: white;
 }
 
@@ -416,14 +440,13 @@ body {
     font-size: 0.9em;
 }
 
-/* Optional: Alle Links als Button formatieren */
 a.btn {
-    text-decoration: none !important;  /* ← Doppelt sicherstellen */
+    text-decoration: none !important;
     display: inline-block;
 }
 
 a.btn:visited {
-    color: white;  /* ← Besuchte Links auch weiß */
+    color: white;
 }
 
 .submit-btn { 
@@ -433,17 +456,14 @@ a.btn:visited {
     font-weight:600; 
     cursor:pointer; 
     margin-top:10px;
-    
-    /* Größer machen */
-    padding: 14px 24px;        /* Vertikale und horizontale Innenabstände */
-    font-size: 16px;            /* Schriftgröße erhöhen */
-    min-height: 45px;           /* Mindesthöhe */
-    border-radius: 8px;         /* Optionales Rounding */
-    width: 100%;                /* Volle Breite ausnutzen */
-    transition: all 0.3s ease;  /* Sanfte Animation */
+    padding: 14px 24px;
+    font-size: 16px;
+    min-height: 45px;
+    border-radius: 8px;
+    width: 100%;
+    transition: all 0.3s ease;
 }
 
-/* Optional: Hover-Effekt */
 .submit-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -697,4 +717,125 @@ a.btn:visited {
     text-align: right;
     margin-left: auto;
     font-weight: normal;
+}
+
+/* ================================
+   RESPONSIVE DESIGN (< 768px)
+   ================================ */
+
+@media (max-width: 768px) {
+    /* Hamburger Button zeigen */
+    .hamburger-menu {
+        display: flex;
+    }
+    
+    /* ← SIDEBAR POSITIONIERUNG FÜR MOBILE */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        width: 280px;
+        transform: translateX(-100%);
+        z-index: 1400;
+        background: white;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    }
+    
+    /* ← SIDEBAR SICHTBAR WENN AKTIV */
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    /* ← SIDEBAR HEADER OBEN POSITIONIERT */
+    .sidebar .sidebar-header {
+        padding: 20px 15px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        position: relative;
+    }
+    
+    .sidebar .sidebar-header h1 {
+        font-size: 1.5em;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    /* ← SIDEBAR NAV SCROLLBAR */
+    .sidebar .sidebar-nav {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px 0;
+    }
+    
+    /* ← SIDEBAR FOOTER */
+    .sidebar .sidebar-footer {
+        padding: 15px;
+        border-top: 1px solid var(--border-color);
+        background: var(--primary-light);
+        text-align: center;
+        font-size: 0.85em;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+    }
+    
+    /* Main Content anpassen */
+    .main-content {
+        padding: 20px;
+        padding-top: 80px;
+    }
+    
+    /* Seiten Inhalte anpassen */
+    .page-header h1 {
+        font-size: 1.8em;
+    }
+    
+    /* Content Grid auf Mobile */
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Overview Section auf Mobile */
+    .overview-section-traubuch {
+        width: 100%;
+    }
+    
+    /* Search Form auf Mobile */
+    .search-form {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Tabelle auf Mobile */
+    .results-table {
+        font-size: 0.9em;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 15px;
+        padding-top: 70px;
+    }
+    
+    .page-header h1 {
+        font-size: 1.5em;
+    }
+    
+    .submit-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    .sidebar {
+        width: 250px;
+    }
 }

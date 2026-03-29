@@ -1,12 +1,8 @@
-<?php
-// Footer für alle Seiten
-$_layoutUrl = $_layoutUrl ?? '/stammbaum/app/layout';
-?>
                 </main>
-            </td>
-        </tr>
-    </table>
-
-    <script src="<?= $_layoutUrl ?>/script-menu.js"></script>
+            </div>
+        </div>
+    
+    <script src="<?= $_layoutUrl ?? '/stammbaum/app/layout' ?>/responsive-menu.js"></script>
+    <script src="<?= $_layoutUrl ?? '/stammbaum/app/layout' ?>/script-menu.js"></script>
 </body>
 </html>

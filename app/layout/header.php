@@ -23,10 +23,10 @@ $pageTitle = isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Stammbaum';
 $_layoutUrl = '/stammbaum/app/layout';
 $_projectUrl = '/stammbaum';
 
-$cssFile = $_layoutUrl . '/style-menu.css';
+$cssFile = __DIR__ . '/style-menu.css';
 $cssVersion = file_exists($cssFile) ? filemtime($cssFile) : time();
 
-?>   
+?>
 
 <!DOCTYPE html>
 <html lang="de">
@@ -38,10 +38,19 @@ $cssVersion = file_exists($cssFile) ? filemtime($cssFile) : time();
     <?php if (isset($extraHead)) echo $extraHead; ?>
 </head>
 <body>
-    <table class="layout-table">
-        <tr>
-            <td class="sidebar-cell">
-                <?php include 'sidebar-menu.php'; ?>
-            </td>
-            <td class="content-cell">
-                <main class="main-content">
+    <!-- ← Hamburger Button für Mobile (mit Close-Button X) -->
+    <button class="hamburger-menu" id="hamburgerBtn" aria-label="Menu toggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="layout-wrapper">
+        <!-- ← Sidebar mit Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <?php include 'sidebar-menu.php'; ?>
+        </aside>
+        
+        <!-- ← Hauptinhalt -->
+        <div class="content-wrapper">
+            <main class="main-content">
