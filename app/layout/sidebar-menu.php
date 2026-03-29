@@ -84,7 +84,8 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
                 <ul class="nav-submenu">
                     <li><a href="<?= $_p ?>/app/views/admin/vornamen-similar.php">👨≈👨 Ähnliche Vornamen</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php">👤≈👤 Ähnliche Nachnamen</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php">✉️ Nachrichten</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen">📬 offene Nachrichten</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet">✅ beantwortete Nachrichten</a></li>
                 </ul>
             </li>
             
