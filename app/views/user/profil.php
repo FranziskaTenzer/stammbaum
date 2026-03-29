@@ -81,6 +81,7 @@ $extraHead = '<style>
         padding: 25px;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        width: 50%;
     }
     
     .profile-search-form {
@@ -120,10 +121,13 @@ $extraHead = '<style>
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     
-    .form-group input:disabled {
+    .form-group input:disabled,
+    .form-group select:disabled,
+    .form-group textarea:disabled {
         background-color: #f9f9f9;
         cursor: not-allowed;
         opacity: 0.7;
+        color: #999;
     }
     
     .test-account-notice {
@@ -149,12 +153,12 @@ $extraHead = '<style>
     button.delete-btn {
         background: #d32f2f !important;
         color: white !important;
+        border: none !important;
     }
     
     button.delete-btn:hover:not(:disabled) {
         background: #b71c1c !important;
-        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4) !important;
-        transform: translateY(-2px) !important;
+        box-shadow: none !important;
     }
     
     button.delete-btn:disabled {
@@ -168,6 +172,19 @@ $extraHead = '<style>
         line-height: 1.6;
     }
     
+    /* Overlay für TestAccount */
+    .test-account-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(200, 200, 200, 0.4);
+        z-index: 9999;
+        pointer-events: auto;
+        cursor: not-allowed;
+    }
+    
     @media (max-width: 768px) {
         .profile-search-form {
             grid-template-columns: 1fr;
@@ -175,6 +192,7 @@ $extraHead = '<style>
     
         .profile-form {
             padding: 20px;
+            width: 100%;
         }
     }
 </style>';
@@ -286,5 +304,9 @@ $extraHead = '<style>
 <br>
 <br>
 <br>
+
+<?php if ($isTestAccount): ?>
+    <div class="test-account-overlay"></div>
+<?php endif; ?>
 
 <?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
