@@ -90,4 +90,10 @@ function sanitizeInput($input) {
     return htmlspecialchars(strip_tags($input));
 }
 
+// Ensures the nachrichten table exists (safe to call multiple times)
+function ensureNachrichtenTable($pdo) {
+    $sql = file_get_contents(__DIR__ . '/nachrichten.sql');
+    $pdo->exec($sql);
+}
+
 // Other helper functions can be added here
