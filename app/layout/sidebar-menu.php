@@ -100,6 +100,7 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
 </nav>
 
 <div class="sidebar-footer">
+    <p><a href="<?= $_p ?>/app/views/user/spenden.php" <?= $currentPage === 'spenden.php' ? 'style="font-weight:bold;"' : '' ?>>💝 Spenden</a></p>
     <p>© Stammbaum 2026</p>
 </div>
 

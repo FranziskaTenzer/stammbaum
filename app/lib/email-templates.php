@@ -12,6 +12,7 @@ function getRegistrationConfirmationTemplate(string $username, string $confirmat
     $subject = 'E-Mail-Adresse bestätigen – Stammbaum';
     $usernameEsc = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
     $linkEsc     = htmlspecialchars($confirmationLink, ENT_QUOTES, 'UTF-8');
+    $baseUrl     = function_exists('getBaseUrl') ? getBaseUrl() : '';
 
     $body = <<<HTML
 <!DOCTYPE html>
@@ -65,7 +66,7 @@ function getRegistrationConfirmationTemplate(string $username, string $confirmat
     </div>
     <div class="footer">
         <p>Du erhältst diese E-Mail, weil eine Registrierung mit dieser Adresse durchgeführt wurde.</p>
-        <!-- <a href="#">Impressum</a> &middot; <a href="#">Datenschutz</a> -->
+        <a href="{$baseUrl}/stammbaum/public/impressum.php">Impressum</a> &middot; <a href="{$baseUrl}/stammbaum/public/datenschutz.php">Datenschutz</a>
     </div>
 </div>
 </body>
@@ -80,6 +81,7 @@ function getPasswordResetTemplate(string $username, string $resetLink): array
     $subject     = 'Passwort zurücksetzen – Stammbaum';
     $usernameEsc = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
     $linkEsc     = htmlspecialchars($resetLink, ENT_QUOTES, 'UTF-8');
+    $baseUrl     = function_exists('getBaseUrl') ? getBaseUrl() : '';
 
     $body = <<<HTML
 <!DOCTYPE html>
@@ -134,7 +136,7 @@ function getPasswordResetTemplate(string $username, string $resetLink): array
     </div>
     <div class="footer">
         <p>Du erhältst diese E-Mail aufgrund einer Passwort-Zurücksetzen-Anfrage für deinen Stammbaum-Account.</p>
-        <!-- <a href="#">Impressum</a> &middot; <a href="#">Datenschutz</a> -->
+        <a href="{$baseUrl}/stammbaum/public/impressum.php">Impressum</a> &middot; <a href="{$baseUrl}/stammbaum/public/datenschutz.php">Datenschutz</a>
     </div>
 </div>
 </body>
@@ -150,6 +152,7 @@ function getAccountDeletedTemplate(string $username, string $email): array
     $subject     = 'Account gelöscht – Stammbaum';
     $usernameEsc = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
     $emailEsc    = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+    $baseUrl     = function_exists('getBaseUrl') ? getBaseUrl() : '';
 
     $body = <<<HTML
 <!DOCTYPE html>
@@ -202,7 +205,7 @@ function getAccountDeletedTemplate(string $username, string $email): array
     </div>
     <div class="footer">
         <p>Diese Nachricht wurde automatisch nach der Account-Löschung gesendet.</p>
-        <!-- <a href="#">Impressum</a> &middot; <a href="#">Datenschutz</a> -->
+        <a href="{$baseUrl}/stammbaum/public/impressum.php">Impressum</a> &middot; <a href="{$baseUrl}/stammbaum/public/datenschutz.php">Datenschutz</a>
     </div>
 </div>
 </body>

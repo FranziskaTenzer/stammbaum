@@ -326,6 +326,40 @@ body {
     margin: 5px 0;
 }
 
+.sidebar-footer a {
+    color: var(--primary-dark);
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.sidebar-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ================================
+   PAGE FOOTER (inside content-wrapper)
+   ================================ */
+
+.page-footer {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 10px 20px;
+    font-size: 0.82em;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-color);
+    background: #f0f0f0;
+}
+
+.page-footer a {
+    color: var(--primary-dark);
+    text-decoration: none;
+    margin: 0 6px;
+}
+
+.page-footer a:hover {
+    text-decoration: underline;
+}
+
 /* ================================
    MAIN CONTENT
    ================================ */
