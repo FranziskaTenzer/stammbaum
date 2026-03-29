@@ -1,5 +1,5 @@
 <?php
-$pageTitle = "Traubuch-Liste";
+$pageTitle = "Mein Profil";
 require_once '../../layout/header.php';
 
 require_once '../../lib/include.php';
@@ -11,10 +11,10 @@ try {
 }
 
 $username = $_SESSION['username'];
-$isTestAccount = ($username === 'TestAccount'); // ← NEUE ZEILE
+$isTestAccount = ($username === 'TestAccount');
 
 // PROFIL UPDATEN
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isTestAccount) { // ← GEÄNDERT: && !$isTestAccount
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isTestAccount) {
     
     if (isset($_POST['update_profile'])) {
         $fields = [
@@ -45,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isTestAccount) { // ← GEÄNDERT
     }
     // Account löschen
     if (isset($_POST['delete_account'])) {
-        // Nutzer muss eingeloggt sein & $pdo muss bereit stehen!
         $username = $_SESSION['username'];
         $stmt = $pdo->prepare("DELETE FROM user_profile WHERE username=?");
         $stmt->execute([$username]);
@@ -62,103 +61,225 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$user) {
     die("Profil nicht gefunden!");
 }
-?>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Mein Profil</title>
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5;}
-        .profile-container { max-width: 500px; margin: 30px auto; background: #fff; 
-            border-radius: 10px; box-shadow: 0 2px 16px rgba(0,0,0,0.10); padding: 30px;}
-        h1 { text-align:center; color:#764ba2; margin-bottom: 18px;}
-        .form-group { margin-bottom: 20px; }
-        label { font-weight:600; display:block; margin-bottom:6px;}
-        input,select,textarea { width:100%; padding:10px; border-radius:5px; border:1px solid #bbb;}
-        .submit-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; border:none; font-weight:600; cursor:pointer; margin-top:10px;}
-        .submit-btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6;} /* ← NEUE ZEILE */
-        .msg { background:#e8e1f5; color:#764ba2; border-left:4px solid #764ba2; padding:10px; margin-bottom:18px;}
-        .test-account-notice { background:#fff3cd; color:#856404; border-left:4px solid #ffc107; padding:10px; margin-bottom:18px; border-radius:4px;} /* ← NEUE ZEILE */
-    </style>
-    <script>
-    function switchPaymentFields() {
-        let t = document.getElementById('zahlungstyp').value;
-        let label = document.getElementById('zahlungsinfo-label');
-        let input = document.getElementById('zahlungsinfo');
-        if (t === "KREDITKARTE") {
-            label.textContent = 'Kreditkartennummer:';
-            input.placeholder = '1234 5678 9012 3456';
-        } else {
-            label.textContent = 'Paypal E-Mail:';
-            input.placeholder = 'paypal@example.com';
+
+$extraHead = '<style>
+    /* Profile Styles - nutzt die gleichen Classes wie search-box */
+    .profile-section {
+        margin-bottom: 40px;
+    }
+    
+    .profile-section h2 {
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--primary-light);
+        font-size: 1.3em;
+    }
+    
+    .profile-form {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .profile-search-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: flex-end;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 10px;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1em;
+        transition: var(--transition);
+        font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-group input:disabled {
+        background-color: #f9f9f9;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    .test-account-notice {
+        background: #fff3cd;
+        border-left-color: #ffc107;
+        color: #856404;
+        margin-bottom: 25px;
+    }
+    
+    .alert {
+        padding: 15px;
+        border-radius: 6px;
+        margin: 25px 0;
+        border-left: 4px solid;
+    }
+    
+    .alert-success {
+        background: #e8f5e9;
+        border-left-color: #4caf50;
+        color: #2e7d32;
+    }
+    
+    .delete-btn {
+        background: #d32f2f !important;
+        color: white !important;
+    }
+    
+    .delete-btn:hover:not(:disabled) {
+        background: #b71c1c !important;
+        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    .divider-text {
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-search-form {
+            grid-template-columns: 1fr;
+        }
+    
+        .profile-form {
+            padding: 20px;
         }
     }
-    </script>
-</head>
-<body>
-<div class="profile-container">
-    <h1>Mein Profil</h1>
-    <?php if ($isTestAccount): /* ← NEUE ZEILE */ ?>
-        <div class="test-account-notice">⚠️ Dies ist ein Test-Account. Bearbeitungen sind deaktiviert.</div>
-    <?php endif; /* ← NEUE ZEILE */ ?>
-    <?php if (!empty($message)): ?><div class="msg"><?=htmlspecialchars($message)?></div><?php endif; ?>
-    <form method="post" autocomplete="off">
-        <div class="form-group">
-            <label for="username">Benutzername:</label>
-            <input type="text" id="username" name="username" value="<?=htmlspecialchars($user['username'])?>" readonly>
-        </div>
-        <div class="form-group">
-            <label for="email">E-Mail:</label>
-            <input type="email" required id="email" name="email" value="<?=htmlspecialchars($user['email'])?>" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-        </div>
-      <!--   <div class="form-group">
-             <label for="vorname">Vorname:</label>
-             <input type="text" id="vorname" name="vorname" value="<?=htmlspecialchars($user['vorname'])?>">
-         </div>
-         <div class="form-group">
-             <label for="nachname">Nachname:</label>
-             <input type="text" id="nachname" name="nachname" value="<?=htmlspecialchars($user['nachname'])?>">
-         </div>
-         <div class="form-group">
-             <label for="adresse">Adresse:</label>
-             <textarea id="adresse" name="adresse"><?=htmlspecialchars($user['adresse'])?></textarea>
-         </div>
-         <div class="form-group">
-             <label for="zahlungstyp">Zahlungsinformation:</label>
-             <select name="zahlungstyp" id="zahlungstyp" onchange="switchPaymentFields()" required>
-                 <option value="KREDITKARTE" <?=($user['zahlungstyp']=='KREDITKARTE'?'selected':'')?>>Kreditkarte</option>
-                 <option value="PAYPAL" <?=($user['zahlungstyp']=='PAYPAL'?'selected':'')?>>Paypal</option>
-             </select>
-         </div>
-         <div class="form-group">
-             <label for="zahlungsinfo" id="zahlungsinfo-label">
-                 <?= $user['zahlungstyp']=='KREDITKARTE'?'Kreditkartennummer:':'Paypal E-Mail:' ?>
-             </label>
-             <input type="text" name="zahlungsinfo" id="zahlungsinfo" required value="<?=htmlspecialchars($user['zahlungsinfo'])?>">
-         </div>-->
-        <button class="submit-btn" type="submit" name="update_profile" <?php echo $isTestAccount ? 'disabled' : ''; ?>>Speichern</button>
-    </form>
-    
-    <form method="post" autocomplete="off" style="margin-top:28px;">
-        <h2 style="color:#764ba2; font-size:1.14em;">Passwort ändern</h2>
-        <div class="form-group">
-            <label for="new_password1">Neues Passwort:</label>
-            <input type="password" id="new_password1" name="new_password1" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-        </div>
-        <div class="form-group">
-            <label for="new_password2">Wiederholen:</label>
-            <input type="password" id="new_password2" name="new_password2" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-        </div>
-        <button class="submit-btn" type="submit" name="pwchange" <?php echo $isTestAccount ? 'disabled' : ''; ?>>Passwort ändern</button>
-    </form>
-    
-    <form method="post" onsubmit="return confirm('Willst du deinen Account wirklich unwiderruflich löschen?');">
-    <button class="submit-btn" type="submit" name="delete_account" style="background:#d32f2f;margin-top:20px;" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
-        Account unwiderruflich löschen
-    </button>
-</form>
+</style>';
+?>
+
+<div class="page-header">
+    <h1>👤 Mein Profil</h1>
+    <p class="subtitle">Verwalte deine Kontoinformationen</p>
 </div>
-<script>switchPaymentFields();</script>
-</body>
-</html>
+
+<?php if ($isTestAccount): ?>
+    <div class="alert alert-warning test-account-notice">
+        ⚠️ Dies ist ein Test-Account. Bearbeitungen sind deaktiviert.
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($message)): ?>
+    <div class="alert alert-success">
+        ✅ <?= htmlspecialchars($message) ?>
+    </div>
+<?php endif; ?>
+
+<!-- Allgemeine Informationen -->
+<div class="search-box">
+    <div class="profile-section">
+        <h2>📋 Allgemeine Informationen</h2>
+        <br>
+    </div>
+    
+    <form method="post" autocomplete="off" class="profile-form">
+        <div class="profile-search-form">
+            <div class="form-group">
+                <label for="username">Benutzername:</label>
+                <input type="text" id="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" readonly>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="email">E-Mail:</label>
+                <input type="email" required id="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+            </div>
+        </div>
+        
+        <br>
+        <br>
+        
+        <button class="btn btn-primary" type="submit" name="update_profile" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+            💾 Änderungen speichern
+        </button>
+    </form>
+</div>
+
+<br>
+<hr>
+<br>
+
+<!-- Passwort ändern -->
+<div class="search-box">
+    <div class="profile-section">
+        <h2>🔐 Passwort ändern</h2>
+        <br>
+    </div>
+    
+    <form method="post" autocomplete="off" class="profile-form">
+        <div class="profile-search-form">
+            <div class="form-group">
+                <label for="new_password1">Neues Passwort:</label>
+                <input type="password" id="new_password1" name="new_password1" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="new_password2">Passwort wiederholen:</label>
+                <input type="password" id="new_password2" name="new_password2" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+            </div>
+        </div>
+        
+        <br>
+        <br>
+        
+        <button class="btn btn-primary" type="submit" name="pwchange" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+            🔄 Passwort ändern
+        </button>
+    </form>
+</div>
+
+<br>
+<hr>
+<br>
+
+<!-- Dangerzone -->
+<div class="search-box">
+    <div class="profile-section">
+        <h2>⚠️ Dangerzone</h2>
+        <br>
+    </div>
+    
+    <form method="post" onsubmit="return confirm('Willst du deinen Account wirklich unwiderruflich löschen?');" class="profile-form">
+        <p class="divider-text">
+            Diese Aktion kann nicht rückgängig gemacht werden. Bitte sei sicher, dass du dies wirklich möchtest.
+        </p>
+        
+        <br>
+        
+        <button class="btn btn-primary delete-btn" type="submit" name="delete_account" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+            🗑️ Account unwiderruflich löschen
+        </button>
+    </form>
+</div>
+
+<br>
+<br>
+<br>
+
+<?php require_once dirname(__DIR__, 2) . '/layout/footer.php'; ?>
