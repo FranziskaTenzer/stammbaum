@@ -42,11 +42,6 @@ if (!isAdmin()) {
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li>cookies</li>
             <li>Impressum und Datenschutz</li>
-            <li>Test User 
-                <ul>
-                <li>-> sieht Namen Ende nur mit *** Daten stehen auf der Login Seite</li>
-                </ul>
-            </li>
             <li></li>
             <li></li>
             

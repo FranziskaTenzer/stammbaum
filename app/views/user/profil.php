@@ -100,7 +100,7 @@ if (!$user) {
 <div class="profile-container">
     <h1>Mein Profil</h1>
     <?php if ($isTestAccount): /* ← NEUE ZEILE */ ?>
-        <div class="test-account-notice">⚠️ Dies ist ein Test-Account. Bearbeitungen sind nicht verfügbar.</div>
+        <div class="test-account-notice">⚠️ Dies ist ein Test-Account. Bearbeitungen sind deaktiviert.</div>
     <?php endif; /* ← NEUE ZEILE */ ?>
     <?php if (!empty($message)): ?><div class="msg"><?=htmlspecialchars($message)?></div><?php endif; ?>
     <form method="post" autocomplete="off">
