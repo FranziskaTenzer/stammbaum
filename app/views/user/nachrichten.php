@@ -2,16 +2,33 @@
 $pageTitle = "Meine Nachrichten";
 require_once '../../layout/header.php';
 
-require_once '../../lib/include.php';
-
+// Datenbankverbindung
 try {
-    $pdo = getPDO();
+    $host = 'localhost';
+    $benutzer = 'franziska';
+    $passwort = 'Rychp27g!';
+    $datenbank = 'stammbaum';
+    $charset = 'utf8mb4';
+    $dsn = "mysql:host=$host;dbname=$datenbank;charset=$charset";
+    $options = [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ];
+    $pdo = new PDO($dsn, $benutzer, $passwort, $options);
 } catch (Exception $e) {
     die("Datenbankverbindung nicht verfügbar: " . htmlspecialchars($e->getMessage()));
 }
 
 // Tabelle erstellen falls noch nicht vorhanden
-ensureNachrichtenTable($pdo);
+$pdo->exec("CREATE TABLE IF NOT EXISTS nachrichten (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user VARCHAR(255) NOT NULL,
+    betreff VARCHAR(255) NOT NULL,
+    nachricht TEXT NOT NULL,
+    zeitstempel DATETIME DEFAULT CURRENT_TIMESTAMP,
+    antwort TEXT DEFAULT NULL,
+    antwort_zeitstempel DATETIME DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
 $username = $_SESSION['username'];
 $message = '';
