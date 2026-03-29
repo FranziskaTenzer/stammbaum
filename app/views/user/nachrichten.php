@@ -202,11 +202,11 @@ $extraHead = '<style>
             <label for="betreff">Betreff:</label>
             <input type="text" id="betreff" name="betreff" maxlength="255" required
                    value="<?= isset($_POST['betreff']) ? htmlspecialchars($_POST['betreff']) : '' ?>">
-        </div>
+        </div><br/>
         <div class="form-group">
             <label for="nachricht">Nachricht:</label>
             <textarea id="nachricht" name="nachricht" rows="5" required><?= isset($_POST['nachricht']) ? htmlspecialchars($_POST['nachricht']) : '' ?></textarea>
-        </div>
+        </div><br/>
         <button class="btn btn-primary" type="submit" name="send_message">
             📤 Nachricht senden
         </button>
@@ -229,21 +229,22 @@ $extraHead = '<style>
                 <div class="nachricht-card">
                     <div class="nachricht-header">
                         <h4>📌 <?= htmlspecialchars($n['betreff']) ?></h4>
-                        <span class="zeitstempel">🕐 <?= htmlspecialchars($n['zeitstempel']) ?></span>
+                        <span class="zeitstempel">🕐 <?= formatDatum($n['zeitstempel']); ?></span>
                     </div>
                     <div class="nachricht-body">
                         <p><?= htmlspecialchars($n['nachricht']) ?></p>
-                    </div>
+                    </div><br>
                     <?php if ($n['antwort'] !== null): ?>
                         <div class="nachricht-antwort">
                             <div class="antwort-label">💬 Antwort vom Admin:</div>
                             <p><?= htmlspecialchars($n['antwort']) ?></p>
                             <?php if ($n['antwort_zeitstempel']): ?>
-                                <div class="antwort-zeit">🕐 <?= htmlspecialchars($n['antwort_zeitstempel']) ?></div>
+                                <div class="antwort-zeit">🕐 <?= formatDatum($n['antwort_zeitstempel']); ?></div>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
+                <br/><hr><br/>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>

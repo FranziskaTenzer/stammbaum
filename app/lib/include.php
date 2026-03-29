@@ -85,6 +85,10 @@ function formatDBDateOrNull($dateStr, $fromFormat = 'Y-m-d', $toFormat = 'd.m.Y'
     return $dt ? $dt->format($toFormat) : null;
 }
 
+function formatDatum($datetime, $format = 'd.m.Y H:i') {
+    return htmlspecialchars((new DateTime($datetime))->format($format), ENT_QUOTES, 'UTF-8');
+}
+
 // Helper function to sanitize input
 function sanitizeInput($input) {
     return htmlspecialchars(strip_tags($input));

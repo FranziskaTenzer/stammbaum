@@ -230,21 +230,21 @@ $extraHead = '<style>
                         </h4>
                         <div class="meta">
                             <span>👤 <?= htmlspecialchars($n['user']) ?></span>
-                            <span>🕐 <?= htmlspecialchars($n['zeitstempel']) ?></span>
+                            <span>🕐 <?= formatDatum($n['zeitstempel']);  ?></span>
                         </div>
                     </div>
-
+ 					<br />
                     <div class="nachricht-body">
                         <p><?= htmlspecialchars($n['nachricht']) ?></p>
                     </div>
-
+					<br /><br/>
                     <div class="nachricht-antwort-bereich">
                         <?php if ($n['antwort'] !== null): ?>
                             <div class="antwort-vorhanden">
                                 <div class="antwort-label">💬 Deine Antwort:</div>
                                 <p><?= htmlspecialchars($n['antwort']) ?></p>
                                 <?php if ($n['antwort_zeitstempel']): ?>
-                                    <div class="antwort-zeit">🕐 <?= htmlspecialchars($n['antwort_zeitstempel']) ?></div>
+                                    <div class="antwort-zeit">🕐 <?= formatDatum($n['antwort_zeitstempel']);  ?></div>
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
@@ -253,7 +253,7 @@ $extraHead = '<style>
                             <input type="hidden" name="nachricht_id" value="<?= (int) $n['id'] ?>">
                             <label for="antwort_<?= (int) $n['id'] ?>">
                                 <?= $n['antwort'] !== null ? '✏️ Antwort bearbeiten:' : '💬 Antwort schreiben:' ?>
-                            </label>
+                            </label><br /><br />
                             <textarea id="antwort_<?= (int) $n['id'] ?>" name="antwort" rows="3"
                                       placeholder="Antwort eingeben..."><?= $n['antwort'] !== null ? htmlspecialchars($n['antwort']) : '' ?></textarea>
                             <div>
@@ -264,6 +264,8 @@ $extraHead = '<style>
                         </form>
                     </div>
                 </div>
+                
+                            <br /><hr /><br/>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
