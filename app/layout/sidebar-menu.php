@@ -61,6 +61,20 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
             <li class="nav-subsection">
                <a href="<?= $_p ?>/app/views/admin/home.php" <?= $currentPage === 'home.php' && empty($currentFilter) ? 'class="active"' : '' ?>>👨🏻‍💻 Admin Startseite</a>
             </li>
+            <!-- Verwaltung -->
+            <li class="nav-subsection">
+                <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)">
+                    <span class="subsection-icon">▶</span>
+                    🛠️ Verwaltung
+                </span>
+                <ul class="nav-submenu">
+                    <li><a href="<?= $_p ?>/app/views/admin/vornamen-similar.php" <?= $currentPage === 'vornamen-similar.php' ? 'class="active"' : '' ?>>👨≈👨 Ähnliche Vornamen</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php" <?= $currentPage === 'nachnamen-similar.php' ? 'class="active"' : '' ?>>👤≈👤 Ähnliche Nachnamen</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?>>📬 offene Nachrichten</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
+                </ul>
+            </li>
+            
             <!-- Datenbank verwalten -->
             <li class="nav-subsection">
                 <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)">
@@ -79,19 +93,7 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
                 </ul>
             </li>
 
-            <!-- Verwaltung -->
-            <li class="nav-subsection">
-                <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)">
-                    <span class="subsection-icon">▶</span>
-                    🛠️ Verwaltung
-                </span>
-                <ul class="nav-submenu">
-                    <li><a href="<?= $_p ?>/app/views/admin/vornamen-similar.php" <?= $currentPage === 'vornamen-similar.php' ? 'class="active"' : '' ?>>👨≈👨 Ähnliche Vornamen</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php" <?= $currentPage === 'nachnamen-similar.php' ? 'class="active"' : '' ?>>👤≈👤 Ähnliche Nachnamen</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?>>📬 offene Nachrichten</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
-                </ul>
-            </li>
+            
             
         </ul>
     </div>
@@ -99,9 +101,31 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
     
 </nav>
 
+<!-- In app/layout/sidebar-menu.php -->
+
 <div class="sidebar-footer">
-    <p><a href="<?= $_p ?>/app/views/user/spenden.php" <?= $currentPage === 'spenden.php' ? 'style="font-weight:bold;"' : '' ?>>💝 Spenden</a></p>
-    <p>© Stammbaum 2026</p>
+    <div style="background: linear-gradient(135deg, #764ba2, #764ba2);
+            padding: 10px 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            text-align: center;
+            transition: all 0.3s ease;"
+     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(118, 75, 162, 0.45)';"
+     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(118, 75, 162, 0.35)';">
+    <a href="<?= $_p ?>/app/views/user/spenden.php" 
+       style="display: block;
+              color: white;
+              font-weight: 800;
+              font-size: 1.3em;
+              text-decoration: none;
+              margin-bottom: 4px;">
+        💝 Spenden<br/>
+        <span style="color: rgba(255,255,255,0.9); font-size: 0.65em;">
+        Unterstütze das Projekt
+    </span>
+    </a>
+    
+</div>
 </div>
 
 <script src="<?= $_layoutUrl ?>/script-menu.js"></script>

@@ -25,13 +25,14 @@ require_once __DIR__ . '/../../layout/header.php';
             Du kannst eine Spende bequem über PayPal senden. Klicke auf den Button oder sende den Betrag direkt an:
         </p>
         <div style="background:#f3f0f8; border-radius:8px; padding:16px 20px; margin-bottom:18px; font-family:monospace; font-size:1.05em; color:#333; word-break:break-all;">
-            [paypal@example.com]
+            franziskatenzer@hotmail.com
         </div>
-        <a href="https://www.paypal.com/donate/?hosted_button_id=XXXXXXXXXXXXXXX"
+         <p style="color:#555; line-height:1.7; margin-bottom:18px;">(bitte Freunde & Familie auswählen)</p>
+        <a href="https://www.paypal.me/FranziskaTenzer130"
            target="_blank" rel="noopener noreferrer"
            style="display:inline-block; padding:12px 28px; background:linear-gradient(135deg,#009cde 0%,#003087 100%);
                   color:white; text-decoration:none; border-radius:6px; font-weight:600; font-size:1em;">
-            💳 Mit PayPal spenden
+            💳 Mit PayPal spenden 
         </a>
         <p style="color:#888; font-size:0.85em; margin-top:12px;">
             * Du wirst zur PayPal-Website weitergeleitet. Stammbaum hat keinen Einblick in deine Zahlungsdaten.
@@ -47,15 +48,15 @@ require_once __DIR__ . '/../../layout/header.php';
         <table style="width:100%; border-collapse:collapse; font-size:0.95em;">
             <tr style="border-bottom:1px solid #eee;">
                 <td style="padding:10px 8px; color:#888; width:140px; font-weight:600;">Empfänger</td>
-                <td style="padding:10px 8px; color:#333;">[Name des Kontoinhabers]</td>
+                <td style="padding:10px 8px; color:#333;">Franziska Tenzer</td>
             </tr>
             <tr style="border-bottom:1px solid #eee;">
                 <td style="padding:10px 8px; color:#888; font-weight:600;">IBAN</td>
-                <td style="padding:10px 8px; color:#333; font-family:monospace; font-size:1.05em;">[DE00 0000 0000 0000 0000 00]</td>
+                <td style="padding:10px 8px; color:#333; font-family:monospace; font-size:1.05em;">AT88 1420 0200 1291 9531</td>
             </tr>
             <tr style="border-bottom:1px solid #eee;">
                 <td style="padding:10px 8px; color:#888; font-weight:600;">BIC</td>
-                <td style="padding:10px 8px; color:#333; font-family:monospace;">[XXXXXXXX]</td>
+                <td style="padding:10px 8px; color:#333; font-family:monospace;">BAWAATWW</td>
             </tr>
             <tr>
                 <td style="padding:10px 8px; color:#888; font-weight:600;">Verwendungszweck</td>

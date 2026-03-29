@@ -33,14 +33,11 @@ if (!isAdmin()) {
         <h3>To Do List:</h3>
         <ul>
             <li>Re-create-all überschreibt Werte, die beim einzelnen aufrufen nicht überschrieben werden</li>
-            <li>Kontakt Formular, für den User, Auflistung der Nachrichten für den Admin inkl. der 
-            	Möglichkeit zu Antworten und Feedback zu geben</li>
             <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
             <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
-            <li>cookies</li>
-            <li>Impressum und Datenschutz</li>
-            <li>Spenden Info</li>
+            <li>Impressum und Datenschutz - von mir überarbeiten</li>
+            <li>Spendeninfo ist mittig, andere Seiten nutzen die ganze breite und Traubuchliste nur einen Teil => vereinheitlichen</li>
             <li>Import prüfen lassen
             MariaDB [stammbaum]> select * from person where id=7820; (ebenfalls 7883)
 +------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
@@ -53,7 +50,6 @@ if (!isAdmin()) {
             
             <li><b>Für später:</b>
                 <ul>
-                	<li>automatische Emails bei Registrierung</li>
                 	<li>e2e Tests, aktuell noch nicht nötig</li>
                 	<li>paypal Anbindung bzw. Kreditkarte</li>
                 	<li>kompletten Stammbaum wenn 100€ bezahlt wurden</li>
