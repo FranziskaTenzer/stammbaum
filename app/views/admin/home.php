@@ -37,7 +37,6 @@ if (!isAdmin()) {
             <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
-            <li>Spendeninfo ist mittig, andere Seiten nutzen die ganze breite und Traubuchliste nur einen Teil => vereinheitlichen</li>
             <li>Import prüfen lassen
             MariaDB [stammbaum]> select * from person where id=7820; (ebenfalls 7883)
 +------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
