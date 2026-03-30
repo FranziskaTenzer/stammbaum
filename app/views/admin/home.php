@@ -64,19 +64,19 @@ if (!isAdmin()) {
     <div class="content-card admin-card">
         <h3>⛃ Datenbank löschen und neu erstellen</h3>
         <p>Die Datenbank wird komplett gelöscht und neu erstellt</p>
-     	<a href="recreate-db.php">⛃ Datenbank löschen und neu erstellen</a>
+     	<a href="recreate-db.php" onclick="return confirm('⚠️ WARNUNG: Die Datenbank wird komplett gelöscht und neu erstellt. Möchten Sie fortfahren?');">⛃ Datenbank löschen und neu erstellen</a>
     </div>
     
     <div class="content-card admin-card">
         <h3>📝 Thierbach importieren</h3>
         <p>Die Daten von Thierbach werden importiert</p>
-        <a href="import-thierbach.php" class="btn btn-warning">Thierbach importieren</a>
+        <a href="import-thierbach.php" onclick="return confirm('⚠️ WARNUNG: Die Thierbach-Daten werden importiert. Möchten Sie fortfahren?');" class="btn btn-warning">Thierbach importieren</a>
     </div>
     
     <div class="content-card admin-card">
         <h3>📝 Neue Orte importieren</h3>
         <p>Die Daten von allen anderen Orten werden importiert</p>
-        <a href="import-orte.php" class="btn btn-warning">Orte importieren</a>
+        <a href="import-orte.php" onclick="return confirm('⚠️ WARNUNG: Alle Orte-Daten werden importiert. Möchten Sie fortfahren?');" class="btn btn-warning">Orte importieren</a>
     </div>
                        
 

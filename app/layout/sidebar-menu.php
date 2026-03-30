@@ -82,9 +82,9 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
                     🗃️ Datenbank verwalten
                 </span>
                 <ul class="nav-submenu">
-                    <li><a href="<?= $_p ?>/app/views/admin/recreate-db.php" <?= $currentPage === 'recreate-db.php' ? 'class="active"' : '' ?>>⛃ Datenbank löschen und neu erstellen</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/import-thierbach.php" <?= $currentPage === 'import-thierbach.php' ? 'class="active"' : '' ?>>📝 Thierbach importieren</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/import-orte.php" <?= $currentPage === 'import-orte.php' ? 'class="active"' : '' ?>>📝 Alle Orte importieren</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/recreate-db.php" onclick="return confirm('⚠️ WARNUNG: Die Datenbank wird komplett gelöscht und neu erstellt. Möchten Sie fortfahren?');" <?= $currentPage === 'recreate-db.php' ? 'class="active"' : '' ?>>⛃ Datenbank löschen und neu erstellen</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/import-thierbach.php" onclick="return confirm('⚠️ WARNUNG: Die Thierbach-Daten werden importiert. Möchten Sie fortfahren?');" <?= $currentPage === 'import-thierbach.php' ? 'class="active"' : '' ?>>📝 Thierbach importieren</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/import-orte.php" onclick="return confirm('⚠️ WARNUNG: Alle Orte-Daten werden importiert. Möchten Sie fortfahren?');" <?= $currentPage === 'import-orte.php' ? 'class="active"' : '' ?>>📝 Alle Orte importieren</a></li>
                     <li class="warning-item"><b>
                         <a href="<?= $_p ?>/app/views/admin/re-create-all.php" onclick="return confirm('⚠️ WARNUNG: Dies löscht ALLE Daten und importiert alles neu. Möchten Sie fortfahren?');" <?= $currentPage === 're-create-all.php' ? 'class="active"' : '' ?>>
                             🔄 Kompletter Neustart (re create)
