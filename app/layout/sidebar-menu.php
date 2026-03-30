@@ -72,6 +72,7 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
                     <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php" <?= $currentPage === 'nachnamen-similar.php' ? 'class="active"' : '' ?>>👤≈👤 Ähnliche Nachnamen</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?>>📬 offene Nachrichten</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
+                	<li><a href="<?= $_p ?>/app/views/admin/benutzer-verwaltung.php" <?= $currentPage === 'benutzer-verwaltung.php' ? 'class="active"' : '' ?>>👥 Benutzer-Verwaltung</a></li>
                 </ul>
             </li>
             

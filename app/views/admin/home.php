@@ -30,6 +30,12 @@ if (!isAdmin()) {
     </div>
     
     <div class="content-card admin-card">
+    <h3>👥 Benutzer-Verwaltung</h3>
+    <p>Alle registrierten Benutzer und deren Verifizierungsstatus anzeigen</p>
+    <a href="benutzer-verwaltung.php" class="btn btn-primary">Benutzer verwalten</a>
+</div>
+    
+    <div class="content-card admin-card">
         <h3>To Do List:</h3>
         <ul>
             <li>Re-create-all überschreibt Werte, die beim einzelnen aufrufen nicht überschrieben werden</li>
