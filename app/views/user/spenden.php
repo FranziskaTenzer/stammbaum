@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../layout/header.php';
     <p class="subtitle">Unterstütze das Stammbaum-Projekt</p>
 </div>
 
-<div style="max-width:700px; margin: 0 auto;">
+<div style="max-width:700px;">
 
     <div style="background:white; border-radius:10px; padding:32px; box-shadow:0 2px 12px rgba(0,0,0,0.08); margin-bottom:24px;">
         <h2 style="color:#764ba2; margin-bottom:14px;">Danke für deine Unterstützung! 🙏</h2>
