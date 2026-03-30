@@ -115,6 +115,32 @@ function extractParents(&$text) {
     return [$vater, $mutter];
 }
 
+function extractUnehelich(&$text) {
+    $result = [
+        'bemerkung' => null,
+        'mutter_text' => null,
+    ];
+
+    // Match: (uneheliche(r) Tochter/Sohn von Name[, VaterName & MutterName])
+    if (preg_match('/\(unehelich(?:e|er)?\s+(?:Tochter|Sohn)\s+von\s+([^,)]+)(?:,\s*([^&)]+)\s*&\s*([^)]+))?\)/i', $text, $m)) {
+        $mutterName      = trim($m[1]);
+        $vaterDerMutter  = trim($m[2] ?? '') ?: null;
+        $mutterDerMutter = trim($m[3] ?? '') ?: null;
+
+        $result['bemerkung'] = trim(substr($m[0], 1, -1));
+
+        if ($vaterDerMutter && $mutterDerMutter) {
+            $result['mutter_text'] = "$mutterName ($vaterDerMutter & $mutterDerMutter)";
+        } else {
+            $result['mutter_text'] = $mutterName;
+        }
+
+        $text = str_replace($m[0], '', $text);
+    }
+
+    return $result;
+}
+
 function splitOutsideBrackets($text) {
     $depth = 0;
     for ($i = 0; $i < strlen($text); $i++) {
@@ -146,8 +172,17 @@ function parsePerson($text) {
     
     list($tod, $todOrt) = extractDateAndPlace($text, 'gest');
     list($geb, $gebOrt) = extractDateAndPlace($text, 'geb');
-    
+
+    $unehelichData = extractUnehelich($text);
+    if ($unehelichData['bemerkung']) {
+        $bemerkung .= ($bemerkung ? '; ' : '') . $unehelichData['bemerkung'];
+    }
+
     list($vater_text, $mutter_text) = extractParents($text);
+
+    if ($unehelichData['mutter_text']) {
+        $mutter_text = $unehelichData['mutter_text'];
+    }
     
     $text = preg_replace('/\([^)]*\)/', '', $text);
     $text = preg_replace('/\b\d+\s*[jJ]\b/', '', $text);
