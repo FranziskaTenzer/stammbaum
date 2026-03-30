@@ -1,105 +1,129 @@
 <?php
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 $pageTitle = "Zeige ähnliche Nachnamen";
 require_once '../../layout/header.php';
+require_once '../../lib/include.php';
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+include '../../lib/tirol-archiv-helper.php';
 
 if (!isAdmin()) {
     die('❌ Zugriff verweigert! Nur für Administratoren.');
 }
 
-// Fehlerbehandlung
-set_error_handler(function($errno, $errstr, $errfile, $errline) {
-    echo "Fehler: $errstr in $errfile:$errline";
-    return true;
-});
-    
+$pdo = getPDO();
+
+
+// ===========================
+// HELPER FUNKTIONEN
+// ===========================
+
+// Verwende die Funktion aus tirol-archiv-helper.php (falls noch nicht definiert)
+if (!function_exists('levenshteinSimilarity')) {
+    function levenshteinSimilarity($str1, $str2) {
+        $distance = levenshtein(strtolower($str1), strtolower($str2));
+        $maxLen = max(strlen($str1), strlen($str2));
+        return ($maxLen == 0) ? 100 : round((1 - ($distance / $maxLen)) * 100);
+    }
+}
+
+// Get all unique last names
+function getSimilarNachnamen($pdo) {
     try {
-        include '../../lib/include.php';
-        include '../../lib/tirol-archiv-helper.php';
-        
-        $pdo = getPDO();
-    } catch (Exception $e) {
-        die('Verbindungsfehler: ' . $e->getMessage());
-    }
-    
-    // ===========================
-    // HELPER FUNKTIONEN
-    // ===========================
-    
-    // Verwende die Funktion aus tirol-archiv-helper.php (falls noch nicht definiert)
-    if (!function_exists('levenshteinSimilarity')) {
-        function levenshteinSimilarity($str1, $str2) {
-            $distance = levenshtein(strtolower($str1), strtolower($str2));
-            $maxLen = max(strlen($str1), strlen($str2));
-            return ($maxLen == 0) ? 100 : round((1 - ($distance / $maxLen)) * 100);
-        }
-    }
-    
-    // Get all unique last names
-    function getSimilarNachnamen($pdo) {
-        try {
-            $stmt = $pdo->prepare("
+        $stmt = $pdo->prepare("
             SELECT DISTINCT nachname
             FROM person
             WHERE nachname IS NOT NULL AND nachname != ''
             ORDER BY nachname
         ");
-            $stmt->execute();
-            $nachnamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        } catch (Exception $e) {
-            echo "DB Fehler: " . $e->getMessage();
-            return [];
-        }
+        $stmt->execute();
+        $nachnamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+        echo "DB Fehler: " . $e->getMessage();
+        return [];
+    }
+    
+    $groups = [];
+    $processed = [];
+    
+    foreach ($nachnamen as $name) {
+        if (in_array($name, $processed)) continue;
         
-        $groups = [];
-        $processed = [];
-        
-        foreach ($nachnamen as $name) {
-            if (in_array($name, $processed)) continue;
-            
-            $group = [$name];
-            foreach ($nachnamen as $compareName) {
-                if ($compareName != $name && !in_array($compareName, $processed)) {
-                    $similarity = levenshteinSimilarity($name, $compareName);
-                    if ($similarity >= 80) {
-                        $group[] = $compareName;
-                        $processed[] = $compareName;
-                    }
+        $group = [$name];
+        foreach ($nachnamen as $compareName) {
+            if ($compareName != $name && !in_array($compareName, $processed)) {
+                $similarity = levenshteinSimilarity($name, $compareName);
+                if ($similarity >= 80) {
+                    $group[] = $compareName;
+                    $processed[] = $compareName;
                 }
             }
-            
-            if (count($group) > 1) {
-                $groups[] = $group;
-                $processed[] = $name;
-            }
         }
         
-        return $groups;
+        if (count($group) > 1) {
+            $groups[] = $group;
+            $processed[] = $name;
+        }
     }
     
-    // Group by first letter
-    function groupNachamenByFirstLetter($groups) {
-        $grouped = [];
+    return $groups;
+}
+
+// Group by first letter with special handling for S variants
+function groupNachamenByFirstLetter($groups) {
+    $grouped = [];
+    
+    foreach ($groups as $group) {
+        $firstLetter = strtoupper(substr($group[0], 0, 1));
+        $prefix = getTirolArchivPrefix($group[0]);
         
-        foreach ($groups as $group) {
-            $firstLetter = strtoupper(substr($group[0], 0, 1));
-            if (!isset($grouped[$firstLetter])) {
-                $grouped[$firstLetter] = [];
+        // Für S: unterscheide zwischen S, Sch, Sp, St
+        if ($firstLetter === 'S') {
+            if ($prefix === 'sch') {
+                $key = 'SCH';
+            } elseif ($prefix === 'sp') {
+                $key = 'SP';
+            } elseif ($prefix === 'st') {
+                $key = 'ST';
+            } else {
+                $key = 'S';
             }
-            $grouped[$firstLetter][] = $group;
+        } else {
+            $key = $firstLetter;
         }
         
-        ksort($grouped);
+        if (!isset($grouped[$key])) {
+            $grouped[$key] = [];
+        }
+        $grouped[$key][] = $group;
+    }
+    
+    // Sortiere: A-Q, dann R, S, Sch, Sp, St, T, dann U-Z
+    uksort($grouped, function($a, $b) {
+        // Definiere die gewünschte Reihenfolge
+        $order = [
+            'A' => 1, 'B' => 2, 'C' => 3, 'D' => 4, 'E' => 5,
+            'F' => 6, 'G' => 7, 'H' => 8, 'I' => 9, 'J' => 10,
+            'K' => 11, 'L' => 12, 'M' => 13, 'N' => 14, 'O' => 15,
+            'P' => 16, 'Q' => 17, 'R' => 18, 'S' => 19, 'SCH' => 20,
+            'SP' => 21, 'ST' => 22, 'T' => 23, 'U' => 24, 'V' => 25,
+            'W' => 26, 'X' => 27, 'Y' => 28, 'Z' => 29
+        ];
+        
+        $aOrder = $order[$a] ?? 999;
+        $bOrder = $order[$b] ?? 999;
+        return $aOrder <=> $bOrder;
+    });
+        
         return $grouped;
-    }
-    
-    // Get records for a name
-    function getRecordsForNachname($pdo, $nachname) {
-        try {
-            $sql = "
+}
+
+// Get records for a name
+function getRecordsForNachname($pdo, $nachname) {
+    try {
+        $sql = "
             SELECT
                 p.id,
                 p.vorname,
@@ -122,157 +146,157 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
             WHERE p.nachname = ?
             ORDER BY e.traubuch, p.geburtsdatum
         ";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$nachname]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log("DB Error in getRecordsForNachname: " . $e->getMessage());
+        return [];
+    }
+}
+
+function formatDate($date) {
+    if (!$date) return '—';
+    try {
+        $d = DateTime::createFromFormat('Y-m-d', $date);
+        return $d ? $d->format('d.m.Y') : '—';
+    } catch (Exception $e) {
+        return '—';
+    }
+}
+
+function formatTraubuch($traubuch) {
+    if (strpos($traubuch, '.txt') !== false) {
+        return substr($traubuch, 0, strpos($traubuch, '.txt') + 4);
+    }
+    return $traubuch;
+}
+
+function renderPersonRecord($record, $recordId) {
+    $html = '<div style="background:#f0f8ff; padding:12px; margin:8px 0; border-left:4px solid #0066cc; border-radius:3px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">';
+    
+    $html .= '<div style="flex-grow:1; min-width:250px; user-select:text;">';
+    
+    $html .= '<span style="color:#0066cc; font-size:1.1em; font-weight:bold;">' . htmlspecialchars($record['vorname'] . ' ' . $record['nachname'], ENT_QUOTES, 'UTF-8') . '</span>';
+    
+    if (!empty($record['vater_vorname']) || !empty($record['mutter_vorname'])) {
+        $html .= '<span style="color:#666; font-size:0.85em; margin-left:10px;">';
+        if (!empty($record['vater_vorname'])) {
+            $html .= htmlspecialchars($record['vater_vorname'] . ' ' . $record['vater_nachname'], ENT_QUOTES, 'UTF-8');
+        }
+        if (!empty($record['mutter_vorname'])) {
+            if (!empty($record['vater_vorname'])) $html .= ' & ';
+            $html .= htmlspecialchars($record['mutter_vorname'] . ' ' . $record['mutter_nachname'], ENT_QUOTES, 'UTF-8');
+        }
+        $html .= '</span>';
+    }
+    
+    $html .= '</div>';
+    
+    if (!empty($record['traubuch'])) {
+        $traubuchClean = formatTraubuch($record['traubuch']);
+        $html .= '<span style="background:#fff3cd; color:#856404; padding:4px 8px; border-radius:3px; font-size:0.85em; display:inline-block; white-space:nowrap;">';
+        $html .= '📖 ' . htmlspecialchars($traubuchClean, ENT_QUOTES, 'UTF-8');
+        $html .= '</span>';
+    }
+    
+    $html .= '<span class="toggle-icon" style="color:#0066cc; font-size:1.2em; font-weight:bold; transition:transform 0.3s; cursor:pointer; user-select:none;" onclick="toggleRecord(this, \'' . htmlspecialchars($recordId, ENT_QUOTES) . '\'); event.stopPropagation();">▶</span>';
+    
+    $html .= '</div>';
+    
+    $html .= '<div id="record-' . htmlspecialchars($recordId, ENT_QUOTES) . '" style="display:none; margin-top:12px; margin-left:12px; padding:12px; background:#f9f9f9; border-radius:3px; border-left:4px solid #0066cc;">';
+    
+    if (!empty($record['geburtsdatum']) || !empty($record['sterbedatum'])) {
+        $html .= '<span style="color:#555; font-size:0.9em; display:block; margin-bottom:8px;">';
+        $html .= '<strong>Lebensdaten:</strong> ';
+        if (!empty($record['geburtsdatum'])) {
+            $html .= 'geb. ' . formatDate($record['geburtsdatum']);
+        }
+        if (!empty($record['sterbedatum'])) {
+            if (!empty($record['geburtsdatum'])) $html .= ' | ';
+            $html .= 'gest. ' . formatDate($record['sterbedatum']);
+        }
+        $html .= '</span>';
+    }
+    
+    if (!empty($record['hof']) || !empty($record['ort']) || !empty($record['bemerkung'])) {
+        $html .= '<span style="color:#888; font-size:0.85em; display:block;">';
+        if (!empty($record['hof'])) {
+            $html .= '<strong>Hof:</strong> ' . htmlspecialchars($record['hof'], ENT_QUOTES, 'UTF-8') . '<br>';
+        }
+        if (!empty($record['ort'])) {
+            $html .= '<strong>Ort:</strong> ' . htmlspecialchars($record['ort'], ENT_QUOTES, 'UTF-8') . '<br>';
+        }
+        if (!empty($record['bemerkung'])) {
+            $html .= '<strong>Bem.:</strong> ' . htmlspecialchars($record['bemerkung'], ENT_QUOTES, 'UTF-8') . '<br>';
+        }
+        $html .= '</span>';
+    }
+    
+    if (!empty($record['heiratsdatum'])) {
+        $html .= '<span style="color:#888; font-size:0.85em; display:block;">';
+        $html .= '<strong>Heirat:</strong> ' . formatDate($record['heiratsdatum']);
+        $html .= '</span>';
+    }
+    
+    $html .= '</div>';
+    
+    return $html;
+}
+
+function renderNameGroup($groupNames, $pdo) {
+    $groupId = 'group-nachname-' . md5(implode('-', $groupNames));
+    
+    $html = '<div class="name-group" style="background:#f9f9f9; padding:12px; margin:10px 0; border-left:4px solid #666; border-radius:3px;">';
+    
+    $html .= '<div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleNameGroup(this, \'' . htmlspecialchars($groupId, ENT_QUOTES) . '\');">';
+    $html .= '<div>';
+    $html .= '<strong style="color:#333; user-select:none;">' . htmlspecialchars(implode(', ', $groupNames), ENT_QUOTES, 'UTF-8') . '</strong>';
+    $html .= '</div>';
+    $html .= '<span class="toggle-icon" style="color:#666; font-size:1.2em; transition:transform 0.3s; user-select:none;">▶</span>';
+    $html .= '</div>';
+    
+    // Tirol Archive Info - durchsuche die ganze Gruppe
+    $html .= renderArchiveNamesBoxForGroup($groupNames);
+    
+    $html .= '<div id="' . htmlspecialchars($groupId, ENT_QUOTES) . '" class="group-content" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #ddd;">';
+    
+    foreach ($groupNames as $name) {
+        $records = getRecordsForNachname($pdo, $name);
+        
+        if (!empty($records)) {
+            $versionId = 'version-nachname-' . md5($name);
             
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$nachname]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            error_log("DB Error in getRecordsForNachname: " . $e->getMessage());
-            return [];
-        }
-    }
-    
-    function formatDate($date) {
-        if (!$date) return '—';
-        try {
-            $d = DateTime::createFromFormat('Y-m-d', $date);
-            return $d ? $d->format('d.m.Y') : '—';
-        } catch (Exception $e) {
-            return '—';
-        }
-    }
-    
-    function formatTraubuch($traubuch) {
-        if (strpos($traubuch, '.txt') !== false) {
-            return substr($traubuch, 0, strpos($traubuch, '.txt') + 4);
-        }
-        return $traubuch;
-    }
-    
-    function renderPersonRecord($record, $recordId) {
-        $html = '<div style="background:#f0f8ff; padding:12px; margin:8px 0; border-left:4px solid #0066cc; border-radius:3px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">';
-        
-        $html .= '<div style="flex-grow:1; min-width:250px; user-select:text;">';
-        
-        $html .= '<span style="color:#0066cc; font-size:1.1em; font-weight:bold;">' . htmlspecialchars($record['vorname'] . ' ' . $record['nachname'], ENT_QUOTES, 'UTF-8') . '</span>';
-        
-        if (!empty($record['vater_vorname']) || !empty($record['mutter_vorname'])) {
-            $html .= '<span style="color:#666; font-size:0.85em; margin-left:10px;">';
-            if (!empty($record['vater_vorname'])) {
-                $html .= htmlspecialchars($record['vater_vorname'] . ' ' . $record['vater_nachname'], ENT_QUOTES, 'UTF-8');
-            }
-            if (!empty($record['mutter_vorname'])) {
-                if (!empty($record['vater_vorname'])) $html .= ' & ';
-                $html .= htmlspecialchars($record['mutter_vorname'] . ' ' . $record['mutter_nachname'], ENT_QUOTES, 'UTF-8');
-            }
-            $html .= '</span>';
-        }
-        
-        $html .= '</div>';
-        
-        if (!empty($record['traubuch'])) {
-            $traubuchClean = formatTraubuch($record['traubuch']);
-            $html .= '<span style="background:#fff3cd; color:#856404; padding:4px 8px; border-radius:3px; font-size:0.85em; display:inline-block; white-space:nowrap;">';
-            $html .= '📖 ' . htmlspecialchars($traubuchClean, ENT_QUOTES, 'UTF-8');
-            $html .= '</span>';
-        }
-        
-        $html .= '<span class="toggle-icon" style="color:#0066cc; font-size:1.2em; font-weight:bold; transition:transform 0.3s; cursor:pointer; user-select:none;" onclick="toggleRecord(this, \'' . htmlspecialchars($recordId, ENT_QUOTES) . '\'); event.stopPropagation();">▶</span>';
-        
-        $html .= '</div>';
-        
-        $html .= '<div id="record-' . htmlspecialchars($recordId, ENT_QUOTES) . '" style="display:none; margin-top:12px; margin-left:12px; padding:12px; background:#f9f9f9; border-radius:3px; border-left:4px solid #0066cc;">';
-        
-        if (!empty($record['geburtsdatum']) || !empty($record['sterbedatum'])) {
-            $html .= '<span style="color:#555; font-size:0.9em; display:block; margin-bottom:8px;">';
-            $html .= '<strong>Lebensdaten:</strong> ';
-            if (!empty($record['geburtsdatum'])) {
-                $html .= 'geb. ' . formatDate($record['geburtsdatum']);
-            }
-            if (!empty($record['sterbedatum'])) {
-                if (!empty($record['geburtsdatum'])) $html .= ' | ';
-                $html .= 'gest. ' . formatDate($record['sterbedatum']);
-            }
-            $html .= '</span>';
-        }
-        
-        if (!empty($record['hof']) || !empty($record['ort']) || !empty($record['bemerkung'])) {
-            $html .= '<span style="color:#888; font-size:0.85em; display:block;">';
-            if (!empty($record['hof'])) {
-                $html .= '<strong>Hof:</strong> ' . htmlspecialchars($record['hof'], ENT_QUOTES, 'UTF-8') . '<br>';
-            }
-            if (!empty($record['ort'])) {
-                $html .= '<strong>Ort:</strong> ' . htmlspecialchars($record['ort'], ENT_QUOTES, 'UTF-8') . '<br>';
-            }
-            if (!empty($record['bemerkung'])) {
-                $html .= '<strong>Bem.:</strong> ' . htmlspecialchars($record['bemerkung'], ENT_QUOTES, 'UTF-8') . '<br>';
-            }
-            $html .= '</span>';
-        }
-        
-        if (!empty($record['heiratsdatum'])) {
-            $html .= '<span style="color:#888; font-size:0.85em; display:block;">';
-            $html .= '<strong>Heirat:</strong> ' . formatDate($record['heiratsdatum']);
-            $html .= '</span>';
-        }
-        
-        $html .= '</div>';
-        
-        return $html;
-    }
-    
-    function renderNameGroup($groupNames, $pdo) {
-        $groupId = 'group-nachname-' . md5(implode('-', $groupNames));
-        
-        $html = '<div class="name-group" style="background:#f9f9f9; padding:12px; margin:10px 0; border-left:4px solid #666; border-radius:3px;">';
-        
-        $html .= '<div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleNameGroup(this, \'' . htmlspecialchars($groupId, ENT_QUOTES) . '\');">';
-        $html .= '<div>';
-        $html .= '<strong style="color:#333; user-select:none;">' . htmlspecialchars(implode(', ', $groupNames), ENT_QUOTES, 'UTF-8') . '</strong>';
-        $html .= '</div>';
-        $html .= '<span class="toggle-icon" style="color:#666; font-size:1.2em; transition:transform 0.3s; user-select:none;">▶</span>';
-        $html .= '</div>';
-        
-        // Tirol Archive Info
-        $html .= renderArchiveNamesBox($groupNames[0]);
-        
-        $html .= '<div id="' . htmlspecialchars($groupId, ENT_QUOTES) . '" class="group-content" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #ddd;">';
-        
-        foreach ($groupNames as $name) {
-            $records = getRecordsForNachname($pdo, $name);
+            $html .= '<div style="margin-top:12px; padding:10px; background:#ffffff; border:1px solid #ddd; border-radius:3px;">';
+            $html .= '<div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleVersion(this, \'' . htmlspecialchars($versionId, ENT_QUOTES) . '\'); event.stopPropagation();">';
+            $html .= '<div>';
+            $html .= '<strong style="color:#0066cc; font-size:1em; user-select:none;">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</strong>';
+            $html .= ' <span style="color:#999; font-size:0.9em; user-select:none;">(' . count($records) . ' Einträge)</span>';
+            $html .= '</div>';
+            $html .= '<span class="version-icon" style="color:#0066cc; font-size:1.1em; transition:transform 0.3s; display:inline-block; user-select:none;">▶</span>';
+            $html .= '</div>';
             
-            if (!empty($records)) {
-                $versionId = 'version-nachname-' . md5($name);
-                
-                $html .= '<div style="margin-top:12px; padding:10px; background:#ffffff; border:1px solid #ddd; border-radius:3px;">';
-                $html .= '<div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleVersion(this, \'' . htmlspecialchars($versionId, ENT_QUOTES) . '\'); event.stopPropagation();">';
-                $html .= '<div>';
-                $html .= '<strong style="color:#0066cc; font-size:1em; user-select:none;">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</strong>';
-                $html .= ' <span style="color:#999; font-size:0.9em; user-select:none;">(' . count($records) . ' Einträge)</span>';
-                $html .= '</div>';
-                $html .= '<span class="version-icon" style="color:#0066cc; font-size:1.1em; transition:transform 0.3s; display:inline-block; user-select:none;">▶</span>';
-                $html .= '</div>';
-                
-                $html .= '<div id="' . htmlspecialchars($versionId, ENT_QUOTES) . '" class="version-content" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">';
-                
-                $recordCounter = 0;
-                foreach ($records as $record) {
-                    $recordId = 'nachname-' . $name . '-' . ($recordCounter++);
-                    $html .= renderPersonRecord($record, $recordId);
-                }
-                
-                $html .= '</div>';
-                $html .= '</div>';
+            $html .= '<div id="' . htmlspecialchars($versionId, ENT_QUOTES) . '" class="version-content" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">';
+            
+            $recordCounter = 0;
+            foreach ($records as $record) {
+                $recordId = 'nachname-' . $name . '-' . ($recordCounter++);
+                $html .= renderPersonRecord($record, $recordId);
             }
+            
+            $html .= '</div>';
+            $html .= '</div>';
         }
-        
-        $html .= '</div>';
-        $html .= '</div>';
-        
-        return $html;
     }
     
-    ?>
+    $html .= '</div>';
+    $html .= '</div>';
+    
+    return $html;
+}
+
+?>
 <style>
     .container {
         max-width: 1200px;

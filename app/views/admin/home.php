@@ -30,20 +30,18 @@ if (!isAdmin()) {
     </div>
     
     <div class="content-card admin-card">
-    <h3>👥 Benutzer-Verwaltung</h3>
-    <p>Alle registrierten Benutzer und deren Verifizierungsstatus anzeigen</p>
-    <a href="benutzer-verwaltung.php" class="btn btn-primary">Benutzer verwalten</a>
-</div>
+        <h3>👥 Benutzer-Verwaltung</h3>
+        <p>Alle registrierten Benutzer und deren Verifizierungsstatus anzeigen</p>
+        <a href="benutzer-verwaltung.php" class="btn btn-primary">Benutzer verwalten</a>
+    </div>
     
     <div class="content-card admin-card">
         <h3>To Do List:</h3>
         <ul>
             <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
-            <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
-            
-              <li>Scheidung mit darstellen (ggfs. Importieren das Datum)</li>
+            <li>Scheidung mit darstellen (ggfs. Importieren das Datum)</li>
            
             <li><b>Für später:</b>
                 <ul>
@@ -57,7 +55,7 @@ if (!isAdmin()) {
          
             </ul>
     </div>
-    <br />
+  
     <div class="content-card admin-card">
         <h3>⛃ Datenbank löschen und neu erstellen</h3>
         <p>Die Datenbank wird komplett gelöscht und neu erstellt</p>

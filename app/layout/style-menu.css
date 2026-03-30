@@ -300,7 +300,7 @@ body {
 }
 
 .warning-item a {
-    color: var(--danger-color);
+    color: black;
 }
 
 .warning-item a:hover {
