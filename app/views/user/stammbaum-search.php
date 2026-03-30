@@ -61,7 +61,7 @@ AND p.nachname LIKE :nachname
 
 <div class="page-header">
     <h1>👤 Personensuche</h1>
-    <p class="subtitle">Suchen Sie nach Personen im Stammbaum</p>
+    <p class="subtitle">Suchen Sie nach Personen im Stammbaum. Die Kirchenbucheinträge gehen nur bis 1939.</p>
 </div>
 
 <div class="search-box">

@@ -21,17 +21,37 @@ $messageType = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
     $betreff = trim($_POST['betreff']);
     $nachricht = trim($_POST['nachricht']);
-
+    
     if ($betreff === '' || $nachricht === '') {
         $message = "Bitte Betreff und Nachricht ausfüllen.";
         $messageType = 'warning';
     } else {
         $stmt = $pdo->prepare(
             "INSERT INTO nachrichten (user, betreff, nachricht) VALUES (?, ?, ?)"
-        );
+            );
         $stmt->execute([$username, $betreff, $nachricht]);
         $message = "Nachricht erfolgreich gesendet!";
         $messageType = 'success';
+    }
+}
+
+// Nachricht löschen
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_message'])) {
+    $id = (int) $_POST['nachricht_id'];
+    
+    // Verifizieren, dass die Nachricht dem aktuellen User gehört
+    $stmt = $pdo->prepare("SELECT user FROM nachrichten WHERE id = ?");
+    $stmt->execute([$id]);
+    $msg = $stmt->fetch();
+    
+    if ($msg && $msg['user'] === $username) {
+        $stmt = $pdo->prepare("DELETE FROM nachrichten WHERE id = ?");
+        $stmt->execute([$id]);
+        $message = "Nachricht erfolgreich gelöscht!";
+        $messageType = 'success';
+    } else {
+        $message = "Fehler: Nachricht konnte nicht gelöscht werden.";
+        $messageType = 'warning';
     }
 }
 
@@ -41,7 +61,7 @@ $stmt = $pdo->prepare(
      FROM nachrichten
      WHERE user = ?
      ORDER BY zeitstempel DESC"
-);
+    );
 $stmt->execute([$username]);
 $nachrichten = $stmt->fetchAll();
 
@@ -75,6 +95,7 @@ $extraHead = '<style>
         margin: 0;
         font-size: 1.05em;
         line-height: 1.4;
+        flex: 1;
     }
     
     .nachricht-header .zeitstempel {
@@ -120,6 +141,32 @@ $extraHead = '<style>
         font-size: 0.8em;
         color: #888;
         margin-top: 12px;
+    }
+    
+    .nachricht-footer {
+        padding: 15px 20px;
+        background: #f9f9f9;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .delete-message-btn {
+        padding: 8px 16px;
+        background: #d32f2f;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9em;
+        transition: all 0.2s;
+    }
+    
+    .delete-message-btn:hover {
+        background: #b71c1c;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
     }
     
     .no-messages {
@@ -248,20 +295,27 @@ $extraHead = '<style>
                     </div><br>
                     <?php if ($n['antwort'] !== null): ?>
                         <div class="nachricht-antwort">
-                            <div class="antwort-label">💬 Antwort vom Admin:</div><br/>
-                            <p><?= htmlspecialchars($n['antwort']) ?></p><br/>
+                            <div class="antwort-label">💬 Antwort vom Admin:</div><br>
+                            <p><?= htmlspecialchars($n['antwort']) ?></p><br>
                             <?php if ($n['antwort_zeitstempel']): ?>
                                 <div class="antwort-zeit">🕐 <?= formatDatum($n['antwort_zeitstempel']); ?></div>
                             <?php endif; ?>
-                        </div>
+                        </div><br />
                     <?php endif; ?>
+                    <div class="nachricht-footer">
+                        <form method="post" style="display: inline;" onsubmit="return confirm('Möchtest du diese Nachricht wirklich löschen?');">
+                            <input type="hidden" name="nachricht_id" value="<?= $n['id'] ?>">
+                            <button type="submit" name="delete_message" class="delete-btn btn btn-primary">✖ Löschen</button>
+                        </form>
+                    </div><br/>
                 </div>
-                <br/><hr><br/>
+                <hr/><br/>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </div>
 
+<br>
 <br>
 <br>
 

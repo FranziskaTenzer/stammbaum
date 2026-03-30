@@ -51,7 +51,26 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
     <!-- ================================
          ⚙️ ADMIN - Nur für angemeldete User
          ================================ -->
-    <?php if (isLoggedIn() && isAdmin()): ?>
+    <?php if (isLoggedIn() && isAdmin()): 
+    $offen = "";
+    // Zähle unbeantwortete Nachrichten
+    require_once '../../lib/include.php';
+    $offen_count = 0;
+    $style="";
+    try {
+        $pdo = getPDO();
+        $count_stmt = $pdo->query("SELECT COUNT(*) as count FROM nachrichten WHERE antwort IS NULL");
+        $offen_count = $count_stmt->fetch(PDO::FETCH_ASSOC)['count'];
+        
+        if ($offen_count > 0) {
+            $style="style='color:red; font-weight:bold;'";
+        }
+    } catch (Exception $e) {
+        // Fehler ignorieren, falls Tabelle nicht existiert
+    }
+    
+    
+    ?>
     <div class="nav-section">
         <h3 class="nav-section-title" onclick="toggleSection(this)">
             <span class="section-icon">▶</span>
@@ -70,7 +89,7 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
                 <ul class="nav-submenu">
                     <li><a href="<?= $_p ?>/app/views/admin/vornamen-similar.php" <?= $currentPage === 'vornamen-similar.php' ? 'class="active"' : '' ?>>👨≈👨 Ähnliche Vornamen</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php" <?= $currentPage === 'nachnamen-similar.php' ? 'class="active"' : '' ?>>👤≈👤 Ähnliche Nachnamen</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?>>📬 offene Nachrichten</a></li>
+                   <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?> <?= $style; ?>>📬 offene Nachrichten</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
                 	<li><a href="<?= $_p ?>/app/views/admin/benutzer-verwaltung.php" <?= $currentPage === 'benutzer-verwaltung.php' ? 'class="active"' : '' ?>>👥 Benutzer-Verwaltung</a></li>
                 </ul>
