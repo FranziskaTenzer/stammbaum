@@ -40,9 +40,25 @@ function extractWitweWitwer(&$text) {
     $result = [
         'bemerkung' => null,
         'sterbedatum_partner' => null,
+        'uneheliche_mutter' => null,
     ];
     
-    if (preg_match('/(Witwer|Witwe)\s+(nach|von)\s+([^,]+)(?:,\s*(\d{2}\.\d{2}\.\d{4}))?/i', $text, $m)) {
+    // Check for pattern: (Name, Witwer/Witwe von ...)
+    // This catches cases like: (Maria Gwiggner, Witwe von Johann Hörbiger)
+    if (preg_match('/\(([^,]+),\s*(Witwer|Witwe)\s+(von)\s+([^)]+)\)/i', $text, $m)) {
+        $potentialMother = trim($m[1]);
+        $result['uneheliche_mutter'] = $potentialMother;
+        $result['bemerkung'] = trim($m[2] . ' ' . $m[3] . ' ' . $m[4]);
+        
+        // Extract date if present
+        if (preg_match('/(\d{2}\.\d{2}\.\d{4})/', $m[4], $dateMatch)) {
+            $result['sterbedatum_partner'] = parseDate($dateMatch[1]);
+        }
+        
+        $text = str_replace($m[0], '', $text);
+    }
+    // Original pattern for regular Witwer/Witwe
+    elseif (preg_match('/(Witwer|Witwe)\s+(nach|von)\s+([^,)]+)(?:,\s*(\d{2}\.\d{2}\.\d{4}))?/i', $text, $m)) {
         $result['bemerkung'] = trim($m[0]);
         
         if (!empty($m[4])) {
@@ -58,11 +74,7 @@ function extractWitweWitwer(&$text) {
 function extractBemerkung(&$text) {
     $bemerkung = [];
     
-    if (preg_match('/\((unehelich von [^)]+)\)/i', $text, $m)) {
-        $bemerkung[] = trim($m[1]);
-        $text = str_replace($m[0], '', $text);
-    }
-    
+    // Extract other bemerkungen (S-numbers)
     if (preg_match('/\b(S\d+)\b/', $text, $m)) {
         $bemerkung[] = $m[1];
         $text = str_replace($m[1], '', $text);
@@ -92,11 +104,31 @@ function extractDateAndPlace(&$text, $type) {
     return [$datum, $ort];
 }
 
+/**
+ * Extrahiert Eltern-Information und verarbeitet auch verschachtelte Fälle
+ * Pattern 1: (Vater & Mutter) - normale Eltern
+ * Pattern 2: (Name, Tochter/Sohn von Vater & Mutter) - Person mit Großeltern
+ */
 function extractParents(&$text) {
     $vater = null;
     $mutter = null;
+    $nested_vater = null;
+    $nested_mutter = null;
     
-    if (preg_match('/\(([^&)]+)\s*&\s*([^)]+)\)/i', $text, $m)) {
+    // Pattern: (Name, Tochter/Sohn von Vater & Mutter)
+    // This extracts: Name with nested grandparents
+    if (preg_match('/\(([^,)]+?),\s*(?:Tochter|Sohn)\s+von\s+([^&)]+)\s*&\s*([^)]+)\)/i', $text, $m)) {
+        // This is a person with nested grandparents
+        $name_with_relation = trim($m[1]);
+        $nested_vater = trim($m[2]);
+        $nested_mutter = trim($m[3]);
+        
+        $text = str_replace($m[0], '', $text);
+        
+        return [$name_with_relation, null, $nested_vater, $nested_mutter];
+    }
+    // Pattern: (Vater & Mutter) - direct parents
+    elseif (preg_match('/\(([^&)]+)\s*&\s*([^)]+)\)/i', $text, $m)) {
         $vater_text = trim($m[1]);
         $mutter_text = trim($m[2]);
         
@@ -104,41 +136,69 @@ function extractParents(&$text) {
         $mutter = $mutter_text ? $mutter_text : null;
         
         $text = str_replace($m[0], '', $text);
-    } elseif (preg_match('/\(([^)]+)\)/i', $text, $m)) {
+        
+        return [$vater, $mutter, null, null];
+    }
+    // Pattern: (Single parent info)
+    elseif (preg_match('/\(([^)]+)\)/i', $text, $m)) {
         $parent_text = trim($m[1]);
-        if ($parent_text && !preg_match('/^(unehelich|S\d+)/i', $parent_text)) {
+        if ($parent_text && !preg_match('/^(unehelich|S\d+|Witwer|Witwe)/i', $parent_text)) {
             $vater = $parent_text;
         }
         $text = str_replace($m[0], '', $text);
+        
+        return [$vater, $mutter, null, null];
     }
     
-    return [$vater, $mutter];
+    return [$vater, $mutter, $nested_vater, $nested_mutter];
 }
 
+/**
+ * Extrahiert uneheliche Informationen
+ * Pattern: (uneheliche(r) Tochter/Sohn von Name[, Vater & Mutter])
+ */
 function extractUnehelich(&$text) {
     $result = [
         'bemerkung' => null,
         'mutter_text' => null,
+        'nested_vater_text' => null,
+        'nested_mutter_text' => null,
     ];
-
+    
     // Match: (uneheliche(r) Tochter/Sohn von Name[, VaterName & MutterName])
     if (preg_match('/\(unehelich(?:e|er)?\s+(?:Tochter|Sohn)\s+von\s+([^,)]+)(?:,\s*([^&)]+)\s*&\s*([^)]+))?\)/i', $text, $m)) {
         $mutterName      = trim($m[1]);
         $vaterDerMutter  = trim($m[2] ?? '') ?: null;
         $mutterDerMutter = trim($m[3] ?? '') ?: null;
-
+        
         $result['bemerkung'] = trim(substr($m[0], 1, -1));
-
-        if ($vaterDerMutter && $mutterDerMutter) {
-            $result['mutter_text'] = "$mutterName ($vaterDerMutter & $mutterDerMutter)";
-        } else {
-            $result['mutter_text'] = $mutterName;
-        }
-
+        $result['nested_vater_text'] = $vaterDerMutter;
+        $result['nested_mutter_text'] = $mutterDerMutter;
+        $result['mutter_text'] = $mutterName;
+        
         $text = str_replace($m[0], '', $text);
     }
-
+    
     return $result;
+}
+
+/**
+ * Bereinigt den Namen von "unehelich" Markierungen
+ * Entfernt: "unehelich, " oder ", unehelich"
+ */
+function cleanNameFromUneligitimate($name) {
+    $name = trim($name);
+    
+    // Remove "unehelich, " at the start
+    $name = preg_replace('/^unehelich,\s*/i', '', $name);
+    
+    // Remove ", unehelich" anywhere (not just at the end)
+    $name = preg_replace('/,\s*unehelich\s*/i', '', $name);
+    
+    // Remove all remaining commas
+    $name = str_replace(',', '', $name);
+    
+    return trim($name);
 }
 
 function splitOutsideBrackets($text) {
@@ -163,30 +223,56 @@ function parsePerson($text) {
     preg_match('/\b(\d+)\s*[jJ]\b/', $text, $m);
     $alter = $m[1] ?? null;
     
+    // Extract Witwer/Witwe information first
     $witweData = extractWitweWitwer($text);
-    $bemerkung = extractBemerkung($text);
     
+    // Extract other bemerkungen (S-numbers)
+    $otherBemerkung = extractBemerkung($text);
+    
+    // Combine bemerkungen
+    $bemerkung = [];
     if ($witweData['bemerkung']) {
-        $bemerkung .= ($bemerkung ? '; ' : '') . $witweData['bemerkung'];
+        $bemerkung[] = $witweData['bemerkung'];
     }
+    if ($otherBemerkung) {
+        $bemerkung[] = $otherBemerkung;
+    }
+    $bemerkung = implode('; ', $bemerkung);
     
+    // Extract dates
     list($tod, $todOrt) = extractDateAndPlace($text, 'gest');
     list($geb, $gebOrt) = extractDateAndPlace($text, 'geb');
-
+    
+    // Extract unehelich information
     $unehelichData = extractUnehelich($text);
     if ($unehelichData['bemerkung']) {
         $bemerkung .= ($bemerkung ? '; ' : '') . $unehelichData['bemerkung'];
     }
-
-    list($vater_text, $mutter_text) = extractParents($text);
-
-    if ($unehelichData['mutter_text']) {
+    
+    // Extract parents (now returns 4 values for nested parents)
+    list($vater_text, $mutter_text, $nested_vater_text, $nested_mutter_text) = extractParents($text);
+    
+    // Priority: If we have an uneheliche mother from the Witwe/Witwer combined pattern, use it
+    if ($witweData['uneheliche_mutter']) {
+        $mutter_text = $witweData['uneheliche_mutter'];
+    }
+    // Otherwise, use mother from unehelich extraction
+    elseif ($unehelichData['mutter_text']) {
         $mutter_text = $unehelichData['mutter_text'];
+        // If the unehelich mother also has grandparents, store them
+        if ($unehelichData['nested_vater_text'] || $unehelichData['nested_mutter_text']) {
+            $nested_vater_text = $unehelichData['nested_vater_text'];
+            $nested_mutter_text = $unehelichData['nested_mutter_text'];
+        }
     }
     
+    // Remove all brackets before parsing name
     $text = preg_replace('/\([^)]*\)/', '', $text);
     $text = preg_replace('/\b\d+\s*[jJ]\b/', '', $text);
     $text = preg_replace('/,?\s*(Hof|Ort):\s*[^,]*/i', '', $text);
+    
+    // IMPORTANT: Clean "unehelich" BEFORE splitting vorname/nachname
+    $text = cleanNameFromUneligitimate($text);
     
     $text = trim($text);
     
@@ -196,7 +282,7 @@ function parsePerson($text) {
     
     return [
         'vorname' => trim($vorname),
-        'nachname' => $nachname,
+        'nachname' => trim($nachname),
         'geburtsdatum' => $geb,
         'sterbedatum' => $tod,
         'geburtsort' => $gebOrt,
@@ -205,7 +291,9 @@ function parsePerson($text) {
         'referenz_ehe' => $referenzEhe,
         'bemerkung' => $bemerkung,
         'vater_text' => $vater_text,
-        'mutter_text' => $mutter_text
+        'mutter_text' => $mutter_text,
+        'nested_vater_text' => $nested_vater_text,
+        'nested_mutter_text' => $nested_mutter_text,
     ];
 }
 
@@ -254,7 +342,24 @@ function findOrCreatePersonFromText($pdo, $personText) {
     }
     
     if ($personData['mutter_text']) {
-        $mutterId = findOrCreatePersonFromText($pdo, $personData['mutter_text']);
+        // If the mother also has nested parents (grandparents), process them first
+        if ($personData['nested_vater_text'] || $personData['nested_mutter_text']) {
+            $nested_vater_id = null;
+            $nested_mutter_id = null;
+            
+            if ($personData['nested_vater_text']) {
+                $nested_vater_id = findOrCreatePersonFromText($pdo, $personData['nested_vater_text']);
+            }
+            if ($personData['nested_mutter_text']) {
+                $nested_mutter_id = findOrCreatePersonFromText($pdo, $personData['nested_mutter_text']);
+            }
+            
+            // Now create the mother with the grandparents
+            $mutterPersonData = parsePerson($personData['mutter_text']);
+            $mutterId = findOrCreatePerson($pdo, $mutterPersonData, $nested_vater_id, $nested_mutter_id);
+        } else {
+            $mutterId = findOrCreatePersonFromText($pdo, $personData['mutter_text']);
+        }
     }
     
     return findOrCreatePerson($pdo, $personData, $vaterId, $mutterId);

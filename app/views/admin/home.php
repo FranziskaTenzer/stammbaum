@@ -38,20 +38,11 @@ if (!isAdmin()) {
     <div class="content-card admin-card">
         <h3>To Do List:</h3>
         <ul>
-            <li>Re-create-all überschreibt Werte, die beim einzelnen aufrufen nicht überschrieben werden</li>
             <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
             <li>Ähnliche Namen richtig finden/vergleichen im Tiroler Archiv</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
-            <li>Import prüfen lassen
-            MariaDB [stammbaum]> select * from person where id=7820; (ebenfalls 7883)
-+------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
-| id   | vorname                                      | nachname    | vater_id | mutter_id | geburtsdatum | sterbedatum | geburtsort | sterbeort | hof  | ort  | bemerkung | referenz_ehe_id |
-+------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
-| 7820 | Maria Gwiggner, uneheliche Tochter von Jakob | Lohrstaller |     NULL |      NULL | NULL         | NULL        | NULL       | NULL      | NULL | NULL |           |            NULL |
-+------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
             
-            </li>
               <li>Scheidung mit darstellen (ggfs. Importieren das Datum)</li>
            
             <li><b>Für später:</b>
