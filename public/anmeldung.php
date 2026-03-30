@@ -350,9 +350,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php endif; ?>
 
 <footer style="text-align:center; padding:14px 20px; font-size:0.85em; color:#888; background:rgba(255,255,255,0.15); margin-top:20px;">
-    <a href="datenschutz.php" style="color:#e8e1f5; text-decoration:none; margin:0 8px;">Datenschutz</a>
+    <a href="datenschutz.php" style="color:white; text-decoration:none; margin:0 8px;">Datenschutz</a>
     &middot;
-    <a href="impressum.php" style="color:#e8e1f5; text-decoration:none; margin:0 8px;">Impressum</a>
+    <a href="impressum.php" style="color:white; text-decoration:none; margin:0 8px;">Impressum</a>
 </footer>
 
 <?php include __DIR__ . '/../app/layout/cookie-consent.php'; ?>

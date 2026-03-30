@@ -47,7 +47,11 @@ if (!isAdmin()) {
 +------+----------------------------------------------+-------------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
             
             </li>
-            
+            <li>User kann eigene Nachrichten löschen (weg für immer? Inkl. Antworten)</li>
+             <li>Admin bekommt Userliste (Name und Email, registriert seit)</li>
+              <li>Info Personensuche: kirchenbuch einträge bis max 1938</li>
+              <li>Scheidung mit darstellen (ggfs. Importieren das Datum)</li>
+           
             <li><b>Für später:</b>
                 <ul>
                 	<li>e2e Tests, aktuell noch nicht nötig</li>
