@@ -247,6 +247,21 @@ function splitOutsideBrackets($text) {
     return [null, null];
 }
 
+function extractScheidungsdatum(&$text) {
+    $scheidungsdatum = null;
+
+    // Formats in source data: "geschieden am 04.05.1949" with optional "in <Ort>".
+    // Keep trailing tokens (e.g. S92) untouched by removing only the matched clause.
+    if (preg_match('/\bgeschieden\s+(?:am\s+)?((?:\d{2}|xx|00)\.(?:\d{2}|xx|00)\.\d{4})(?:\s+in\s+[^,&(]+)?/i', $text, $m)) {
+        $scheidungsdatum = parseDate($m[1]);
+        $text = str_replace($m[0], '', $text);
+        $text = preg_replace('/\s{2,}/', ' ', $text);
+        $text = trim($text);
+    }
+
+    return $scheidungsdatum;
+}
+
 function parsePerson($text) {
     
     $referenzEhe = extractSId($text);
@@ -331,10 +346,30 @@ function parsePerson($text) {
     ];
 }
 
+function mergeBemerkungValues($existing, $incoming) {
+    $existing = trim((string)$existing);
+    $incoming = trim((string)$incoming);
+
+    if ($existing === '') return $incoming;
+    if ($incoming === '') return $existing;
+
+    $parts = array_merge(
+        preg_split('/\s*;\s*/', $existing),
+        preg_split('/\s*;\s*/', $incoming)
+    );
+
+    $parts = array_values(array_filter(array_map('trim', $parts), static function ($value) {
+        return $value !== '';
+    }));
+
+    $parts = array_values(array_unique($parts));
+    return implode('; ', $parts);
+}
+
 function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
     
-    $stmt = $pdo->prepare("
-        SELECT id, geburtsdatum FROM person
+    $stmt = $pdo->prepare(" 
+        SELECT id, geburtsdatum, bemerkung FROM person
         WHERE vorname=? AND nachname=?
         AND (vater_id <=> ?)
         AND (mutter_id <=> ?)
@@ -366,8 +401,9 @@ function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
         }
 
         if (!empty($data['bemerkung'])) {
-            $update = $pdo->prepare("UPDATE person SET bemerkung = CASE WHEN bemerkung IS NULL OR bemerkung = '' THEN ? ELSE bemerkung END WHERE id = ?");
-            $update->execute([$data['bemerkung'], $id]);
+            $mergedBemerkung = mergeBemerkungValues($existing['bemerkung'] ?? '', $data['bemerkung']);
+            $update = $pdo->prepare("UPDATE person SET bemerkung = ? WHERE id = ?");
+            $update->execute([$mergedBemerkung, $id]);
         }
     } else {
         $stmt = $pdo->prepare("
@@ -476,6 +512,7 @@ function importFile($pdo, $filePath, $traubuch) {
             $heiratsdatum = isset($m[0]) ? parseDate($m[0]) : null;
             
             $line = preg_replace('/^\d{2}\.\d{2}\.\d{4}\s*/', '', $line);
+            $scheidungsdatum = extractScheidungsdatum($line);
             
             list($mannText, $frauText) = splitOutsideBrackets($line);
             if (!$mannText || !$frauText) continue;
@@ -495,11 +532,17 @@ function importFile($pdo, $filePath, $traubuch) {
             
             if (!$eheId) {
                 $pdo->prepare("
-                    INSERT INTO ehe (vater_id, mutter_id, heiratsdatum, traubuch)
-                    VALUES (?, ?, ?, ?)
-                ")->execute([$mannId, $frauId, $heiratsdatum, $traubuch]);
+                    INSERT INTO ehe (vater_id, mutter_id, heiratsdatum, scheidungsdatum, traubuch)
+                    VALUES (?, ?, ?, ?, ?)
+                ")->execute([$mannId, $frauId, $heiratsdatum, $scheidungsdatum, $traubuch]);
                 
                 $eheId = $pdo->lastInsertId();
+            } elseif (!empty($scheidungsdatum)) {
+                $pdo->prepare(" 
+                    UPDATE ehe
+                    SET scheidungsdatum = COALESCE(scheidungsdatum, ?)
+                    WHERE id = ?
+                ")->execute([$scheidungsdatum, $eheId]);
             }
             
             $imported++;

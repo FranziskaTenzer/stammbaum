@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS ehe (
     mutter_alter INT,
     
     heiratsdatum VARCHAR(10) NULL,
+    scheidungsdatum VARCHAR(10) NULL,
     traubuch VARCHAR(255),
     
     CONSTRAINT unique_ehe UNIQUE (vater_id, mutter_id, heiratsdatum)
