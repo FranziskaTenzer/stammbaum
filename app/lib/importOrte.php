@@ -74,30 +74,51 @@ function extractWitweWitwer(&$text) {
 function extractBemerkung(&$text) {
     $bemerkung = [];
     
-    // Extract other bemerkungen (S-numbers)
-    if (preg_match('/\b(S\d+)\b/', $text, $m)) {
-        $bemerkung[] = $m[1];
-        $text = str_replace($m[1], '', $text);
+    // Extract all S-number notes and remove them from text.
+    if (preg_match_all('/\b(S\d+)\b/', $text, $matches) && !empty($matches[1])) {
+        foreach ($matches[1] as $sid) {
+            $bemerkung[] = $sid;
+        }
+        $text = preg_replace('/\bS\d+\b/', '', $text);
     }
     
+    $bemerkung = array_values(array_unique($bemerkung));
     return implode('; ', $bemerkung);
 }
 
 function extractDateAndPlace(&$text, $type) {
     $datum = null;
     $ort = null;
+
+    $normalizePlace = static function ($value) {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return null;
+        }
+
+        // Ortsangaben erscheinen oft als "in <Ort>"; das führende "in" soll nicht gespeichert werden.
+        $value = preg_replace('/^in\s+/i', '', $value);
+        $value = trim($value, " \t\n\r\0\x0B,.;");
+
+        return $value === '' ? null : $value;
+    };
     
     if ($type === 'geb') {
-        if (preg_match('/geb\.\s*(\d{2}\.\d{2}\.\d{4})/', $text, $m)) {
-            $datum = parseDate($m[1]);
-            $text = preg_replace('/geb\.\s*\d{2}\.\d{2}\.\d{4}.*/', '', $text);
+        if (preg_match_all('/\bgeb\.\s*((?:\d{2}|xx|00)\.(?:\d{2}|xx|00)\.\d{4})(?:\s+([^,&(]+?))?\s*(?=,|\(|&|$)/i', $text, $matches, PREG_SET_ORDER) && !empty($matches)) {
+            // Prefer the last explicit birth date in the remaining person text.
+            $last = end($matches);
+            $datum = parseDate($last[1]);
+            $ort = isset($last[2]) ? $normalizePlace($last[2]) : null;
+            $text = preg_replace('/\bgeb\.\s*(?:\d{2}|xx|00)\.(?:\d{2}|xx|00)\.\d{4}(?:\s+[^,&(]+?)?\s*(?=,|\(|&|$)/i', '', $text);
         }
     }
     
     if ($type === 'gest') {
-        if (preg_match('/gest\.\s*(\d{2}\.\d{2}\.\d{4})/', $text, $m)) {
-            $datum = parseDate($m[1]);
-            $text = preg_replace('/gest\.\s*\d{2}\.\d{2}\.\d{4}.*/', '', $text);
+        if (preg_match_all('/\bgest\.\s*((?:\d{2}|xx|00)\.(?:\d{2}|xx|00)\.\d{4})(?:\s+([^,&(]+?))?\s*(?=,|\(|&|$)/i', $text, $matches, PREG_SET_ORDER) && !empty($matches)) {
+            $last = end($matches);
+            $datum = parseDate($last[1]);
+            $ort = isset($last[2]) ? $normalizePlace($last[2]) : null;
+            $text = preg_replace('/\bgest\.\s*(?:\d{2}|xx|00)\.(?:\d{2}|xx|00)\.\d{4}(?:\s+[^,&(]+?)?\s*(?=,|\(|&|$)/i', '', $text);
         }
     }
     
@@ -115,6 +136,16 @@ function extractParents(&$text) {
     $nested_vater = null;
     $nested_mutter = null;
     
+    // Pattern: (Name (Vater & Mutter)) with missing outer closing bracket in source.
+    // Example: (Maria ... (Mathias ... & Anna ...)
+    if (preg_match('/^\(\s*([^()&]+?)\s*\(\s*([^()&]+)\s*&\s*([^)]+)\)\s*$/i', $text, $m)) {
+        $text = trim($m[1]);
+        $vater = trim($m[2]);
+        $mutter = trim($m[3]);
+
+        return [$vater ?: null, $mutter ?: null, null, null];
+    }
+
     // Pattern: (Name, Tochter/Sohn von Vater & Mutter)
     // This extracts: Name with nested grandparents
     if (preg_match('/\(([^,)]+?),\s*(?:Tochter|Sohn)\s+von\s+([^&)]+)\s*&\s*([^)]+)\)/i', $text, $m)) {
@@ -128,7 +159,7 @@ function extractParents(&$text) {
         return [$name_with_relation, null, $nested_vater, $nested_mutter];
     }
     // Pattern: (Vater & Mutter) - direct parents
-    elseif (preg_match('/\(([^&)]+)\s*&\s*([^)]+)\)/i', $text, $m)) {
+    elseif (preg_match('/\(([^()&]+)\s*&\s*([^()]+)\)/i', $text, $m)) {
         $vater_text = trim($m[1]);
         $mutter_text = trim($m[2]);
         
@@ -231,6 +262,9 @@ function parsePerson($text) {
     
     // Combine bemerkungen
     $bemerkung = [];
+    if ($referenzEhe) {
+        $bemerkung[] = $referenzEhe;
+    }
     if ($witweData['bemerkung']) {
         $bemerkung[] = $witweData['bemerkung'];
     }
@@ -238,10 +272,6 @@ function parsePerson($text) {
         $bemerkung[] = $otherBemerkung;
     }
     $bemerkung = implode('; ', $bemerkung);
-    
-    // Extract dates
-    list($tod, $todOrt) = extractDateAndPlace($text, 'gest');
-    list($geb, $gebOrt) = extractDateAndPlace($text, 'geb');
     
     // Extract unehelich information
     $unehelichData = extractUnehelich($text);
@@ -265,6 +295,10 @@ function parsePerson($text) {
             $nested_mutter_text = $unehelichData['nested_mutter_text'];
         }
     }
+
+    // Extract dates after parent extraction so parent birth dates stay with parent records.
+    list($tod, $todOrt) = extractDateAndPlace($text, 'gest');
+    list($geb, $gebOrt) = extractDateAndPlace($text, 'geb');
     
     // Remove all brackets before parsing name
     $text = preg_replace('/\([^)]*\)/', '', $text);
@@ -300,25 +334,53 @@ function parsePerson($text) {
 function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
     
     $stmt = $pdo->prepare("
-        SELECT id FROM person
+        SELECT id, geburtsdatum FROM person
         WHERE vorname=? AND nachname=?
         AND (vater_id <=> ?)
         AND (mutter_id <=> ?)
     ");
     $stmt->execute([$data['vorname'], $data['nachname'], $vaterId, $mutterId]);
     
-    $id = $stmt->fetchColumn();
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+    $id = $existing['id'] ?? null;
     
-    if (!$id) {
+    if ($id) {
+        if (!empty($data['geburtsdatum']) && empty($existing['geburtsdatum'])) {
+            $update = $pdo->prepare("UPDATE person SET geburtsdatum = ? WHERE id = ?");
+            $update->execute([$data['geburtsdatum'], $id]);
+        }
+
+        if (!empty($data['sterbedatum'])) {
+            $update = $pdo->prepare("UPDATE person SET sterbedatum = COALESCE(sterbedatum, ?) WHERE id = ?");
+            $update->execute([$data['sterbedatum'], $id]);
+        }
+
+        if (!empty($data['geburtsort'])) {
+            $update = $pdo->prepare("UPDATE person SET geburtsort = COALESCE(geburtsort, ?) WHERE id = ?");
+            $update->execute([$data['geburtsort'], $id]);
+        }
+
+        if (!empty($data['sterbeort'])) {
+            $update = $pdo->prepare("UPDATE person SET sterbeort = COALESCE(sterbeort, ?) WHERE id = ?");
+            $update->execute([$data['sterbeort'], $id]);
+        }
+
+        if (!empty($data['bemerkung'])) {
+            $update = $pdo->prepare("UPDATE person SET bemerkung = CASE WHEN bemerkung IS NULL OR bemerkung = '' THEN ? ELSE bemerkung END WHERE id = ?");
+            $update->execute([$data['bemerkung'], $id]);
+        }
+    } else {
         $stmt = $pdo->prepare("
-            INSERT INTO person (vorname, nachname, geburtsdatum, sterbedatum, bemerkung, vater_id, mutter_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO person (vorname, nachname, geburtsdatum, sterbedatum, geburtsort, sterbeort, bemerkung, vater_id, mutter_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $data['vorname'],
             $data['nachname'],
             $data['geburtsdatum'],
             $data['sterbedatum'],
+            $data['geburtsort'],
+            $data['sterbeort'],
             $data['bemerkung'],
             $vaterId,
             $mutterId

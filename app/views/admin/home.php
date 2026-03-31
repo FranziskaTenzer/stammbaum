@@ -41,33 +41,17 @@ if (!isAdmin()) {
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
             <li>Scheidung mit darstellen (ggfs. Importieren das Datum)</li>
-           
+            
             <li><b>Für später:</b>
                 <ul>
                 	<li>e2e Tests, aktuell noch nicht nötig</li>
                 	<li>paypal Anbindung bzw. Kreditkarte</li>
                 	<li>kompletten Stammbaum wenn 100€ bezahlt wurden</li>
                 	<li>Stammbaum inkl. Tanten und Onkel 200€</li>
-                	
+                	<li>Transkripbus für die Traubücher ohne Tabellenlayout in latein prüfen</li>
                 </ul>
             </li>
-         <li>
-         folgende Daten sind falsch in der DB:
-         
-         noch mal prüfen, geändert zu witwe nach
-         02.07.1921 Albrecht Putzker 49J (Karl Friedrich Putzker & Franziska Prosch, Witwer nach 28.03.1919 Aloisa Schardinger) geb. 30.01.1872 gest. 08.04.1937 & Anna Leie Gföller 36J (Sebastian Gföller & Ursula Steiner, Witwe nach Emil Leie gest. 29.03.1919) geb. 03.03.1885
-         
-         -----------------
-         alle orte:
-         
-         geburtsdatum der Eltern mit dabei
-         25.11.1867 Karl Moser 40J (Jakob Moser geb. 28.04.1799 & Theresia Hager) geb. 18.11.1827 & Maria Brunner 29J (Oswald Knoll geb. 30.07.1811 & Maria Brunner geb. 21.12.1804) geb. 21.09.1838
-         
-         04.02.1760 Bartholomäus Klingler (Matthias Klingler geb. 21.08.1723 & Katharina Toidtholzl) & Anna Bischofer (Vitus Bischofer & Maria Plözachner) geb. 05.06.1713
-         
-         
-         </li>
-            </ul>
+        </ul>
     </div>
   
     <div class="content-card admin-card">
