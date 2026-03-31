@@ -58,46 +58,6 @@ if (!isAdmin()) {
          noch mal prüfen, geändert zu witwe nach
          02.07.1921 Albrecht Putzker 49J (Karl Friedrich Putzker & Franziska Prosch, Witwer nach 28.03.1919 Aloisa Schardinger) geb. 30.01.1872 gest. 08.04.1937 & Anna Leie Gföller 36J (Sebastian Gföller & Ursula Steiner, Witwe nach Emil Leie gest. 29.03.1919) geb. 03.03.1885
          
-         --------------------
-         
-         thierbach:
-         
-         
-S124 Kaspar  Hofer, Ort: Auffach, & Anna Moser Kinder: Anna Hofer S123
-
-S125 Vitus Klingler & Maria Moser Kinder: Walburga Klingler S119
-
-S126 20.10.1871 Johann Siedler 42J S119 & Gertraud Moser 25J S128 Kinder: Josef Siedler S129
-
-S127 02.02.1870 Michael Siedler 31J S119 & Katharina Alph 32J (unehelich von Maria Alph)
-
-S215 16.07.1877 Josef Straster 50J (uneheliche von Anna Straster) & Maria Varhofer 41J S180
-
-S057 08.02.1886 Peter Klingler 52J S036 & Ursula Feichter 39J (uneheliche von Margreth Feichter, Michael Feichter & Maria Holzer) S056
-
-         Verknüpfung noch immer falsch:
-         ariaDB [stammbaum]> select * from person where (vorname IN ('Margreth', 'Ursula') AND nachname = 'Feichter') OR (vorname='Maria' and nachname='Holzer');
-+-----+----------+----------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
-| id  | vorname  | nachname | vater_id | mutter_id | geburtsdatum | sterbedatum | geburtsort | sterbeort | hof  | ort  | bemerkung | referenz_ehe_id |
-+-----+----------+----------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
-| 162 | Margreth | Feichter |      160 |       161 | NULL         | NULL        | NULL       | NULL      | NULL | NULL | unehelich |            NULL |
-| 161 | Maria    | Holzer   |     NULL |      NULL | NULL         | NULL        | NULL       | NULL      | NULL | NULL | NULL      |              59 |
-| 163 | Ursula   | Feichter |     NULL |      NULL | NULL         | NULL        | NULL       | NULL      | NULL | NULL | NULL      |              60 |
-+-----+----------+----------+----------+-----------+--------------+-------------+------------+-----------+------+------+-----------+-----------------+
-         
-         Dabei ist die richtige Verknüpfung:
-			163 Margreth Feichter Mutter: 161
-			161 Maria Holzer Mutter:
-			162 Ursula Feicher Mutter: 163
-         
-         Der Fehler wurde auch noch nicht behoben:
-         
-          S215 16.07.1877 Josef Straster 50J (unehelicher Sohn von Anna Straster) & Maria Varhofer 41J S180
-
-Warning: Undefined array key "geburtsdatum" in /home/franziska/eclipse-workspace/stammbaum/app/lib/importThierbach.php on line 247
-
-Warning: Undefined array key "sterbedatum" in /home/franziska/eclipse-workspace/stammbaum/app/lib/importThierbach.php on line 248
-         
          -----------------
          alle orte:
          

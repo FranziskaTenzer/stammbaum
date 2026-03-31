@@ -49,62 +49,56 @@ function extractFieldThierbach(&$text, $label) {
 }
 
 /* =========================
- UNEHELICHE PARENT PARSER
+ UNEHELICHE PARENT EXTRACTOR - für einzelne Person
  ========================= */
 
-function extractIllegitimateParent(&$text) {
-    $illegitimate = null;
+function extractIllegitimateParentFromPerson(&$text) {
+    $parent = null;
     
-    // Pattern 1: (unehelich von Maria Alph)
-    if (preg_match('/\(unehelich\s+von\s+([^)]+)\)/i', $text, $m)) {
-        $parent = trim($m[1]);
-        $sSave = extractSIdThierbach($parent);
+    // Suche IRGENDWELCHE Klammern mit "unehelich" darin
+    if (preg_match('/\(uneheliche?[r]?\s+(?:von|Sohn\s+von|Tochter\s*:\s*)([^)]*)\)/i', $text, $m)) {
+        $parentInfo = trim($m[1]);
         
-        $parts = preg_split('/\s+/', $parent);
-        $parentNachname = count($parts) > 1 ? array_pop($parts) : null;
-        $parentVorname = implode(' ', $parts);
+        debug("🔍 Raw Parent Info: '$parentInfo'");
         
-        $illegitimate = [
-            'vorname' => trim($parentVorname),
-            'nachname' => $parentNachname,
-            'sId' => $sSave
-        ];
+        // Splitte nach & und Kommas
+        $people = preg_split('/[,&]/', $parentInfo);
+        $people = array_map('trim', $people);
+        $people = array_filter($people);
         
-        $text = preg_replace('/\(unehelich\s+von\s+[^)]+\)/i', '', $text);
-        return $illegitimate;
+        // Nehme die ERSTE Person (das ist die direkte Mutter!)
+        if (!empty($people)) {
+            $firstPerson = array_shift($people);
+            
+            // Entferne S-IDs
+            $firstPerson = preg_replace('/\s*S\d+\s*/', '', $firstPerson);
+            $firstPerson = trim($firstPerson);
+            
+            // Teile in Vorname und Nachname
+            $parentParts = preg_split('/\s+/', $firstPerson);
+            $parentNachname = count($parentParts) > 1 ? array_pop($parentParts) : null;
+            $parentVorname = implode(' ', $parentParts);
+            
+            $parent = [
+                'vorname' => trim($parentVorname),
+                'nachname' => $parentNachname
+            ];
+            
+            debug("📌 Uneheliche Mutter extrahiert: " . $parent['vorname'] . " " . $parent['nachname']);
+        }
     }
     
-    // Pattern 2: (unehelicher Sohn von Anna Straster)
-    if (preg_match('/\(unehelicher\s+Sohn\s+von\s+([^)]+)\)/i', $text, $m)) {
-        $parent = trim($m[1]);
-        $sSave = extractSIdThierbach($parent);
-        
-        $parts = preg_split('/\s+/', $parent);
-        $parentNachname = count($parts) > 1 ? array_pop($parts) : null;
-        $parentVorname = implode(' ', $parts);
-        
-        $illegitimate = [
-            'vorname' => trim($parentVorname),
-            'nachname' => $parentNachname,
-            'sId' => $sSave
-        ];
-        
-        $text = preg_replace('/\(unehelicher\s+Sohn\s+von\s+[^)]+\)/i', '', $text);
-        return $illegitimate;
-    }
+    // Entferne ALLE Klammern mit Unehelich-Info aus dem Text
+    $text = preg_replace('/\s*\(uneheliche?[r]?\s+(?:von|Sohn\s+von|Tochter\s*:\s*)[^)]*\)/i', '', $text);
     
-    // Pattern 3: (uneheliche Tochter: Ursula Feichter ...) - NUR in Eltern-Context
-    // In Kinder-Context wird dies NICHT als uneheliche Parent interpretiert!
-    // Stattdessen wird nur die Person extrahiert, nicht der Parent
-    
-    return $illegitimate;
+    return $parent;
 }
 
 /* =========================
  PERSON PARSER
  ========================= */
 
-function parsePersonText($text) {
+function parsePersonText($text, &$illegitimateParent = null) {
     
     // ZUERST alle Variablen mit null initialisieren
     $referenzEhe = null;
@@ -116,10 +110,10 @@ function parsePersonText($text) {
     $bemerkung = null;
     $illegitimateParent = null;
     
-    $referenzEhe = extractSIdThierbach($text);
+    // ✅ KRITISCH: Uneheliche Parent aus diesem Text extrahieren
+    $illegitimateParent = extractIllegitimateParentFromPerson($text);
     
-    // ZUERST uneheliche Infos extrahieren (vor allen anderen Extraktion!)
-    $illegitimateParent = extractIllegitimateParent($text);
+    $referenzEhe = extractSIdThierbach($text);
     
     $text = preg_replace('/^\d{2}\.\d{2}\.\d{4}\s*/', '', $text);
     
@@ -139,15 +133,6 @@ function parsePersonText($text) {
     $hof = extractFieldThierbach($text, 'Hof:');
     $ort = extractFieldThierbach($text, 'Ort:');
     $bemerkung = extractFieldThierbach($text, 'Bemerkung:');
-    
-    // Add illegitimate marker to bemerkung if applicable
-    if ($illegitimateParent) {
-        if ($bemerkung) {
-            $bemerkung .= ' [unehelich]';
-        } else {
-            $bemerkung = 'unehelich';
-        }
-    }
     
     $text = str_replace(',', '', $text);
     
@@ -172,7 +157,7 @@ function parsePersonText($text) {
 }
 
 /* =========================
- PERSON DB
+ PERSON DB - NORMAL
  ========================= */
 
 function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
@@ -200,7 +185,7 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
         if ($id = $stmt->fetchColumn()) return $id;
     }
     
-    // 2. Match über Eltern + Geburtsdatum
+    // 2. Match ��ber Eltern + Geburtsdatum
     $stmt = $pdo->prepare("
         SELECT id, geburtsdatum
         FROM person
@@ -255,6 +240,77 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
 }
 
 /* =========================
+ PERSON DB - NUR FÜR UNEHELICHE FÄLLE
+ ========================= */
+
+function getOrCreatePersonIllegitimate($pdo, $data) {
+    
+    // Für uneheliche Fälle: Suche Person nur nach Vorname + Nachname
+    // Diese Funktion wird NICHT mit Parent-IDs aufgerufen!
+    
+    // 1. Match über Geburtsdatum (falls vorhanden)
+    if (!empty($data['geburtsdatum'])) {
+        $stmt = $pdo->prepare("
+            SELECT id
+            FROM person
+            WHERE vorname = ?
+            AND nachname = ?
+            AND geburtsdatum = ?
+            LIMIT 1
+        ");
+        
+        $stmt->execute([
+            $data['vorname'],
+            $data['nachname'],
+            $data['geburtsdatum']
+        ]);
+        
+        if ($id = $stmt->fetchColumn()) return $id;
+    }
+    
+    // 2. Match über Vorname + Nachname allein
+    $stmt = $pdo->prepare("
+        SELECT id
+        FROM person
+        WHERE vorname = ?
+        AND nachname = ?
+        LIMIT 1
+    ");
+    
+    $stmt->execute([
+        $data['vorname'],
+        $data['nachname']
+    ]);
+    
+    if ($id = $stmt->fetchColumn()) return $id;
+    
+    // 3. Insert (nur wenn nicht existiert)
+    $stmt = $pdo->prepare("
+        INSERT INTO person (
+            vorname, nachname,
+            vater_id, mutter_id,
+            geburtsdatum, sterbedatum,
+            hof, ort, bemerkung
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    
+    $stmt->execute([
+        $data['vorname'],
+        $data['nachname'],
+        null, // Keine Parent-IDs bei unehelichen - diese werden später gesetzt
+        null,
+        $data['geburtsdatum'] ?? null,
+        $data['sterbedatum'] ?? null,
+        $data['hof'] ?? null,
+        $data['ort'] ?? null,
+        $data['bemerkung'] ?? null
+    ]);
+    
+    return $pdo->lastInsertId();
+}
+
+/* =========================
  LINE PARSER
  ========================= */
 
@@ -289,33 +345,28 @@ function parseLine($line) {
         foreach ($kinderEintraege as $k) {
             $k = trim($k);
             if ($k !== '') {
-                // Für Kinder: uneheliche Tochter/Sohn Markierungen entfernen, aber behalten für Bemerkung
-                // (uneheliche Tochter: Ursula Feichter S057) -> nur "Ursula Feichter S057" parsen
-                // UND die Bemerkung setzen
-                $hasIllegitimateMarking = preg_match('/\(uneheliche[r]?\s+(?:Tochter|Sohn)(?::\s*|\s+von\s+)/i', $k);
-                if ($hasIllegitimateMarking) {
-                    $k = preg_replace('/\(uneheliche[r]?\s+(?:Tochter|Sohn)(?::\s*|\s+von\s+)([^)]*)\)\s*/i', '', $k);
-                }
-                
-                $kindData = parsePersonText($k);
-                if ($hasIllegitimateMarking) {
-                    // Markiere als unehelich, aber setze keine Parent-Info
-                    if ($kindData['bemerkung']) {
-                        $kindData['bemerkung'] .= ' [unehelich]';
-                    } else {
-                        $kindData['bemerkung'] = 'unehelich';
-                    }
-                }
-                $result['kinder'][] = $kindData;
+                $illegParent = null;
+                $result['kinder'][] = parsePersonText($k, $illegParent);
             }
         }
     }
     
     if (preg_match('/^(.*?)\s*&\s*(.*)$/', $line, $m)) {
+        $vaterIllegParent = null;
+        $mutterIllegParent = null;
+        
         $result['eltern'] = [
-            'vater' => parsePersonText(trim($m[1])),
-            'mutter' => parsePersonText(trim($m[2]))
+            'vater' => parsePersonText(trim($m[1]), $vaterIllegParent),
+            'mutter' => parsePersonText(trim($m[2]), $mutterIllegParent)
         ];
+        
+        // Speichere die unehelichen Parent-Infos
+        if ($vaterIllegParent) {
+            $result['eltern']['vater']['illegitimate_parent'] = $vaterIllegParent;
+        }
+        if ($mutterIllegParent) {
+            $result['eltern']['mutter']['illegitimate_parent'] = $mutterIllegParent;
+        }
     }
     
     return $result;
@@ -369,20 +420,27 @@ function runThierbachImport() {
         $vaterData = $parsed['eltern']['vater'];
         $mutterData = $parsed['eltern']['mutter'];
         
-        // Handle uneheliche Eltern für Vater
-        if ($vaterData['illegitimate_parent']) {
-            $mutterUnehelichVater = getOrCreatePerson($pdo, $vaterData['illegitimate_parent']);
-            $vaterId = getOrCreatePerson($pdo, $vaterData, null, $mutterUnehelichVater);
-            debug("✓ Unehelicher Vater: " . $vaterData['vorname'] . " " . $vaterData['nachname'] . " mit Mutter " . $vaterData['illegitimate_parent']['vorname'] . " " . $vaterData['illegitimate_parent']['nachname']);
+        $vaterId = null;
+        $mutterId = null;
+        
+        // Handle Vater mit unehelicher Herkunft
+        if (!empty($vaterData['illegitimate_parent'])) {
+            $illegMutterData = $vaterData['illegitimate_parent'];
+            // Nutze spezielle Funktion für uneheliche Fälle
+            $illegMutterId = getOrCreatePersonIllegitimate($pdo, $illegMutterData);
+            $vaterId = getOrCreatePerson($pdo, $vaterData, null, $illegMutterId);
+            debug("✓ Unehelicher Vater: " . $vaterData['vorname'] . " " . $vaterData['nachname'] . " mit Mutter " . $illegMutterData['vorname'] . " " . $illegMutterData['nachname']);
         } else {
             $vaterId = getOrCreatePerson($pdo, $vaterData);
         }
         
-        // Handle uneheliche Eltern für Mutter
-        if ($mutterData['illegitimate_parent']) {
-            $mutterUnehelichMutter = getOrCreatePerson($pdo, $mutterData['illegitimate_parent']);
-            $mutterId = getOrCreatePerson($pdo, $mutterData, null, $mutterUnehelichMutter);
-            debug("✓ Uneheliche Mutter: " . $mutterData['vorname'] . " " . $mutterData['nachname'] . " mit Mutter " . $mutterData['illegitimate_parent']['vorname'] . " " . $mutterData['illegitimate_parent']['nachname']);
+        // Handle Mutter mit unehelicher Herkunft
+        if (!empty($mutterData['illegitimate_parent'])) {
+            $illegMutterData = $mutterData['illegitimate_parent'];
+            // Nutze spezielle Funktion für uneheliche Fälle
+            $illegMutterId = getOrCreatePersonIllegitimate($pdo, $illegMutterData);
+            $mutterId = getOrCreatePerson($pdo, $mutterData, null, $illegMutterId);
+            debug("✓ Uneheliche Mutter: " . $mutterData['vorname'] . " " . $mutterData['nachname'] . " mit Mutter " . $illegMutterData['vorname'] . " " . $illegMutterData['nachname']);
         } else {
             $mutterId = getOrCreatePerson($pdo, $mutterData);
         }
@@ -414,7 +472,19 @@ function runThierbachImport() {
             ->execute([$eheId, $vaterId, $mutterId]);
             
             foreach ($parsed['kinder'] as $kind) {
-                $kindId = getOrCreatePerson($pdo, $kind, $vaterId, $mutterId);
+                $kindVaterId = $vaterId;
+                $kindMutterId = $mutterId;
+                
+                // Prüfe ob Kind uneheliche Parent hat
+                if (!empty($kind['illegitimate_parent'])) {
+                    $illegMutterData = $kind['illegitimate_parent'];
+                    // Nutze spezielle Funktion für uneheliche Fälle
+                    $kindMutterId = getOrCreatePersonIllegitimate($pdo, $illegMutterData);
+                    $kindVaterId = null;
+                    debug("✓ Kind mit unehelicher Mutter: " . $kind['vorname'] . " " . $kind['nachname'] . " - Mutter: " . $illegMutterData['vorname'] . " " . $illegMutterData['nachname']);
+                }
+                
+                $kindId = getOrCreatePerson($pdo, $kind, $kindVaterId, $kindMutterId);
                 
                 if (!empty($kind['referenz_ehe'])) {
                     $stmt = $pdo->prepare("SELECT id FROM ehe WHERE externe_id = ?");
