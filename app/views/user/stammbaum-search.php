@@ -95,6 +95,8 @@ AND p.nachname LIKE :nachname
                     <tr  style="height:20px; overflow:hidden">
                         <th>ID</th>
                         <th>Name</th>
+                        <th>Vater</th>
+                        <th>Mutter</th>
                         <th>Geburtsdatum</th>
                         <th>Geburtsort</th>
                         <th>Sterbedatum</th>
@@ -110,6 +112,8 @@ AND p.nachname LIKE :nachname
                     <tr  style="height:20px; overflow:hidden">
                         <td ><?= htmlspecialchars($row['id']) ?></td>
                         <td><strong><?= htmlspecialchars($row['vorname'] . ' ' . $row['nachname']) ?></strong></td>
+                        <td><?= htmlspecialchars(($row['vater_vorname'] ?? '') . ' ' . ($row['vater_nachname'] ?? '')) ?></td>
+                        <td><?= htmlspecialchars(($row['mutter_vorname'] ?? '') . ' ' . ($row['mutter_nachname'] ?? '')) ?></td>
                         <td><?= formatDBDateOrNull($row['geburtsdatum']) ?></td>
                         <td><?= htmlspecialchars($row['geburtsort'] ?? '') ?></td>
                         <td><?= formatDBDateOrNull($row['sterbedatum']) ?></td>
