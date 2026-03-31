@@ -238,7 +238,7 @@ function loadTreeData(PDO $pdo, int $startId): array
     }
 
     $stmtEhen = $pdo->prepare(
-        "SELECT e.mann_id, e.frau_id, e.heiratsdatum,
+        "SELECT e.mann_id, e.frau_id, e.heiratsdatum, e.scheidungsdatum,
                 v.vorname AS v_vorname, v.nachname AS v_nachname,
                 m.vorname AS m_vorname, m.nachname AS m_nachname
          FROM ehe e
@@ -250,26 +250,38 @@ function loadTreeData(PDO $pdo, int $startId): array
     $ehen = $stmtEhen->fetchAll(PDO::FETCH_ASSOC);
 
     $spouseMap = [];
+    $coupleEventMap = [];
     foreach ($ehen as $ehe) {
         $fatherId = !empty($ehe['mann_id']) ? (int)$ehe['mann_id'] : 0;
         $motherId = !empty($ehe['frau_id']) ? (int)$ehe['frau_id'] : 0;
 
+        if ($fatherId > 0 && $motherId > 0) {
+            $pairEvents = [
+                'heiratsdatum' => $ehe['heiratsdatum'] ?? null,
+                'scheidungsdatum' => $ehe['scheidungsdatum'] ?? null
+            ];
+            $coupleEventMap[$fatherId . '-' . $motherId] = $pairEvents;
+            $coupleEventMap[$motherId . '-' . $fatherId] = $pairEvents;
+        }
+
         if ($fatherId > 0 && !empty($ehe['m_vorname'])) {
             $spouseMap[$fatherId][] = [
                 'name' => trim($ehe['m_vorname'] . ' ' . $ehe['m_nachname']),
-                'heiratsdatum' => $ehe['heiratsdatum'] ?? null
+                'heiratsdatum' => $ehe['heiratsdatum'] ?? null,
+                'scheidungsdatum' => $ehe['scheidungsdatum'] ?? null
             ];
         }
 
         if ($motherId > 0 && !empty($ehe['v_vorname'])) {
             $spouseMap[$motherId][] = [
                 'name' => trim($ehe['v_vorname'] . ' ' . $ehe['v_nachname']),
-                'heiratsdatum' => $ehe['heiratsdatum'] ?? null
+                'heiratsdatum' => $ehe['heiratsdatum'] ?? null,
+                'scheidungsdatum' => $ehe['scheidungsdatum'] ?? null
             ];
         }
     }
 
-    return [$personsById, $childrenMap, $spouseMap];
+    return [$personsById, $childrenMap, $spouseMap, $coupleEventMap];
 }
 
 function formatPersonLine(array $person): string
@@ -329,8 +341,19 @@ function formatSpouseSummary(int $personId, array $spouseMap): string
 
     $items = [];
     foreach ($spouseMap[$personId] as $entry) {
-        $wedding = !empty($entry['heiratsdatum']) ? formatDBDateOrNull($entry['heiratsdatum']) : '-';
-        $items[] = $entry['name'] . ' (⚭ ' . $wedding . ')';
+        $events = [];
+
+        if (!empty($entry['heiratsdatum'])) {
+            $events[] = '⚭ ' . formatDBDateOrNull($entry['heiratsdatum']);
+        }
+
+        if (!empty($entry['scheidungsdatum'])) {
+            $events[] = 'geschieden ' . formatDBDateOrNull($entry['scheidungsdatum']);
+        }
+
+        $items[] = !empty($events)
+            ? ($entry['name'] . ' (' . implode(' | ', $events) . ')')
+            : $entry['name'];
     }
 
     $items = array_values(array_unique($items));
@@ -563,6 +586,79 @@ function renderAncestorGenerations(array $levels, array $personsById): string
     return $html;
 }
 
+function formatCoupleEvents(int $personAId, int $personBId, array $coupleEventMap): string
+{
+    if ($personAId <= 0 || $personBId <= 0) {
+        return '';
+    }
+
+    $events = $coupleEventMap[$personAId . '-' . $personBId] ?? null;
+    if (!$events) {
+        return '';
+    }
+
+    $parts = [];
+    if (!empty($events['heiratsdatum'])) {
+        $parts[] = '⚭ ' . formatDBDateOrNull($events['heiratsdatum']);
+    }
+    if (!empty($events['scheidungsdatum'])) {
+        $parts[] = 'geschieden ' . formatDBDateOrNull($events['scheidungsdatum']);
+    }
+
+    return implode(' | ', $parts);
+}
+
+function renderAncestorGenerationsWithEvents(array $levels, array $personsById, array $coupleEventMap): string
+{
+    if (empty($levels)) {
+        return '<p class="subtle">Keine Eintraege vorhanden.</p>';
+    }
+
+    krsort($levels);
+
+    $html = '<div class="generation-list">';
+    foreach ($levels as $depth => $units) {
+        $depth = (int)$depth;
+        $title = ancestorLabelByDepth($depth);
+
+        $html .= '<section class="generation">';
+        $html .= '<h4 class="generation-title">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h4>';
+        $html .= '<div class="generation-row">';
+
+        foreach ($units as $unit) {
+            $fatherId = (int)($unit['father_id'] ?? 0);
+            $motherId = (int)($unit['mother_id'] ?? 0);
+            $fromIds = $unit['from_ids'] ?? [];
+
+            $line1 = htmlspecialchars(formatCoupleLine($fatherId, $motherId, $personsById), ENT_QUOTES, 'UTF-8');
+
+            $originNames = [];
+            foreach ($fromIds as $fromId) {
+                $originNames[] = personByIdShortName((int)$fromId, $personsById);
+            }
+            $originNames = array_values(array_unique($originNames));
+            sort($originNames);
+            $relation = 'Eltern von: ' . (!empty($originNames) ? implode(', ', $originNames) : '-');
+
+            $events = formatCoupleEvents($fatherId, $motherId, $coupleEventMap);
+
+            $html .= '<article class="person-card">';
+            $html .= '<p class="person-line">' . $line1 . '</p>';
+            if ($events !== '') {
+                $html .= '<p class="subtle person-spouse">Ehe: ' . htmlspecialchars($events, ENT_QUOTES, 'UTF-8') . '</p>';
+            }
+            $html .= '<p class="subtle person-relation">' . htmlspecialchars($relation, ENT_QUOTES, 'UTF-8') . '</p>';
+            $html .= '</article>';
+        }
+
+        $html .= '</div>';
+        $html .= '</section>';
+    }
+    $html .= '</div>';
+
+    return $html;
+}
+
 function renderDescendantGenerations(array $levels, array $personsById, array $spouseMap): string
 {
     if (empty($levels)) {
@@ -600,7 +696,7 @@ if (!$focusPerson) {
     exit;
 }
 
-list($personsById, $childrenMap, $spouseMap) = loadTreeData($pdo, $startId);
+list($personsById, $childrenMap, $spouseMap, $coupleEventMap) = loadTreeData($pdo, $startId);
 
 $ancestorLevels = collectAncestorUnitsByLevel($startId, $personsById, 12);
 $descendantLevels = collectDescendantLevels($startId, $personsById, $childrenMap, 12);
@@ -620,7 +716,7 @@ $focusSpouses = htmlspecialchars(formatSpouseSummary($startId, $spouseMap) ?: '-
     <div class="tree-grid">
         <section class="tree-panel ancestors">
             <h3>Vorfahren (komplett aus DB)</h3>
-            <?= renderAncestorGenerations($ancestorLevels, $personsById) ?>
+            <?= renderAncestorGenerationsWithEvents($ancestorLevels, $personsById, $coupleEventMap) ?>
         </section>
 
         <section class="focus-card">

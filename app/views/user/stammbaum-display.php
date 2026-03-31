@@ -126,6 +126,39 @@ function formatSpouse($name, $geb, $tod) {
     return $name . $gebText . $todText;
 }
 
+function formatMarriageDivorceInfo($heiratsdatum, $scheidungsdatum) {
+    $parts = [];
+
+    if (!empty($heiratsdatum)) {
+        $parts[] = "⚭ " . formatDBDateOrNull($heiratsdatum);
+    }
+
+    if (!empty($scheidungsdatum)) {
+        $parts[] = "geschieden " . formatDBDateOrNull($scheidungsdatum);
+    }
+
+    return implode(" | ", $parts);
+}
+
+function formatSpouseEntryFromEhe($personId, $ehe) {
+    if ($ehe['v_id'] == $personId) {
+        $partnerName = formatSpouse(
+            $ehe['m_vorname'] . " " . $ehe['m_nachname'],
+            $ehe['m_geb'],
+            $ehe['m_sterb']
+        );
+    } else {
+        $partnerName = formatSpouse(
+            $ehe['v_vorname'] . " " . $ehe['v_nachname'],
+            $ehe['v_geb'],
+            $ehe['v_sterb']
+        );
+    }
+
+    $eventInfo = formatMarriageDivorceInfo($ehe['heiratsdatum'] ?? null, $ehe['scheidungsdatum'] ?? null);
+    return $eventInfo !== "" ? ($partnerName . " (" . $eventInfo . ")") : $partnerName;
+}
+
 // =========================
 // RELEVANTE IDS SAMMELN
 // =========================
@@ -398,16 +431,14 @@ function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap
                 $partnerId = $ehe['v_id'];
             }
             
-            $hochzeit = !empty($ehe['heiratsdatum'])
-            ? formatDBDateOrNull($ehe['heiratsdatum'])
-            : "";
+            $eheInfo = formatMarriageDivorceInfo($ehe['heiratsdatum'] ?? null, $ehe['scheidungsdatum'] ?? null);
             
             // ← GEÄNDERT: Blur-Klasse korrekt kombiniert
             $blurClass = getBlurClass($isTestAccount);
             $classes = "ehe" . ($blurClass ? " " . $blurClass : "");
             
             $html .= "<div class='{$classes}' style='margin-left:".(($depth * 20) + 20)."px'>
-                        💍 {$partnerName} (⚭ {$hochzeit})
+                                💍 {$partnerName}" . ($eheInfo !== "" ? " ({$eheInfo})" : "") . "
                      </div>";
         }
         
@@ -477,7 +508,7 @@ function buildAncestorColumns($startId, $personsById, $maxDepth = 3) {
     return array_reverse($columns);
 }
 
-function renderAncestorColumns($columns, $isTestAccount = false) {
+function renderAncestorColumns($columns, $spouseMap = [], $isTestAccount = false) {
     
     $html = "<div class='ancestor-flex'>";
     
@@ -498,10 +529,19 @@ function renderAncestorColumns($columns, $isTestAccount = false) {
                 $blurClass = getBlurClass($isTestAccount);
                 $classes = "person" . ($blurClass ? " " . $blurClass : "");
                 
+                $spouseInfoList = [];
+                foreach ($spouseMap[$p['id']] ?? [] as $ehe) {
+                    $spouseInfoList[] = formatSpouseEntryFromEhe((int)$p['id'], $ehe);
+                }
+                $spouseInfo = !empty($spouseInfoList)
+                    ? "<div style='margin-top:4px; font-size:0.9em; color:#555;'>💍 " . implode("; ", array_unique($spouseInfoList)) . "</div>"
+                    : "";
+
                 $html .= "<div class='{$classes}'>
                     👤 {$p['vorname']} {$p['nachname']}<br>
                     " . (!empty($p['geburtsdatum']) ? " * ". formatDBDateOrNull($p['geburtsdatum']) : "") . "<br>
                     " . (!empty($p['sterbedatum']) ? " † ". formatDBDateOrNull($p['sterbedatum']) : "") . "
+                    {$spouseInfo}
                 </div>";
             }
             
@@ -547,7 +587,7 @@ $p = $personsById[$startId];
         <h3>⬆ Vorfahren</h3>
         <?php 
         $columns = buildAncestorColumns($startId, $personsById, 3);
-        echo renderAncestorColumns($columns, $isTestAccount);
+        echo renderAncestorColumns($columns, $spouseMap, $isTestAccount);
         ?>
     </div>
 
@@ -584,11 +624,16 @@ $p = $personsById[$startId];
     $hochzeit = !empty($ehe['heiratsdatum'])
         ? formatDBDateOrNull($ehe['heiratsdatum'])
         : "-";
+
+    $scheidung = !empty($ehe['scheidungsdatum'])
+        ? formatDBDateOrNull($ehe['scheidungsdatum'])
+        : "-";
     ?>
 
     <div style="margin-bottom:10px; padding:8px; border:1px solid #ddd; border-radius:6px;">
         💍 <strong><?= $partnerName ?></strong><br>
-        ⚭ <?= $hochzeit ?>
+        ⚭ <?= $hochzeit ?><br>
+        geschieden <?= $scheidung ?>
     </div>
 
 <?php endforeach; ?>
