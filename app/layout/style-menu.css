@@ -484,6 +484,16 @@ a.btn:visited {
     color: white;
 }
 
+a.btn-link {
+    font-weight: bold;
+    color: #667eea;
+}
+
+a.btn-link:visited {
+    font-weight: lighter;
+    color: var(--admin-color);
+}
+
 .submit-btn { 
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
     color:#fff; 

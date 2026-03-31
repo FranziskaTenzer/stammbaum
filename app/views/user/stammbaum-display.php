@@ -535,6 +535,8 @@ $p = $personsById[$startId];
 
 ?>
 <a href="stammbaum-search.php?vorname=<?= $p['vorname']; ?>&nachname=<?= $p['nachname']?>" class="btn btn-primary">Zurück zur Übersicht</a>
+<a href="stammbaum-display-extended.php?id=<?= (int)$startId ?>" class="btn btn-primary">Stammbaum erweiterte Ansicht</a>
+    
 <br />
 
 <h2 style="text-align:center;">Stammbaum</h2>

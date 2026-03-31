@@ -38,7 +38,6 @@ if (!isAdmin()) {
     <div class="content-card admin-card">
         <h3>To Do List:</h3>
         <ul>
-            <li>Ausgabe des Stammbaumes noch mal überarbeiten (lassen)?</li>
             <li>Suche zeigt auch Einträge als Mutter an (als es sonst keine Daten zur Person geben sollte)</li>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
             <li>Scheidung mit darstellen (ggfs. Importieren das Datum)</li>

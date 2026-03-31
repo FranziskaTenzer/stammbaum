@@ -28,7 +28,21 @@ SELECT
     v.nachname AS vater_nachname,
         
     m.vorname AS mutter_vorname,
-    m.nachname AS mutter_nachname
+    m.nachname AS mutter_nachname,
+    (
+        SELECT GROUP_CONCAT(
+            DISTINCT TRIM(CONCAT(sp.vorname, ' ', sp.nachname))
+            ORDER BY sp.nachname, sp.vorname
+            SEPARATOR ', '
+        )
+        FROM ehe e
+        JOIN person sp
+          ON sp.id = CASE
+              WHEN e.vater_id = p.id THEN e.mutter_id
+              ELSE e.vater_id
+          END
+        WHERE e.vater_id = p.id OR e.mutter_id = p.id
+    ) AS ehepartner
         
 FROM person p
         
@@ -97,6 +111,7 @@ AND p.nachname LIKE :nachname
                         <th>Name</th>
                         <th>Vater</th>
                         <th>Mutter</th>
+                        <th>Ehepartner</th>
                         <th>Geburtsdatum</th>
                         <th>Geburtsort</th>
                         <th>Sterbedatum</th>
@@ -114,6 +129,7 @@ AND p.nachname LIKE :nachname
                         <td><strong><?= htmlspecialchars($row['vorname'] . ' ' . $row['nachname']) ?></strong></td>
                         <td><?= htmlspecialchars(($row['vater_vorname'] ?? '') . ' ' . ($row['vater_nachname'] ?? '')) ?></td>
                         <td><?= htmlspecialchars(($row['mutter_vorname'] ?? '') . ' ' . ($row['mutter_nachname'] ?? '')) ?></td>
+                        <td><?= htmlspecialchars(!empty($row['ehepartner']) ? $row['ehepartner'] : '-') ?></td>
                         <td><?= formatDBDateOrNull($row['geburtsdatum']) ?></td>
                         <td><?= htmlspecialchars($row['geburtsort'] ?? '') ?></td>
                         <td><?= formatDBDateOrNull($row['sterbedatum']) ?></td>
@@ -122,7 +138,8 @@ AND p.nachname LIKE :nachname
                         <td><?= htmlspecialchars($row['ort'] ?? '') ?></td>
                         <td><?= htmlspecialchars(substr($row['bemerkung'] ?? '', 0, 30)) ?></td>
                         <td>
-                            <a href="stammbaum-display.php?id=<?= $row['id'] ?>" class="btn btn-small">Stammbaum</a>
+                            <a href="stammbaum-display.php?id=<?= $row['id'] ?>" class="btn btn-small btn-link">Stammbaum</a>
+                            <a href="stammbaum-display-extended.php?id=<?= $row['id'] ?>" class="btn btn-small btn-link">Stammbaum komplett</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
