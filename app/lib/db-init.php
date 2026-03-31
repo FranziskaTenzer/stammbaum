@@ -104,5 +104,4 @@ $stmt = $pdo->prepare($sqlMultiEhe);
 $stmt->execute();
 
 echo "<h2>Datenbank erfolgreich gelöscht und neu erstellt</h2><br />";
-echo "<a href='../app/views/user/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 ?>
