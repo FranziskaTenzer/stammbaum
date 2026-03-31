@@ -171,8 +171,8 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
             JOIN ehe e ON e.externe_id = ?
             WHERE p.vorname = ?
             AND p.nachname = ?
-            AND p.vater_id = e.vater_id
-            AND p.mutter_id = e.mutter_id
+            AND p.vater_id = e.mann_id
+            AND p.mutter_id = e.frau_id
             LIMIT 1
         ");
         
@@ -449,8 +449,8 @@ function runThierbachImport() {
             $stmt = $pdo->prepare("
                 INSERT INTO ehe (
                     externe_id,
-                    vater_id, vater_alter,
-                    mutter_id, mutter_alter,
+                    mann_id, mann_alter,
+                    frau_id, frau_alter,
                     heiratsdatum, traubuch
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?)

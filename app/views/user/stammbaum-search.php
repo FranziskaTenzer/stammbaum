@@ -38,10 +38,10 @@ SELECT
         FROM ehe e
         JOIN person sp
           ON sp.id = CASE
-              WHEN e.vater_id = p.id THEN e.mutter_id
-              ELSE e.vater_id
+                            WHEN e.mann_id = p.id THEN e.frau_id
+                            ELSE e.mann_id
           END
-        WHERE e.vater_id = p.id OR e.mutter_id = p.id
+                WHERE e.mann_id = p.id OR e.frau_id = p.id
     ) AS ehepartner
         
 FROM person p

@@ -238,21 +238,21 @@ function loadTreeData(PDO $pdo, int $startId): array
     }
 
     $stmtEhen = $pdo->prepare(
-        "SELECT e.vater_id, e.mutter_id, e.heiratsdatum,
+        "SELECT e.mann_id, e.frau_id, e.heiratsdatum,
                 v.vorname AS v_vorname, v.nachname AS v_nachname,
                 m.vorname AS m_vorname, m.nachname AS m_nachname
          FROM ehe e
-         LEFT JOIN person v ON v.id = e.vater_id
-         LEFT JOIN person m ON m.id = e.mutter_id
-         WHERE e.vater_id IN ($placeholders) OR e.mutter_id IN ($placeholders)"
+         LEFT JOIN person v ON v.id = e.mann_id
+         LEFT JOIN person m ON m.id = e.frau_id
+         WHERE e.mann_id IN ($placeholders) OR e.frau_id IN ($placeholders)"
     );
     $stmtEhen->execute(array_merge($ids, $ids));
     $ehen = $stmtEhen->fetchAll(PDO::FETCH_ASSOC);
 
     $spouseMap = [];
     foreach ($ehen as $ehe) {
-        $fatherId = !empty($ehe['vater_id']) ? (int)$ehe['vater_id'] : 0;
-        $motherId = !empty($ehe['mutter_id']) ? (int)$ehe['mutter_id'] : 0;
+        $fatherId = !empty($ehe['mann_id']) ? (int)$ehe['mann_id'] : 0;
+        $motherId = !empty($ehe['frau_id']) ? (int)$ehe['frau_id'] : 0;
 
         if ($fatherId > 0 && !empty($ehe['m_vorname'])) {
             $spouseMap[$fatherId][] = [

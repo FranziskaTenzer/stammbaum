@@ -468,9 +468,9 @@ function updateSpouseDeathByEhe($pdo, $personId, $sterbedatum) {
     if (!$sterbedatum || !$personId) return;
     
     $stmt = $pdo->prepare("
-        SELECT vater_id, mutter_id
+        SELECT mann_id, frau_id
         FROM ehe
-        WHERE vater_id = ? OR mutter_id = ?
+        WHERE mann_id = ? OR frau_id = ?
         LIMIT 1
     ");
     $stmt->execute([$personId, $personId]);
@@ -478,9 +478,9 @@ function updateSpouseDeathByEhe($pdo, $personId, $sterbedatum) {
     
     if (!$ehe) return;
     
-    $partnerId = ($ehe['vater_id'] == $personId)
-    ? $ehe['mutter_id']
-    : $ehe['vater_id'];
+    $partnerId = ($ehe['mann_id'] == $personId)
+    ? $ehe['frau_id']
+    : $ehe['mann_id'];
     
     if ($partnerId) {
         $pdo->prepare("
@@ -524,15 +524,15 @@ function importFile($pdo, $filePath, $traubuch) {
             
             $stmt = $pdo->prepare("
                 SELECT id FROM ehe
-                WHERE (vater_id = ? AND mutter_id = ?)
-                   OR (vater_id = ? AND mutter_id = ?)
+                     WHERE (mann_id = ? AND frau_id = ?)
+                         OR (mann_id = ? AND frau_id = ?)
             ");
             $stmt->execute([$mannId, $frauId, $frauId, $mannId]);
             $eheId = $stmt->fetchColumn();
             
             if (!$eheId) {
                 $pdo->prepare("
-                    INSERT INTO ehe (vater_id, mutter_id, heiratsdatum, scheidungsdatum, traubuch)
+                    INSERT INTO ehe (mann_id, frau_id, heiratsdatum, scheidungsdatum, traubuch)
                     VALUES (?, ?, ?, ?, ?)
                 ")->execute([$mannId, $frauId, $heiratsdatum, $scheidungsdatum, $traubuch]);
                 

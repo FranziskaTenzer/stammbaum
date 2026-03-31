@@ -218,10 +218,10 @@ function loadData($pdo, $startId) {
                m.id as m_id, m.vorname as m_vorname, m.nachname as m_nachname,
                m.geburtsdatum as m_geb, m.sterbedatum as m_sterb
         FROM ehe e
-        LEFT JOIN person v ON v.id = e.vater_id
-        LEFT JOIN person m ON m.id = e.mutter_id
-        WHERE e.vater_id IN ($placeholders)
-           OR e.mutter_id IN ($placeholders)
+          LEFT JOIN person v ON v.id = e.mann_id
+          LEFT JOIN person m ON m.id = e.frau_id
+          WHERE e.mann_id IN ($placeholders)
+              OR e.frau_id IN ($placeholders)
     ");
     
     $stmt->execute(array_merge($ids, $ids));

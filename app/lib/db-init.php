@@ -49,16 +49,16 @@ CREATE TABLE IF NOT EXISTS ehe (
     
     externe_id VARCHAR(10),
     
-    vater_id INT,
-    vater_alter INT,
-    mutter_id INT,
-    mutter_alter INT,
+    mann_id INT,
+    mann_alter INT,
+    frau_id INT,
+    frau_alter INT,
     
     heiratsdatum VARCHAR(10) NULL,
     scheidungsdatum VARCHAR(10) NULL,
     traubuch VARCHAR(255),
     
-    CONSTRAINT unique_ehe UNIQUE (vater_id, mutter_id, heiratsdatum)
+    CONSTRAINT unique_ehe UNIQUE (mann_id, frau_id, heiratsdatum)
 );
 ";
 
@@ -98,7 +98,7 @@ $stmt->execute();
 
 $sqlMultiEhe = "    
 CREATE UNIQUE INDEX unique_ehe_multi
-ON ehe (externe_id, vater_id, mutter_id, heiratsdatum);
+ON ehe (externe_id, mann_id, frau_id, heiratsdatum);
 ";
 
 $stmt = $pdo->prepare($sqlMultiEhe);

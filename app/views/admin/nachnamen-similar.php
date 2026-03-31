@@ -140,9 +140,9 @@ function getRecordsForNachname($pdo, $nachname) {
                 mutter.vorname as mutter_vorname,
                 mutter.nachname as mutter_nachname
             FROM person p
-            JOIN ehe e ON (p.id = e.vater_id OR p.id = e.mutter_id)
-            LEFT JOIN person vater ON e.vater_id = vater.id
-            LEFT JOIN person mutter ON e.mutter_id = mutter.id
+            JOIN ehe e ON (p.id = e.mann_id OR p.id = e.frau_id)
+            LEFT JOIN person vater ON e.mann_id = vater.id
+            LEFT JOIN person mutter ON e.frau_id = mutter.id
             WHERE p.nachname = ?
             ORDER BY e.traubuch, p.geburtsdatum
         ";

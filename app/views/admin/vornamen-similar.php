@@ -24,12 +24,12 @@ function levenshteinSimilarity($str1, $str2) {
     return round((1 - ($distance / $maxLen)) * 100);
 }
 
-// Get all unique MOTHER first names (mutter_id from ehe)
+// Get all unique MOTHER first names (frau_id from ehe)
 function getSimilarMutterNamen($pdo) {
     $stmt = $pdo->prepare("
         SELECT DISTINCT p.vorname
         FROM person p
-        JOIN ehe e ON p.id = e.mutter_id
+        JOIN ehe e ON p.id = e.frau_id
         WHERE p.vorname IS NOT NULL AND p.vorname != ''
         ORDER BY p.vorname
     ");
@@ -62,12 +62,12 @@ function getSimilarMutterNamen($pdo) {
     return $groups;
 }
 
-// Get all unique FATHER first names (vater_id from ehe)
+// Get all unique FATHER first names (mann_id from ehe)
 function getSimilarVaterNamen($pdo) {
     $stmt = $pdo->prepare("
         SELECT DISTINCT p.vorname
         FROM person p
-        JOIN ehe e ON p.id = e.vater_id
+        JOIN ehe e ON p.id = e.mann_id
         WHERE p.vorname IS NOT NULL AND p.vorname != ''
         ORDER BY p.vorname
     ");
@@ -126,10 +126,10 @@ function getRecordsForMutterName($pdo, $vorname) {
             kinder.geburtsdatum as kind_geburtsdatum,
             kinder.sterbedatum as kind_sterbedatum
         FROM person p
-        JOIN ehe e ON p.id = e.mutter_id
-        LEFT JOIN person vater ON e.vater_id = vater.id
-        LEFT JOIN person mutter ON e.mutter_id = mutter.id
-        LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.vater_id AND kinder.mutter_id = e.mutter_id))
+        JOIN ehe e ON p.id = e.frau_id
+        LEFT JOIN person vater ON e.mann_id = vater.id
+        LEFT JOIN person mutter ON e.frau_id = mutter.id
+        LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.mann_id AND kinder.mutter_id = e.frau_id))
         WHERE p.vorname = ?
         ORDER BY e.traubuch, p.nachname, p.geburtsdatum
     ";
@@ -165,10 +165,10 @@ function getRecordsForVaterName($pdo, $vorname) {
             kinder.geburtsdatum as kind_geburtsdatum,
             kinder.sterbedatum as kind_sterbedatum
         FROM person p
-        JOIN ehe e ON p.id = e.vater_id
-        LEFT JOIN person vater ON e.vater_id = vater.id
-        LEFT JOIN person mutter ON e.mutter_id = mutter.id
-        LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.vater_id AND kinder.mutter_id = e.mutter_id))
+        JOIN ehe e ON p.id = e.mann_id
+        LEFT JOIN person vater ON e.mann_id = vater.id
+        LEFT JOIN person mutter ON e.frau_id = mutter.id
+        LEFT JOIN person kinder ON (e.id = kinder.referenz_ehe_id OR (kinder.vater_id = e.mann_id AND kinder.mutter_id = e.frau_id))
         WHERE p.vorname = ?
         ORDER BY e.traubuch, p.nachname, p.geburtsdatum
     ";
