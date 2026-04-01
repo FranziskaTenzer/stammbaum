@@ -218,7 +218,7 @@ function loadData($pdo, $startId) {
     
     $ids = getRelevantIds($pdo, $startId);
     
-    if (empty($ids)) return [[], [], []];
+    if (empty($ids)) return [[], [], [], []];
     
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     
@@ -261,12 +261,22 @@ function loadData($pdo, $startId) {
     $ehen = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     $spouseMap = [];
+    $coupleEventMap = [];
     foreach ($ehen as $ehe) {
+        if (!empty($ehe['v_id']) && !empty($ehe['m_id'])) {
+            $pairEvents = [
+                'heiratsdatum' => $ehe['heiratsdatum'] ?? null,
+                'scheidungsdatum' => $ehe['scheidungsdatum'] ?? null,
+            ];
+            $coupleEventMap[$ehe['v_id'] . '-' . $ehe['m_id']] = $pairEvents;
+            $coupleEventMap[$ehe['m_id'] . '-' . $ehe['v_id']] = $pairEvents;
+        }
+
         if ($ehe['v_id']) $spouseMap[$ehe['v_id']][] = $ehe;
         if ($ehe['m_id']) $spouseMap[$ehe['m_id']][] = $ehe;
     }
     
-    return [$personsById, $childrenMap, $spouseMap];
+    return [$personsById, $childrenMap, $spouseMap, $coupleEventMap];
 }
 
 // =========================
@@ -465,104 +475,195 @@ function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap
 // =========================
 // 🆕 VORFAHREN ALS SPALTEN
 // =========================
-function buildAncestorColumns($startId, $personsById, $maxDepth = 3) {
-    
-    $columns = [];
-    $current = [$startId];
-    
-    for ($depth = 0; $depth < $maxDepth; $depth++) {
-        
-        $next = [];
-        $columns[$depth] = [];
-        
-        foreach ($current as $id) {
-            
-            if (!isset($personsById[$id])) {
-                $columns[$depth][] = null;
-                $columns[$depth][] = null;
-                continue;
-            }
-            
-            $p = $personsById[$id];
-            
-            // Vater
-            if (!empty($p['vater_id']) && isset($personsById[$p['vater_id']])) {
-                $columns[$depth][] = $personsById[$p['vater_id']];
-                $next[] = $p['vater_id'];
-            } else {
-                $columns[$depth][] = null;
-            }
-            
-            // Mutter
-            if (!empty($p['mutter_id']) && isset($personsById[$p['mutter_id']])) {
-                $columns[$depth][] = $personsById[$p['mutter_id']];
-                $next[] = $p['mutter_id'];
-            } else {
-                $columns[$depth][] = null;
-            }
-        }
-        
-        $current = $next;
+function parentUnitForPerson($personId, $personsById) {
+    if (!isset($personsById[$personId])) {
+        return null;
     }
-    
-    return array_reverse($columns);
+
+    $person = $personsById[$personId];
+    $fatherId = !empty($person['vater_id']) ? (int)$person['vater_id'] : 0;
+    $motherId = !empty($person['mutter_id']) ? (int)$person['mutter_id'] : 0;
+
+    if ($fatherId <= 0 && $motherId <= 0) {
+        return null;
+    }
+
+    return ['father_id' => $fatherId, 'mother_id' => $motherId];
 }
 
-function renderAncestorColumns($columns, $spouseMap = [], $isTestAccount = false) {
-    
-    $html = "<div class='ancestor-flex'>";
-    
-    foreach ($columns as $generation) {
-        
-        $html .= "<div class='ancestor-col'>";
-        
-        $count = count($generation);
-        
-        for ($i = 0; $i < $count; $i++) {
-            
-            $p = $generation[$i];
-            
-            if ($p === null) {
-                $html .= "<div class='person placeholder'></div>";
-            } else {
-                // ← GEÄNDERT: Blur-Klasse korrekt kombiniert
-                $blurClass = getBlurClass($isTestAccount);
-                $classes = "person" . ($blurClass ? " " . $blurClass : "");
-                
-                $spouseInfoList = [];
-                foreach ($spouseMap[$p['id']] ?? [] as $ehe) {
-                    $spouseInfoList[] = formatSpouseEntryFromEhe((int)$p['id'], $ehe);
-                }
-                $spouseInfo = !empty($spouseInfoList)
-                    ? "<div style='margin-top:4px; font-size:0.9em; color:#555;'>💍 " . implode("; ", array_unique($spouseInfoList)) . "</div>"
-                    : "";
+function parentUnitKey($fatherId, $motherId) {
+    return $fatherId . '-' . $motherId;
+}
 
-                $html .= "<div class='{$classes}'>
-                    👤 {$p['vorname']} {$p['nachname']}<br>
-                    " . (!empty($p['geburtsdatum']) ? " * ". formatDBDateOrNull($p['geburtsdatum']) : "") . "<br>
-                    " . (!empty($p['sterbedatum']) ? " † ". formatDBDateOrNull($p['sterbedatum']) : "") . "
-                    {$spouseInfo}
-                </div>";
+function collectAncestorUnitsByLevel($startId, $personsById, $maxDepth = 6) {
+    if (!isset($personsById[$startId])) {
+        return [];
+    }
+
+    $rootUnit = parentUnitForPerson($startId, $personsById);
+    if (!$rootUnit) {
+        return [];
+    }
+
+    $levels = [];
+    $currentLevel = [[
+        'father_id' => $rootUnit['father_id'],
+        'mother_id' => $rootUnit['mother_id'],
+        'from_ids' => [$startId],
+    ]];
+
+    $depth = 1;
+    while (!empty($currentLevel) && $depth <= $maxDepth) {
+        $levels[$depth] = $currentLevel;
+
+        $nextMap = [];
+        foreach ($currentLevel as $unit) {
+            $memberIds = [];
+            if (!empty($unit['father_id'])) {
+                $memberIds[] = (int)$unit['father_id'];
             }
-            
-            // 👉 Nach JEDEM PAAR (also jedes 2. Element) Linie einfügen
-            if ($i % 2 === 1 && $i < $count - 1) {
-                $html .= "<div class='ancestor-line'></div>";
+            if (!empty($unit['mother_id'])) {
+                $memberIds[] = (int)$unit['mother_id'];
+            }
+
+            foreach ($memberIds as $memberId) {
+                $parentUnit = parentUnitForPerson($memberId, $personsById);
+                if (!$parentUnit) {
+                    continue;
+                }
+
+                $fatherId = (int)$parentUnit['father_id'];
+                $motherId = (int)$parentUnit['mother_id'];
+                $key = parentUnitKey($fatherId, $motherId);
+
+                if (!isset($nextMap[$key])) {
+                    $nextMap[$key] = [
+                        'father_id' => $fatherId,
+                        'mother_id' => $motherId,
+                        'from_ids' => [],
+                    ];
+                }
+
+                $nextMap[$key]['from_ids'][$memberId] = true;
             }
         }
-        
+
+        $nextLevel = [];
+        foreach ($nextMap as $unit) {
+            $fromIds = array_map('intval', array_keys($unit['from_ids']));
+            sort($fromIds);
+            $unit['from_ids'] = $fromIds;
+            $nextLevel[] = $unit;
+        }
+
+        $currentLevel = $nextLevel;
+        $depth++;
+    }
+
+    return $levels;
+}
+
+function formatAncestorCoupleLine($fatherId, $motherId, $personsById) {
+    $fatherName = '';
+    $motherName = '';
+
+    if ($fatherId > 0 && isset($personsById[$fatherId])) {
+        $fatherName = trim($personsById[$fatherId]['vorname'] . ' ' . $personsById[$fatherId]['nachname']);
+    }
+
+    if ($motherId > 0 && isset($personsById[$motherId])) {
+        $motherName = trim($personsById[$motherId]['vorname'] . ' ' . $personsById[$motherId]['nachname']);
+    }
+
+    if ($fatherName !== '' && $motherName !== '') {
+        return $fatherName . ' + ' . $motherName;
+    }
+    if ($fatherName !== '') {
+        return $fatherName;
+    }
+    if ($motherName !== '') {
+        return $motherName;
+    }
+
+    return 'Unbekannt';
+}
+
+function formatCoupleEventsForAncestors($fatherId, $motherId, $coupleEventMap) {
+    if ($fatherId <= 0 || $motherId <= 0) {
+        return '';
+    }
+
+    $events = $coupleEventMap[$fatherId . '-' . $motherId] ?? null;
+    if (!$events) {
+        return '';
+    }
+
+    $parts = [];
+    if (!empty($events['heiratsdatum'])) {
+        $parts[] = '⚭ ' . formatDBDateOrNull($events['heiratsdatum']);
+    }
+    if (!empty($events['scheidungsdatum'])) {
+        $parts[] = 'geschieden ' . formatDBDateOrNull($events['scheidungsdatum']);
+    }
+
+    return implode(' | ', $parts);
+}
+
+function renderAncestorUnits($levels, $personsById, $coupleEventMap, $isTestAccount = false) {
+    if (empty($levels)) {
+        return '<p>Keine Vorfahren gefunden.</p>';
+    }
+
+    krsort($levels);
+
+    $html = "<div class='ancestor-flex'><div class='ancestor-col'>";
+    foreach ($levels as $depth => $units) {
+        $html .= "<div style='margin-bottom:12px;'>";
+        $html .= "<div style='font-weight:600; margin-bottom:6px;'>Generation {$depth}</div>";
+
+        foreach ($units as $unit) {
+            $fatherId = (int)($unit['father_id'] ?? 0);
+            $motherId = (int)($unit['mother_id'] ?? 0);
+
+            $blurClass = getBlurClass($isTestAccount);
+            $classes = "person" . ($blurClass ? " " . $blurClass : "");
+
+            $line = formatAncestorCoupleLine($fatherId, $motherId, $personsById);
+            $events = formatCoupleEventsForAncestors($fatherId, $motherId, $coupleEventMap);
+
+            $fromIds = $unit['from_ids'] ?? [];
+            $fromNames = [];
+            foreach ($fromIds as $fromId) {
+                $fp = $personsById[(int)$fromId] ?? null;
+                if ($fp) {
+                    $fromNames[] = trim($fp['vorname'] . ' ' . $fp['nachname']);
+                }
+            }
+            $fromNames = array_values(array_unique($fromNames));
+            sort($fromNames);
+            $elternVon = !empty($fromNames) ? 'Eltern von: ' . implode(', ', $fromNames) : '';
+
+            $html .= "<div class='{$classes}'>👤 {$line}";
+            if ($events !== '') {
+                $html .= "<div style='margin-top:4px; font-size:0.9em; color:#555;'>💍 {$events}</div>";
+            }
+            if ($elternVon !== '') {
+                $html .= "<div style='margin-top:2px; font-size:0.85em; color:#888;'>{$elternVon}</div>";
+            }
+            $html .= "</div>";
+        }
+
         $html .= "</div>";
     }
-    
-    $html .= "</div>";
-    
+    $html .= "</div></div>";
+
     return $html;
 }
 
 // =========================
 // START
 // =========================
-list($personsById, $childrenMap, $spouseMap) = loadData($pdo, $startId);
+list($personsById, $childrenMap, $spouseMap, $coupleEventMap) = loadData($pdo, $startId);
 
 if (!isset($personsById[$startId])) {
     die("Person nicht gefunden");
@@ -586,8 +687,8 @@ $p = $personsById[$startId];
     <div class="column">
         <h3>⬆ Vorfahren</h3>
         <?php 
-        $columns = buildAncestorColumns($startId, $personsById, 3);
-        echo renderAncestorColumns($columns, $spouseMap, $isTestAccount);
+        $ancestorLevels = collectAncestorUnitsByLevel($startId, $personsById, 6);
+        echo renderAncestorUnits($ancestorLevels, $personsById, $coupleEventMap, $isTestAccount);
         ?>
     </div>
 
@@ -625,15 +726,12 @@ $p = $personsById[$startId];
         ? formatDBDateOrNull($ehe['heiratsdatum'])
         : "-";
 
-    $scheidung = !empty($ehe['scheidungsdatum'])
-        ? formatDBDateOrNull($ehe['scheidungsdatum'])
-        : "-";
     ?>
 
     <div style="margin-bottom:10px; padding:8px; border:1px solid #ddd; border-radius:6px;">
         💍 <strong><?= $partnerName ?></strong><br>
         ⚭ <?= $hochzeit ?><br>
-        geschieden <?= $scheidung ?>
+        <?php if (!empty($ehe['scheidungsdatum'])): ?>geschieden <?= formatDBDateOrNull($ehe['scheidungsdatum']) ?><br><?php endif; ?>
     </div>
 
 <?php endforeach; ?>

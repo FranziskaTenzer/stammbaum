@@ -139,6 +139,13 @@ $extraHead = '<style>
     margin-top: 4px;
 }
 
+.blurred-text {
+    color: transparent;
+    text-shadow: 0 0 8px rgba(0,0,0,0.5);
+    filter: blur(4px);
+    user-select: none;
+}
+
 @media (max-width: 1100px) {
     .tree-panel {
         max-height: none;
@@ -155,6 +162,8 @@ require_once '../../lib/include.php';
 
 $pdo = getPDO();
 $startId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$username = $_SESSION['username'] ?? '';
+$isTestAccount = ($username === 'TestAccount');
 
 if ($startId <= 0) {
     echo '<div class="alert alert-warning">Keine gueltige Personen-ID uebergeben.</div>';
@@ -168,6 +177,11 @@ function fetchPersonById(PDO $pdo, int $id): ?array
     $stmt->execute(['id' => $id]);
     $person = $stmt->fetch(PDO::FETCH_ASSOC);
     return $person ?: null;
+}
+
+function getBlurClass(bool $isTestAccount): string
+{
+    return $isTestAccount ? 'blurred-text' : '';
 }
 
 function collectRelevantIds(PDO $pdo, int $startId): array
@@ -360,7 +374,7 @@ function formatSpouseSummary(int $personId, array $spouseMap): string
     return implode(', ', $items);
 }
 
-function renderPersonCard(int $personId, array $personsById, array $spouseMap, string $relationLine = ''): string
+function renderPersonCard(int $personId, array $personsById, array $spouseMap, string $relationLine = '', bool $isTestAccount = false): string
 {
     if (!isset($personsById[$personId])) {
         return '';
@@ -370,12 +384,16 @@ function renderPersonCard(int $personId, array $personsById, array $spouseMap, s
     $line = htmlspecialchars(formatPersonLine($person), ENT_QUOTES, 'UTF-8');
     $spouseSummary = formatSpouseSummary($personId, $spouseMap);
     $spouseLine = htmlspecialchars($spouseSummary !== '' ? $spouseSummary : '-', ENT_QUOTES, 'UTF-8');
+    $blurClass = getBlurClass($isTestAccount);
+    $lineClass = $blurClass !== '' ? ' class="person-line ' . $blurClass . '"' : ' class="person-line"';
+    $spouseClass = $blurClass !== '' ? ' class="subtle person-spouse ' . $blurClass . '"' : ' class="subtle person-spouse"';
+    $relationClass = $blurClass !== '' ? ' class="subtle person-relation ' . $blurClass . '"' : ' class="subtle person-relation"';
 
     $html = '<article class="person-card">';
-    $html .= '<p class="person-line">' . $line . '</p>';
-    $html .= '<p class="subtle person-spouse">Ehepartner: ' . $spouseLine . '</p>';
+    $html .= '<p' . $lineClass . '>' . $line . '</p>';
+    $html .= '<p' . $spouseClass . '>Ehepartner: ' . $spouseLine . '</p>';
     if ($relationLine !== '') {
-        $html .= '<p class="subtle person-relation">' . htmlspecialchars($relationLine, ENT_QUOTES, 'UTF-8') . '</p>';
+        $html .= '<p' . $relationClass . '>' . htmlspecialchars($relationLine, ENT_QUOTES, 'UTF-8') . '</p>';
     }
     $html .= '</article>';
 
@@ -608,7 +626,7 @@ function formatCoupleEvents(int $personAId, int $personBId, array $coupleEventMa
     return implode(' | ', $parts);
 }
 
-function renderAncestorGenerationsWithEvents(array $levels, array $personsById, array $coupleEventMap): string
+function renderAncestorGenerationsWithEvents(array $levels, array $personsById, array $coupleEventMap, bool $isTestAccount = false): string
 {
     if (empty($levels)) {
         return '<p class="subtle">Keine Eintraege vorhanden.</p>';
@@ -641,13 +659,17 @@ function renderAncestorGenerationsWithEvents(array $levels, array $personsById, 
             $relation = 'Eltern von: ' . (!empty($originNames) ? implode(', ', $originNames) : '-');
 
             $events = formatCoupleEvents($fatherId, $motherId, $coupleEventMap);
+            $blurClass = getBlurClass($isTestAccount);
+            $lineClass = $blurClass !== '' ? ' class="person-line ' . $blurClass . '"' : ' class="person-line"';
+            $eventClass = $blurClass !== '' ? ' class="subtle person-spouse ' . $blurClass . '"' : ' class="subtle person-spouse"';
+            $relationClass = $blurClass !== '' ? ' class="subtle person-relation ' . $blurClass . '"' : ' class="subtle person-relation"';
 
             $html .= '<article class="person-card">';
-            $html .= '<p class="person-line">' . $line1 . '</p>';
+            $html .= '<p' . $lineClass . '>' . $line1 . '</p>';
             if ($events !== '') {
-                $html .= '<p class="subtle person-spouse">Ehe: ' . htmlspecialchars($events, ENT_QUOTES, 'UTF-8') . '</p>';
+                $html .= '<p' . $eventClass . '>Ehe: ' . htmlspecialchars($events, ENT_QUOTES, 'UTF-8') . '</p>';
             }
-            $html .= '<p class="subtle person-relation">' . htmlspecialchars($relation, ENT_QUOTES, 'UTF-8') . '</p>';
+            $html .= '<p' . $relationClass . '>' . htmlspecialchars($relation, ENT_QUOTES, 'UTF-8') . '</p>';
             $html .= '</article>';
         }
 
@@ -659,7 +681,7 @@ function renderAncestorGenerationsWithEvents(array $levels, array $personsById, 
     return $html;
 }
 
-function renderDescendantGenerations(array $levels, array $personsById, array $spouseMap): string
+function renderDescendantGenerations(array $levels, array $personsById, array $spouseMap, bool $isTestAccount = false): string
 {
     if (empty($levels)) {
         return '<p class="subtle">Keine Eintraege vorhanden.</p>';
@@ -678,7 +700,7 @@ function renderDescendantGenerations(array $levels, array $personsById, array $s
             $personId = (int)($item['id'] ?? 0);
             $fromId = (int)($item['from'] ?? 0);
             $relation = $fromId > 0 ? ('Kind von: ' . personByIdShortName($fromId, $personsById)) : '';
-            $html .= renderPersonCard($personId, $personsById, $spouseMap, $relation);
+            $html .= renderPersonCard($personId, $personsById, $spouseMap, $relation, $isTestAccount);
         }
 
         $html .= '</div>';
@@ -705,6 +727,9 @@ $focusName = htmlspecialchars(trim(($focusPerson['vorname'] ?? '') . ' ' . ($foc
 $focusBirth = !empty($focusPerson['geburtsdatum']) ? formatDBDateOrNull($focusPerson['geburtsdatum']) : '-';
 $focusDeath = !empty($focusPerson['sterbedatum']) ? formatDBDateOrNull($focusPerson['sterbedatum']) : '-';
 $focusSpouses = htmlspecialchars(formatSpouseSummary($startId, $spouseMap) ?: '-', ENT_QUOTES, 'UTF-8');
+$focusNameClass = 'focus-name';
+$focusMetaClass = 'meta-line';
+$focusTextClass = 'subtle';
 ?>
 
 <div class="tree-page">
@@ -716,20 +741,20 @@ $focusSpouses = htmlspecialchars(formatSpouseSummary($startId, $spouseMap) ?: '-
     <div class="tree-grid">
         <section class="tree-panel ancestors">
             <h3>Vorfahren (komplett aus DB)</h3>
-            <?= renderAncestorGenerationsWithEvents($ancestorLevels, $personsById, $coupleEventMap) ?>
+            <?= renderAncestorGenerationsWithEvents($ancestorLevels, $personsById, $coupleEventMap, $isTestAccount) ?>
         </section>
 
         <section class="focus-card">
-            <h2 class="focus-name"><?= $focusName ?></h2>
-            <p class="meta-line">Geboren: <?= htmlspecialchars($focusBirth, ENT_QUOTES, 'UTF-8') ?></p>
-            <p class="meta-line">Gestorben: <?= htmlspecialchars($focusDeath, ENT_QUOTES, 'UTF-8') ?></p>
-            <p class="meta-line">Ehepartner: <?= $focusSpouses ?></p>
-            <p class="subtle">Diese Ansicht zeigt Vorfahren und Nachkommen so tief, wie sie in der Datenbank verf&uuml;gbar sind.</p>
+            <h2 class="<?= htmlspecialchars($focusNameClass, ENT_QUOTES, 'UTF-8') ?>"><?= $focusName ?></h2>
+            <p class="<?= htmlspecialchars($focusMetaClass, ENT_QUOTES, 'UTF-8') ?>">Geboren: <?= htmlspecialchars($focusBirth, ENT_QUOTES, 'UTF-8') ?></p>
+            <p class="<?= htmlspecialchars($focusMetaClass, ENT_QUOTES, 'UTF-8') ?>">Gestorben: <?= htmlspecialchars($focusDeath, ENT_QUOTES, 'UTF-8') ?></p>
+            <p class="<?= htmlspecialchars($focusMetaClass, ENT_QUOTES, 'UTF-8') ?>">Ehepartner: <?= $focusSpouses ?></p>
+            <p class="<?= htmlspecialchars($focusTextClass, ENT_QUOTES, 'UTF-8') ?>">Diese Ansicht zeigt Vorfahren und Nachkommen so tief, wie sie in der Datenbank verf&uuml;gbar sind.</p>
         </section>
 
         <section class="tree-panel descendants">
             <h3>Nachkommen (komplett aus DB)</h3>
-            <?= renderDescendantGenerations($descendantLevels, $personsById, $spouseMap) ?>
+            <?= renderDescendantGenerations($descendantLevels, $personsById, $spouseMap, $isTestAccount) ?>
         </section>
     </div>
 </div>
