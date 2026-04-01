@@ -73,6 +73,26 @@ function getTirolArchivPrefix($nachname) {
 }
 
 /**
+ * Prüft, ob ein erkannter Namens-Prefix zur angeforderten Archivseite passt.
+ * Gruppenseiten wie pq oder xyz enthalten mehrere Initialen.
+ */
+function tirolArchivPrefixMatches($namePrefix, $requestedPrefix) {
+    if ($namePrefix === $requestedPrefix) {
+        return true;
+    }
+
+    if ($requestedPrefix === 'pq' && in_array($namePrefix, ['p', 'q'], true)) {
+        return true;
+    }
+
+    if ($requestedPrefix === 'xyz' && in_array($namePrefix, ['x', 'y', 'z'], true)) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * Generiert die korrekte URL für einen bestimmten Prefix
  * Berücksichtigt Sonderfälle:
  * - x, y, z -> xyz
@@ -157,7 +177,12 @@ function getTirolArchivNamesWithPlaces($prefix) {
     // Prüfe Cache
     $cached = loadTirolArchivCache($prefix);
     if ($cached !== null) {
-        return $cached;
+        // Historische Recovery: pq/xyz konnten früher fälschlich als leer gecacht werden.
+        if (empty($cached) && in_array($prefix, ['pq', 'xyz'], true)) {
+            // Mit Live-Daten neu aufbauen statt leeren Alt-Cache zu übernehmen.
+        } else {
+            return $cached;
+        }
     }
     
     $url = getTirolArchivUrl($prefix);
@@ -256,7 +281,7 @@ function parseNamesFromHtml($html, $prefix) {
                 $placesStr = trim($matches[2][$i]);
                 
                 // Prüfe ob Name mit richtigem Prefix anfängt
-                if (strlen($name) >= 2 && getTirolArchivPrefix($name) === $prefix) {
+                if (strlen($name) >= 2 && tirolArchivPrefixMatches(getTirolArchivPrefix($name), $prefix)) {
                     $places = array_map('trim', explode(',', $placesStr));
                     $places = array_filter($places, function($p) {
                         return !empty($p) && strlen($p) > 1;
@@ -320,7 +345,7 @@ function parseNameEntry($text, $prefix) {
         $places = array_filter($places);
     }
     // Muster 4: "Name – Ort1, Ort2" oder "Name - Ort1, Ort2"
-    elseif (preg_match('/^([^–-\n]+)\s*[–-]\s*(.+)$/', $text, $m)) {
+    elseif (preg_match('/^([^–\-\n]+)\s*[–\-]\s*(.+)$/', $text, $m)) {
         $name = trim($m[1]);
         $places = array_map('trim', explode(',', $m[2]));
         $places = array_filter($places);
@@ -335,7 +360,7 @@ function parseNameEntry($text, $prefix) {
     $name = trim($name, ': ');
     
     // Prüfe, ob Name mit dem richtigen Prefix anfängt
-    if (getTirolArchivPrefix($name) !== $prefix) {
+    if (!tirolArchivPrefixMatches(getTirolArchivPrefix($name), $prefix)) {
         return null;
     }
     
@@ -660,6 +685,14 @@ function renderArchiveNamesBoxForGroup($groupNames, $minSimilarity = TIROL_ARCHI
     $similar = findSimilarNamesInArchiveForGroup($groupNames, $minSimilarity);
     $prefix = getTirolArchivPrefix($groupNames[0]);
     $archiveUrl = getTirolArchivUrl($prefix);
+
+    // Exakte Treffer separat behandeln: nicht als Variantenliste anzeigen.
+    $exactMatches = array_values(array_filter($similar, function($item) {
+        return isset($item['similarity']) && intval($item['similarity']) === 100;
+    }));
+    $variantMatches = array_values(array_filter($similar, function($item) {
+        return isset($item['similarity']) && intval($item['similarity']) < 100;
+    }));
     
     // Für Debug: Alle Namen mit Ähnlichkeit laden (min. 30%, für JEDEN Namen der Gruppe)
     $allNamesDebug = [];
@@ -785,9 +818,12 @@ function renderArchiveNamesBoxForGroup($groupNames, $minSimilarity = TIROL_ARCHI
         
         // Zusammenfassung (immer sichtbar)
         $html .= '<div style="color:#0c5460; font-size:0.9em; margin-top:8px;">';
-        $html .= '<strong>' . count($similar) . ' ähnliche Namen gefunden</strong>';
-        if (count($similar) > 0) {
-            $html .= ' - Beste Übereinstimmung: <strong>' . htmlspecialchars($similar[0]['name'], ENT_QUOTES, 'UTF-8') . '</strong> (' . intval($similar[0]['similarity']) . '%)';
+        $html .= '<strong>' . count($variantMatches) . ' Varianten (< 100%) gefunden</strong>';
+        if (!empty($variantMatches)) {
+            $html .= ' - Beste Variante: <strong>' . htmlspecialchars($variantMatches[0]['name'], ENT_QUOTES, 'UTF-8') . '</strong> (' . intval($variantMatches[0]['similarity']) . '%)';
+        }
+        if (!empty($exactMatches)) {
+            $html .= '<br><span style="color:#2e7d32;"><strong>Exakte Treffer (100%):</strong> ' . count($exactMatches) . ' gefunden</span>';
         }
         $html .= '<br><small><a href="' . htmlspecialchars($archiveUrl, ENT_QUOTES, 'UTF-8') . '" target="_blank" style="color:#0099cc;">Zur Archiv-Seite ➔</a></small>';
         $html .= '</div>';
@@ -795,18 +831,29 @@ function renderArchiveNamesBoxForGroup($groupNames, $minSimilarity = TIROL_ARCHI
         // Inhalt (eingeklappt)
         $html .= '<div id="' . $contentId . '" style="display:none; margin-top:14px; padding-top:14px; border-top:2px solid #0099cc;">';
         $html .= '<small style="color:#0c5460;">';
+
+        if (!empty($exactMatches)) {
+            $exactNames = implode(', ', array_map(function($item) {
+                return htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8');
+            }, $exactMatches));
+            $html .= '<div style="padding:10px; background:#e8f5e9; margin:8px 0 12px 0; border-radius:3px; border-left:4px solid #2e7d32;">';
+            $html .= '<strong>✅ Exakt gefunden (100%):</strong> ' . $exactNames;
+            $html .= '</div>';
+        }
+
+        if (empty($variantMatches)) {
+            $html .= '<div style="padding:10px; background:#e8f5e9; margin:8px 0; border-radius:3px; border-left:4px solid #2e7d32;">';
+            $html .= '<strong>Keine Varianten unter 100% gefunden.</strong>';
+            $html .= '</div>';
+        }
         
-        foreach ($similar as $item) {
+        foreach ($variantMatches as $item) {
             if (!isset($item['similarity']) || !isset($item['name'])) {
                 continue;
             }
             
-            $match = '';
             $sim = intval($item['similarity']);
-            
-            if ($sim == 100) {
-                $match = '✅ Exakt';
-            } elseif ($sim >= 95) {
+            if ($sim >= 95) {
                 $match = '🟢 ' . $sim . '% sehr ähnlich';
             } elseif ($sim >= 90) {
                 $match = '🟡 ' . $sim . '% ähnlich';

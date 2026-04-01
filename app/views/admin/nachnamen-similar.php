@@ -246,53 +246,10 @@ function renderPersonRecord($record, $recordId) {
 }
 
 function renderNameGroup($groupNames, $pdo) {
-    $groupId = 'group-nachname-' . md5(implode('-', $groupNames));
-    
     $html = '<div class="name-group" style="background:#f9f9f9; padding:12px; margin:10px 0; border-left:4px solid #666; border-radius:3px;">';
-    
-    $html .= '<div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleNameGroup(this, \'' . htmlspecialchars($groupId, ENT_QUOTES) . '\');">';
-    $html .= '<div>';
-    $html .= '<strong style="color:#333; user-select:none;">' . htmlspecialchars(implode(', ', $groupNames), ENT_QUOTES, 'UTF-8') . '</strong>';
-    $html .= '</div>';
-    $html .= '<span class="toggle-icon" style="color:#666; font-size:1.2em; transition:transform 0.3s; user-select:none;">▶</span>';
-    $html .= '</div>';
-    
-    // Tirol Archive Info - durchsuche die ganze Gruppe
+    $html .= '<strong style="color:#333;">' . htmlspecialchars(implode(', ', $groupNames), ENT_QUOTES, 'UTF-8') . '</strong>';
     $html .= renderArchiveNamesBoxForGroup($groupNames);
-    
-    $html .= '<div id="' . htmlspecialchars($groupId, ENT_QUOTES) . '" class="group-content" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #ddd;">';
-    
-    foreach ($groupNames as $name) {
-        $records = getRecordsForNachname($pdo, $name);
-        
-        if (!empty($records)) {
-            $versionId = 'version-nachname-' . md5($name);
-            
-            $html .= '<div style="margin-top:12px; padding:10px; background:#ffffff; border:1px solid #ddd; border-radius:3px;">';
-            $html .= '<div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleVersion(this, \'' . htmlspecialchars($versionId, ENT_QUOTES) . '\'); event.stopPropagation();">';
-            $html .= '<div>';
-            $html .= '<strong style="color:#0066cc; font-size:1em; user-select:none;">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</strong>';
-            $html .= ' <span style="color:#999; font-size:0.9em; user-select:none;">(' . count($records) . ' Einträge)</span>';
-            $html .= '</div>';
-            $html .= '<span class="version-icon" style="color:#0066cc; font-size:1.1em; transition:transform 0.3s; display:inline-block; user-select:none;">▶</span>';
-            $html .= '</div>';
-            
-            $html .= '<div id="' . htmlspecialchars($versionId, ENT_QUOTES) . '" class="version-content" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">';
-            
-            $recordCounter = 0;
-            foreach ($records as $record) {
-                $recordId = 'nachname-' . $name . '-' . ($recordCounter++);
-                $html .= renderPersonRecord($record, $recordId);
-            }
-            
-            $html .= '</div>';
-            $html .= '</div>';
-        }
-    }
-    
     $html .= '</div>';
-    $html .= '</div>';
-    
     return $html;
 }
 

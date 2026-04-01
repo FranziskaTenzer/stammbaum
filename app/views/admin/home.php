@@ -28,6 +28,18 @@ if (!isAdmin()) {
         <p>Gruppen ähnlicher Nachnamen anzeigen und mit Tirol-Archiv vergleichen</p>
         <a href="nachnamen-similar.php" class="btn btn-warning">Nachnamen prüfen</a>
     </div>
+
+    <div class="content-card admin-card">
+        <h3>🗺️ Nachnamen nach Ort</h3>
+        <p>Tirol-Archiv-Nachnamen je Ort alphabetisch auflisten</p>
+        <a href="nachnamen-orte.php" class="btn btn-warning">Ortslisten öffnen</a>
+    </div>
+
+    <div class="content-card admin-card">
+        <h3>📚 Nachnamen Tirol (A-Z)</h3>
+        <p>Alle vorhandenen Tirol-Archiv-Nachnamen alphabetisch gruppiert anzeigen</p>
+        <a href="nachnamen-tirol.php" class="btn btn-warning">Gesamtliste öffnen</a>
+    </div>
     
     <div class="content-card admin-card">
         <h3>👥 Benutzer-Verwaltung</h3>
