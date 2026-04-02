@@ -20,25 +20,25 @@ if (!isAdmin()) {
     <div class="content-card admin-card">
         <h3>👨≈👨 Ähnliche Vornamen</h3>
         <p>Gruppen ähnlicher Vornamen anzeigen</p>
-        <a href="vornamen-similar.php" class="btn btn-warning">Vornamen prüfen</a>
+        <a href="vornamen-similar.php" class="btn btn-primary">Vornamen prüfen</a>
     </div>
 
     <div class="content-card admin-card">
         <h3>👤≈👤 Ähnliche Nachnamen</h3>
         <p>Gruppen ähnlicher Nachnamen anzeigen und mit Tirol-Archiv vergleichen</p>
-        <a href="nachnamen-similar.php" class="btn btn-warning">Nachnamen prüfen</a>
+        <a href="nachnamen-similar.php" class="btn btn-primary">Nachnamen prüfen</a>
     </div>
 
     <div class="content-card admin-card">
         <h3>🗺️ Nachnamen nach Ort</h3>
         <p>Tirol-Archiv-Nachnamen je Ort alphabetisch auflisten</p>
-        <a href="nachnamen-orte.php" class="btn btn-warning">Ortslisten öffnen</a>
+        <a href="nachnamen-orte.php" class="btn btn-primary">Ortslisten öffnen</a>
     </div>
 
     <div class="content-card admin-card">
         <h3>📚 Nachnamen Tirol (A-Z)</h3>
         <p>Alle vorhandenen Tirol-Archiv-Nachnamen alphabetisch gruppiert anzeigen</p>
-        <a href="nachnamen-tirol.php" class="btn btn-warning">Gesamtliste öffnen</a>
+        <a href="nachnamen-tirol.php" class="btn btn-primary">Gesamtliste öffnen</a>
     </div>
     
     <div class="content-card admin-card">
@@ -67,7 +67,7 @@ if (!isAdmin()) {
     <div class="content-card admin-card">
         <h3>⛃ Datenbank löschen und neu erstellen</h3>
         <p>Die Datenbank wird komplett gelöscht und neu erstellt</p>
-     	<a href="recreate-db.php" onclick="return confirm('⚠️ WARNUNG: Die Datenbank wird komplett gelöscht und neu erstellt. Möchten Sie fortfahren?');">⛃ Datenbank löschen und neu erstellen</a>
+     	<a href="recreate-db.php" onclick="return confirm('⚠️ WARNUNG: Die Datenbank wird komplett gelöscht und neu erstellt. Möchten Sie fortfahren?');" class="btn btn-warning">⛃ Datenbank löschen und neu erstellen</a>
     </div>
     
     <div class="content-card admin-card">
@@ -87,7 +87,7 @@ if (!isAdmin()) {
         <p>Datenbank zurücksetzen und alle Daten neu importieren</p>
         <a href="re-create-all.php"
            onclick="return confirm('⚠️ WARNUNG: Dies löscht ALLE Daten und importiert alles neu. Möchten Sie fortfahren?');"
-           class="btn btn-danger">Neustart</a>
+           class="btn btn-warning">Neustart</a>
     </div>
 
 </div>

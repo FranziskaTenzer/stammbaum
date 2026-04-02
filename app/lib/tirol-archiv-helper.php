@@ -608,6 +608,12 @@ function renderArchiveNamesBox($nachname, $minSimilarity = TIROL_ARCHIV_MIN_SIMI
     $html .= '<strong>' . count($similar) . ' ähnliche Namen gefunden</strong>';
     if (count($similar) > 0) {
         $html .= ' - Beste Übereinstimmung: <strong>' . htmlspecialchars($similar[0]['name'], ENT_QUOTES, 'UTF-8') . '</strong> (' . intval($similar[0]['similarity']) . '%)';
+        if (!empty($similar[0]['places']) && is_array($similar[0]['places'])) {
+            $placesStr = implode(', ', array_map(function($p) {
+                return htmlspecialchars($p, ENT_QUOTES, 'UTF-8');
+            }, $similar[0]['places']));
+            $html .= ' - Orte: <strong>' . $placesStr . '</strong>';
+        }
     }
     $html .= '<br><small><a href="' . htmlspecialchars($archiveUrl, ENT_QUOTES, 'UTF-8') . '" target="_blank" style="color:#0099cc;">Zur Archiv-Seite ➔</a></small>';
     $html .= '</div>';
@@ -673,6 +679,55 @@ function renderArchiveNamesBox($nachname, $minSimilarity = TIROL_ARCHIV_MIN_SIMI
  * Durchsucht JEDEN Namen der Gruppe im Tirol-Archiv
  * Box ist standardmäßig eingeklappt
  */
+function getArchiveGroupMatchSummary($groupNames, $minSimilarity = TIROL_ARCHIV_MIN_SIMILARITY) {
+    static $cache = [];
+
+    if (empty($groupNames)) {
+        return [
+            'similar' => [],
+            'exactMatches' => [],
+            'variantMatches' => [],
+            'prefix' => '',
+            'archiveUrl' => '',
+        ];
+    }
+
+    if (!is_array($groupNames)) {
+        $groupNames = [$groupNames];
+    }
+
+    $cacheKey = md5(json_encode([$groupNames, intval($minSimilarity)]));
+    if (isset($cache[$cacheKey])) {
+        return $cache[$cacheKey];
+    }
+
+    $similar = findSimilarNamesInArchiveForGroup($groupNames, $minSimilarity);
+    $prefix = getTirolArchivPrefix($groupNames[0]);
+    $archiveUrl = getTirolArchivUrl($prefix);
+
+    $exactMatches = array_values(array_filter($similar, function($item) {
+        return isset($item['similarity']) && intval($item['similarity']) === 100;
+    }));
+    $variantMatches = array_values(array_filter($similar, function($item) {
+        return isset($item['similarity']) && intval($item['similarity']) < 100;
+    }));
+
+    $cache[$cacheKey] = [
+        'similar' => $similar,
+        'exactMatches' => $exactMatches,
+        'variantMatches' => $variantMatches,
+        'prefix' => $prefix,
+        'archiveUrl' => $archiveUrl,
+    ];
+
+    return $cache[$cacheKey];
+}
+
+function hasArchiveVariantMatchesForGroup($groupNames, $minSimilarity = TIROL_ARCHIV_MIN_SIMILARITY) {
+    $summary = getArchiveGroupMatchSummary($groupNames, $minSimilarity);
+    return !empty($summary['variantMatches']) || empty($summary['similar']);
+}
+
 function renderArchiveNamesBoxForGroup($groupNames, $minSimilarity = TIROL_ARCHIV_MIN_SIMILARITY) {
     if (empty($groupNames)) {
         return '';
@@ -682,17 +737,16 @@ function renderArchiveNamesBoxForGroup($groupNames, $minSimilarity = TIROL_ARCHI
         $groupNames = [$groupNames];
     }
     
-    $similar = findSimilarNamesInArchiveForGroup($groupNames, $minSimilarity);
-    $prefix = getTirolArchivPrefix($groupNames[0]);
-    $archiveUrl = getTirolArchivUrl($prefix);
+    $summary = getArchiveGroupMatchSummary($groupNames, $minSimilarity);
+    $similar = $summary['similar'];
+    $exactMatches = $summary['exactMatches'];
+    $variantMatches = $summary['variantMatches'];
+    $prefix = $summary['prefix'];
+    $archiveUrl = $summary['archiveUrl'];
 
-    // Exakte Treffer separat behandeln: nicht als Variantenliste anzeigen.
-    $exactMatches = array_values(array_filter($similar, function($item) {
-        return isset($item['similarity']) && intval($item['similarity']) === 100;
-    }));
-    $variantMatches = array_values(array_filter($similar, function($item) {
-        return isset($item['similarity']) && intval($item['similarity']) < 100;
-    }));
+    if (empty($variantMatches) && !empty($exactMatches)) {
+        return '';
+    }
     
     // Für Debug: Alle Namen mit Ähnlichkeit laden (min. 30%, für JEDEN Namen der Gruppe)
     $allNamesDebug = [];
@@ -821,6 +875,12 @@ function renderArchiveNamesBoxForGroup($groupNames, $minSimilarity = TIROL_ARCHI
         $html .= '<strong>' . count($variantMatches) . ' Varianten (< 100%) gefunden</strong>';
         if (!empty($variantMatches)) {
             $html .= ' - Beste Variante: <strong>' . htmlspecialchars($variantMatches[0]['name'], ENT_QUOTES, 'UTF-8') . '</strong> (' . intval($variantMatches[0]['similarity']) . '%)';
+            if (!empty($variantMatches[0]['places']) && is_array($variantMatches[0]['places'])) {
+                $placesStr = implode(', ', array_map(function($p) {
+                    return htmlspecialchars($p, ENT_QUOTES, 'UTF-8');
+                }, $variantMatches[0]['places']));
+                $html .= ' - Orte: <strong>' . $placesStr . '</strong>';
+            }
         }
         if (!empty($exactMatches)) {
             $html .= '<br><span style="color:#2e7d32;"><strong>Exakte Treffer (100%):</strong> ' . count($exactMatches) . ' gefunden</span>';

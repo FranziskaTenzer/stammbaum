@@ -125,6 +125,18 @@ function extractDateAndPlace(&$text, $type) {
     return [$datum, $ort];
 }
 
+function extractLabeledField(&$text, $label) {
+    $pattern = '/\b' . preg_quote($label, '/') . '\s*:\s*([^,&(]+?)(?=\s+\d+\s*[jJ]\b|\s+geb\.|\s+gest\.|,|&|\(|$)/i';
+    if (!preg_match($pattern, $text, $m)) {
+        return null;
+    }
+
+    $value = trim($m[1]);
+    $text = preg_replace($pattern, '', $text, 1);
+    $text = preg_replace('/\s{2,}/', ' ', $text);
+    return $value === '' ? null : $value;
+}
+
 /**
  * Extrahiert Eltern-Information und verarbeitet auch verschachtelte Fälle
  * Pattern 1: (Vater & Mutter) - normale Eltern
@@ -195,6 +207,28 @@ function extractUnehelich(&$text) {
         'nested_vater_text' => null,
         'nested_mutter_text' => null,
     ];
+
+    // Spezialfall:
+    // (unehelicher Sohn Maria X Bemerkung: ..., eheliche Tochter Vater ... & Mutter ...)
+    // Beispiel: Franz Sahartinger / Maria Sahartinger / Fabriksnachtwaechter Ort: Woergl & Ursula Feiersinger Ort: Innsbruck
+    if (preg_match('/\(unehelich(?:e|er)?\s+(?:Tochter|Sohn)\s+(?:von\s+)?([^,\)]+?)(?:\s+Bemerkung:\s*([^,\)]*))?,\s*eheliche\s+Tochter\s+([^&\)]+)\s*&\s*([^\)]+)\)/i', $text, $m)) {
+        $mutterName = trim($m[1]);
+        $mutterBemerkung = trim($m[2] ?? '');
+        $vaterDerMutter = trim($m[3]);
+        $mutterDerMutter = trim($m[4]);
+
+        if ($mutterBemerkung !== '') {
+            $mutterName .= ', Bemerkung: ' . $mutterBemerkung;
+        }
+
+        $result['bemerkung'] = trim(substr($m[0], 1, -1));
+        $result['mutter_text'] = $mutterName ?: null;
+        $result['nested_vater_text'] = $vaterDerMutter ?: null;
+        $result['nested_mutter_text'] = $mutterDerMutter ?: null;
+
+        $text = str_replace($m[0], '', $text);
+        return $result;
+    }
     
     // Match: (uneheliche(r) Tochter/Sohn von Name[, VaterName & MutterName])
     if (preg_match('/\(unehelich(?:e|er)?\s+(?:Tochter|Sohn)\s+von\s+([^,)]+)(?:,\s*([^&)]+)\s*&\s*([^)]+))?\)/i', $text, $m)) {
@@ -314,11 +348,18 @@ function parsePerson($text) {
     // Extract dates after parent extraction so parent birth dates stay with parent records.
     list($tod, $todOrt) = extractDateAndPlace($text, 'gest');
     list($geb, $gebOrt) = extractDateAndPlace($text, 'geb');
+
+    // Feldmarker wie in importThierbach unterstuetzen (wichtig fuer unehelich-Spezialfall).
+    $hof = extractLabeledField($text, 'Hof');
+    $ort = extractLabeledField($text, 'Ort');
+    $bemerkungLabel = extractLabeledField($text, 'Bemerkung');
+    if (!empty($bemerkungLabel)) {
+        $bemerkung = mergeBemerkungValues($bemerkung, $bemerkungLabel);
+    }
     
     // Remove all brackets before parsing name
     $text = preg_replace('/\([^)]*\)/', '', $text);
     $text = preg_replace('/\b\d+\s*[jJ]\b/', '', $text);
-    $text = preg_replace('/,?\s*(Hof|Ort):\s*[^,]*/i', '', $text);
     
     // IMPORTANT: Clean "unehelich" BEFORE splitting vorname/nachname
     $text = cleanNameFromUneligitimate($text);
@@ -336,6 +377,8 @@ function parsePerson($text) {
         'sterbedatum' => $tod,
         'geburtsort' => $gebOrt,
         'sterbeort' => $todOrt,
+        'hof' => $hof,
+        'ort' => $ort,
         'alter' => $alter,
         'referenz_ehe' => $referenzEhe,
         'bemerkung' => $bemerkung,
@@ -369,7 +412,7 @@ function mergeBemerkungValues($existing, $incoming) {
 function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
     
     $stmt = $pdo->prepare(" 
-        SELECT id, geburtsdatum, bemerkung FROM person
+        SELECT id, geburtsdatum, bemerkung, hof, ort FROM person
         WHERE vorname=? AND nachname=?
         AND (vater_id <=> ?)
         AND (mutter_id <=> ?)
@@ -405,10 +448,20 @@ function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
             $update = $pdo->prepare("UPDATE person SET bemerkung = ? WHERE id = ?");
             $update->execute([$mergedBemerkung, $id]);
         }
+
+        if (!empty($data['hof']) && empty($existing['hof'])) {
+            $update = $pdo->prepare("UPDATE person SET hof = COALESCE(hof, ?) WHERE id = ?");
+            $update->execute([$data['hof'], $id]);
+        }
+
+        if (!empty($data['ort']) && empty($existing['ort'])) {
+            $update = $pdo->prepare("UPDATE person SET ort = COALESCE(ort, ?) WHERE id = ?");
+            $update->execute([$data['ort'], $id]);
+        }
     } else {
         $stmt = $pdo->prepare("
-            INSERT INTO person (vorname, nachname, geburtsdatum, sterbedatum, geburtsort, sterbeort, bemerkung, vater_id, mutter_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO person (vorname, nachname, geburtsdatum, sterbedatum, geburtsort, sterbeort, hof, ort, bemerkung, vater_id, mutter_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $data['vorname'],
@@ -417,6 +470,8 @@ function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
             $data['sterbedatum'],
             $data['geburtsort'],
             $data['sterbeort'],
+            $data['hof'] ?? null,
+            $data['ort'] ?? null,
             $data['bemerkung'],
             $vaterId,
             $mutterId
@@ -633,7 +688,6 @@ function runOrteImport() {
     echo "</ul>";
     
     echo "<hr><br />";
-    echo "<a href='../../views/user/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a>";
 }
 
 /* =========================

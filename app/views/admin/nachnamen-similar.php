@@ -3,7 +3,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-$pageTitle = "Zeige ähnliche Nachnamen";
+$pageTitle = "Nachnamen ohne exakten Tirol-Archiv Treffer";
 require_once '../../layout/header.php';
 require_once '../../lib/include.php';
 
@@ -20,16 +20,7 @@ $pdo = getPDO();
 // HELPER FUNKTIONEN
 // ===========================
 
-// Verwende die Funktion aus tirol-archiv-helper.php (falls noch nicht definiert)
-if (!function_exists('levenshteinSimilarity')) {
-    function levenshteinSimilarity($str1, $str2) {
-        $distance = levenshtein(strtolower($str1), strtolower($str2));
-        $maxLen = max(strlen($str1), strlen($str2));
-        return ($maxLen == 0) ? 100 : round((1 - ($distance / $maxLen)) * 100);
-    }
-}
-
-// Get all unique last names
+// Liefert Nachnamen ohne exakten (100%) Treffer im Tirol-Archiv
 function getSimilarNachnamen($pdo) {
     try {
         $stmt = $pdo->prepare("
@@ -46,25 +37,13 @@ function getSimilarNachnamen($pdo) {
     }
     
     $groups = [];
-    $processed = [];
-    
+
     foreach ($nachnamen as $name) {
-        if (in_array($name, $processed)) continue;
-        
-        $group = [$name];
-        foreach ($nachnamen as $compareName) {
-            if ($compareName != $name && !in_array($compareName, $processed)) {
-                $similarity = levenshteinSimilarity($name, $compareName);
-                if ($similarity >= 80) {
-                    $group[] = $compareName;
-                    $processed[] = $compareName;
-                }
-            }
-        }
-        
-        if (count($group) > 1) {
-            $groups[] = $group;
-            $processed[] = $name;
+        $summary = getArchiveGroupMatchSummary([$name]);
+
+        // Nur Namen anzeigen, die KEINEN exakten 100%-Treffer haben.
+        if (empty($summary['exactMatches'])) {
+            $groups[] = [$name];
         }
     }
     
@@ -399,13 +378,13 @@ function renderNameGroup($groupNames, $pdo) {
 
 <div class="container">
    
-    <h1>🔍 Ähnliche Nachnamen im Stammbaum</h1>
+    <h1>🔍 Nachnamen ohne exakten Tirol-Archiv Treffer</h1>
     <br/>
     <p style="color:#666; margin-bottom:20px;">
-        Diese Seite zeigt Gruppen ähnlicher Familiennamen und vergleicht sie mit dem 
-        Tirol-Archiv Familiennamen-Verzeichnis.
+        Diese Seite zeigt Nachnamen aus dem Stammbaum, die im Tirol-Archiv
+        <strong>keinen exakten 100%-Treffer</strong> haben.
         <br>
-        <strong>Wählen Sie einen Anfangsbuchstaben:</strong> Die Nachnamen werden nach Gruppe und Ähnlichkeit angezeigt.
+        <strong>Wählen Sie einen Anfangsbuchstaben:</strong> Die Nachnamen bleiben wie bisher nach Buchstaben gegliedert.
     </p>
     
     <!-- BUCHSTABEN-FILTER -->
@@ -416,7 +395,7 @@ function renderNameGroup($groupNames, $pdo) {
         $groupedByLetter = groupNachamenByFirstLetter($nachnamenGroups);
         
         if (empty($groupedByLetter)) {
-            echo '<p style="color:#999;">Keine ähnlichen Nachnamen gefunden.</p>';
+            echo '<p style="color:#999;">Alle Nachnamen haben einen exakten 100%-Treffer im Tirol-Archiv.</p>';
         } else {
             echo '<div class="letter-grid">';
             foreach ($groupedByLetter as $letter => $groups) {
@@ -430,7 +409,7 @@ function renderNameGroup($groupNames, $pdo) {
             foreach ($groupedByLetter as $letter => $groups) {
                 echo '<div id="letter-' . htmlspecialchars($letter, ENT_QUOTES) . '" class="letter-content">';
                 echo '<div class="letter-section">';
-                echo '<h3 style="color:#667eea; margin-top:0;">Nachnamen mit ' . htmlspecialchars($letter, ENT_QUOTES) . ' (' . count($groups) . ' Gruppen)</h3>';
+                echo '<h3 style="color:#667eea; margin-top:0;">Nachnamen mit ' . htmlspecialchars($letter, ENT_QUOTES) . ' (' . count($groups) . ' Namen)</h3>';
                 
                 foreach ($groups as $group) {
                     echo renderNameGroup($group, $pdo);

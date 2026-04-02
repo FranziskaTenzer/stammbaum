@@ -526,5 +526,4 @@ if (!isset($SKIP_AUTO_IMPORT)) {
         echo " | ❌ Fehler: " . $result['errors'];
     }
     echo "<br /><br /><br />";
-    echo "<a href='../../views/user/index.php' style='background:#667eea; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;'>← Zurück zur Startseite</a><br /><br />";
 }
