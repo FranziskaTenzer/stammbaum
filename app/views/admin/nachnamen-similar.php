@@ -20,16 +20,123 @@ $pdo = getPDO();
 // HELPER FUNKTIONEN
 // ===========================
 
-// Liefert Nachnamen ohne exakten (100%) Treffer im Tirol-Archiv
-function getSimilarNachnamen($pdo) {
+function normalizeNachnameForExactMatch($name) {
+    $name = trim((string)$name);
+    if ($name === '') {
+        return '';
+    }
+
+    // Tirol-Archiv liefert teils Schluessel wie "Nachname: Ort1, Ort2".
+    // Fuer den Exaktabgleich nur den eigentlichen Nachnamen verwenden.
+    $name = preg_replace('/\s*:\s*.*$/u', '', $name);
+
+    if (function_exists('mb_strtolower')) {
+        $name = mb_strtolower($name, 'UTF-8');
+    } else {
+        $name = strtolower($name);
+    }
+
+    return preg_replace('/\s+/u', ' ', $name);
+}
+
+function loadVerifiedNamesSet() {
+    static $verifiedSet = null;
+
+    if ($verifiedSet !== null) {
+        return $verifiedSet;
+    }
+
+    $verifiedSet = [];
+    $projectRoot = dirname(__DIR__, 3);
+    $verifiedFile = $projectRoot . '/../stammbaum-daten/verifiedNames.txt';
+
+    if (!is_readable($verifiedFile)) {
+        return $verifiedSet;
+    }
+
+    $lines = file($verifiedFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!is_array($lines)) {
+        return $verifiedSet;
+    }
+
+    foreach ($lines as $line) {
+        $normalized = normalizeNachnameForExactMatch($line);
+        if ($normalized !== '') {
+            $verifiedSet[$normalized] = true;
+        }
+    }
+
+    return $verifiedSet;
+}
+
+function getAllTirolArchivPrefixesForExactCheck() {
+    return [
+        'a', 'b', 'c', 'ch', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+        'k', 'l', 'm', 'n', 'o', 'pq', 'r', 's', 'sch', 'sp', 'st',
+        't', 'tsch', 'tz', 'u', 'v', 'w', 'xyz'
+    ];
+}
+
+function loadTirolArchivExactNamesSetGlobal() {
+    static $exactSet = null;
+
+    if ($exactSet !== null) {
+        return $exactSet;
+    }
+
+    $exactSet = [];
+    $prefixes = getAllTirolArchivPrefixesForExactCheck();
+
+    foreach ($prefixes as $prefix) {
+        $archiveNames = getTirolArchivNamesWithPlaces($prefix);
+        if (empty($archiveNames) || !is_array($archiveNames)) {
+            continue;
+        }
+
+        foreach ($archiveNames as $archiveName => $_places) {
+            $normalized = normalizeNachnameForExactMatch($archiveName);
+            if ($normalized !== '') {
+                $exactSet[$normalized] = true;
+            }
+        }
+    }
+
+    return $exactSet;
+}
+
+function getAvailableTraubuecher($pdo) {
     try {
-        $stmt = $pdo->prepare("
-            SELECT DISTINCT nachname
-            FROM person
-            WHERE nachname IS NOT NULL AND nachname != ''
-            ORDER BY nachname
+        $stmt = $pdo->prepare(" 
+            SELECT DISTINCT traubuch
+            FROM ehe
+            WHERE traubuch IS NOT NULL AND traubuch != ''
+            ORDER BY traubuch
         ");
         $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+        error_log('DB Fehler in getAvailableTraubuecher: ' . $e->getMessage());
+        return [];
+    }
+}
+
+// Liefert Nachnamen ohne exakten (100%) Treffer im Tirol-Archiv (global) und verifiedNames.txt
+function getSimilarNachnamen($pdo, $selectedTraubuch = null) {
+    if (empty($selectedTraubuch)) {
+        return [];
+    }
+
+    try {
+        $stmt = $pdo->prepare(" 
+            SELECT DISTINCT p.nachname
+            FROM person p
+            JOIN ehe e ON (p.id = e.mann_id OR p.id = e.frau_id)
+            WHERE p.nachname IS NOT NULL
+              AND p.nachname != ''
+              AND e.traubuch = ?
+            ORDER BY p.nachname
+        ");
+        $stmt->execute([$selectedTraubuch]);
         $nachnamen = $stmt->fetchAll(PDO::FETCH_COLUMN);
     } catch (Exception $e) {
         echo "DB Fehler: " . $e->getMessage();
@@ -37,14 +144,22 @@ function getSimilarNachnamen($pdo) {
     }
     
     $groups = [];
+    $verifiedNamesSet = loadVerifiedNamesSet();
+    $tirolExactSetGlobal = loadTirolArchivExactNamesSetGlobal();
 
     foreach ($nachnamen as $name) {
-        $summary = getArchiveGroupMatchSummary([$name]);
-
-        // Nur Namen anzeigen, die KEINEN exakten 100%-Treffer haben.
-        if (empty($summary['exactMatches'])) {
-            $groups[] = [$name];
+        // 100%-Exaktmatch in verifiedNames.txt: ausblenden.
+        $normalizedName = normalizeNachnameForExactMatch($name);
+        if (isset($verifiedNamesSet[$normalizedName])) {
+            continue;
         }
+
+        // 100%-Exaktmatch im gesamten Tirol-Archiv (alle Präfixseiten): ausblenden.
+        if (isset($tirolExactSetGlobal[$normalizedName])) {
+            continue;
+        }
+
+        $groups[] = [$name];
     }
     
     return $groups;
@@ -378,25 +493,47 @@ function renderNameGroup($groupNames, $pdo) {
 
 <div class="container">
    
-    <h1>🔍 Nachnamen ohne exakten Tirol-Archiv Treffer</h1>
+    <h1>🔍 Nachnamen ohne exakten Treffer</h1>
     <br/>
     <p style="color:#666; margin-bottom:20px;">
-        Diese Seite zeigt Nachnamen aus dem Stammbaum, die im Tirol-Archiv
-        <strong>keinen exakten 100%-Treffer</strong> haben.
+        Diese Seite zeigt Nachnamen aus dem Stammbaum, die weder im Tirol-Archiv
+        noch in <strong>verifiedNames.txt</strong> einen exakten 100%-Treffer haben.
         <br>
-        <strong>Wählen Sie einen Anfangsbuchstaben:</strong> Die Nachnamen bleiben wie bisher nach Buchstaben gegliedert.
+        <strong>Wählen Sie zuerst ein Traubuch:</strong> Danach erfolgt der Abgleich nur für diesen Bestand und bleibt nach Buchstaben gegliedert.
     </p>
     
     <!-- BUCHSTABEN-FILTER -->
     <h2>📝 Nachnamen nach Anfangsbuchstabe</h2>
     
     <?php
-        $nachnamenGroups = getSimilarNachnamen($pdo);
-        $groupedByLetter = groupNachamenByFirstLetter($nachnamenGroups);
-        
-        if (empty($groupedByLetter)) {
-            echo '<p style="color:#999;">Alle Nachnamen haben einen exakten 100%-Treffer im Tirol-Archiv.</p>';
+        $availableTraubuecher = getAvailableTraubuecher($pdo);
+        $selectedTraubuch = isset($_GET['traubuch']) ? trim((string)$_GET['traubuch']) : '';
+
+        if (!in_array($selectedTraubuch, $availableTraubuecher, true)) {
+            $selectedTraubuch = '';
+        }
+
+        echo '<form method="get" style="margin: 10px 0 20px 0; padding:12px; background:#f6f8ff; border:1px solid #dbe2ff; border-radius:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">';
+        echo '<label for="traubuch-select" style="font-weight:bold; color:#334;">Traubuch:</label>';
+        echo '<select id="traubuch-select" name="traubuch" style="padding:8px 10px; border:1px solid #ccd; border-radius:6px; min-width:220px;">';
+        echo '<option value="">Bitte auswählen...</option>';
+        foreach ($availableTraubuecher as $traubuch) {
+            $isSelected = ($traubuch === $selectedTraubuch) ? ' selected' : '';
+            echo '<option value="' . htmlspecialchars($traubuch, ENT_QUOTES) . '"' . $isSelected . '>' . htmlspecialchars($traubuch, ENT_QUOTES) . '</option>';
+        }
+        echo '</select>';
+        echo '<button type="submit" style="padding:8px 14px; border:0; border-radius:6px; background:#667eea; color:#fff; font-weight:bold; cursor:pointer;">Anzeigen</button>';
+        echo '</form>';
+
+        if ($selectedTraubuch === '') {
+            echo '<p style="color:#777;">Bitte zuerst ein Traubuch auswählen.</p>';
         } else {
+            $nachnamenGroups = getSimilarNachnamen($pdo, $selectedTraubuch);
+            $groupedByLetter = groupNachamenByFirstLetter($nachnamenGroups);
+
+            if (empty($groupedByLetter)) {
+                echo '<p style="color:#999;">Für <strong>' . htmlspecialchars($selectedTraubuch, ENT_QUOTES) . '</strong> haben alle Nachnamen einen exakten 100%-Treffer im Tirol-Archiv oder in verifiedNames.txt.</p>';
+            } else {
             echo '<div class="letter-grid">';
             foreach ($groupedByLetter as $letter => $groups) {
                 $count = count($groups);
@@ -409,7 +546,7 @@ function renderNameGroup($groupNames, $pdo) {
             foreach ($groupedByLetter as $letter => $groups) {
                 echo '<div id="letter-' . htmlspecialchars($letter, ENT_QUOTES) . '" class="letter-content">';
                 echo '<div class="letter-section">';
-                echo '<h3 style="color:#667eea; margin-top:0;">Nachnamen mit ' . htmlspecialchars($letter, ENT_QUOTES) . ' (' . count($groups) . ' Namen)</h3>';
+                echo '<h3 style="color:#667eea; margin-top:0;">' . htmlspecialchars($selectedTraubuch, ENT_QUOTES) . ' - Nachnamen mit ' . htmlspecialchars($letter, ENT_QUOTES) . ' (' . count($groups) . ' Namen)</h3>';
                 
                 foreach ($groups as $group) {
                     echo renderNameGroup($group, $pdo);
@@ -417,6 +554,7 @@ function renderNameGroup($groupNames, $pdo) {
                 
                 echo '</div>';
                 echo '</div>';
+            }
             }
         }
     ?>

@@ -267,15 +267,21 @@ function parseNamesFromHtml($html, $prefix) {
     }
     
     // Muster 3: Direkter Text "Name: Ort1, Ort2, Ort3" (auch über mehrere Zeilen)
-    if (empty($names) || count($names) < 5) {
-        // Entferne HTML-Tags, behalte aber Struktur
-        $textHtml = strip_tags($html, '<br>');
-        $textHtml = str_replace(['<br>', '<br/>', '<br />'], "\n", $textHtml);
+    // Laeuft IMMER als zuverlaessige Ergaenzung zu Muster 1+2, weil Muster 2 bei
+    // <p>-Eintraegen mit inneren <br>-Tags (mehrzeilige Ortslisten) scheitert.
+    {
+        // Entferne HTML-Tags, behalte aber Block-Struktur. Das Tirol-Archiv nutzt
+        // innerhalb einzelner <p>-Eintraege teils Tags wie <abbr>; ohne explizite
+        // Zeilenumbrueche vor strip_tags() kleben mehrere Namen zusammen.
+        $textHtml = preg_replace('/<\s*br\s*\/?>/i', "\n", $html);
+        $textHtml = preg_replace('/<\s*\/\s*(p|li|div|h1|h2|h3|h4|h5|h6)\s*>/i', "\n", $textHtml);
+        $textHtml = strip_tags($textHtml);
         $textHtml = html_entity_decode($textHtml);
+        $textHtml = preg_replace('/\r\n?|\r/u', "\n", $textHtml);
         
         // Suche nach "Name: Orte" Muster
         // Berücksichtigt auch Namen mit Umlauten und Bindestrichen
-        if (preg_match_all('/^([A-Z][a-zäöüß\-\']+)\s*:\s*(.+?)(?=\n[A-Z]|\n$|$)/mi', $textHtml, $matches)) {
+        if (preg_match_all('/^([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\']+)\s*:\s*(.+?)(?=\n[A-ZÄÖÜ]|\n$|$)/msu', $textHtml, $matches)) {
             for ($i = 0; $i < count($matches[0]); $i++) {
                 $name = trim($matches[1][$i]);
                 $placesStr = trim($matches[2][$i]);
@@ -287,13 +293,13 @@ function parseNamesFromHtml($html, $prefix) {
                         return !empty($p) && strlen($p) > 1;
                     });
                         
-                        if (count($places) > 0) {
-                            if (!isset($names[$name])) {
-                                $names[$name] = [];
-                            }
-                            $names[$name] = array_merge($names[$name], $places);
-                            $names[$name] = array_unique($names[$name]);
+                    if (count($places) > 0) {
+                        if (!isset($names[$name])) {
+                            $names[$name] = [];
                         }
+                        $names[$name] = array_merge($names[$name], $places);
+                        $names[$name] = array_unique($names[$name]);
+                    }
                 }
             }
         }

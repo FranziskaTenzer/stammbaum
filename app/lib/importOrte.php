@@ -649,9 +649,9 @@ function runOrteImport() {
             continue;
         }
         
-        // Traubuch-Name extrahieren (erste Wort vor - oder _)
-        preg_match('/^([^-_]+)/', $filename, $m);
-        $traubuch = ucfirst(strtolower($m[1] ?? 'Unbekannt'));
+        // Traubuch-Name: nur Teil vor dem ersten "-" (z.B. Auffach-komplett -> Auffach)
+        $filenameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $traubuch = trim(explode('-', $filenameWithoutExt, 2)[0]);
         
         echo "<div style='margin:10px 0; padding:10px; background:white; border-left:4px solid #667eea;'>";
         echo "📄 <strong>$filename</strong><br>";

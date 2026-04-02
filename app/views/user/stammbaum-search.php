@@ -76,6 +76,12 @@ AND p.nachname LIKE :nachname
 <div class="page-header">
     <h1>👤 Personensuche</h1>
     <p class="subtitle">Suchen Sie nach Personen im Stammbaum. Die Kirchenbucheinträge gehen nur bis 1939.</p>
+    <p>Hinweis: zur besseren Darstellung und Zuordnung, sind schreibweisen mit C zu K geändert z.B. Katharina, Kaspar, Klar
+        Ausnahme: Cäcilia
+        und ph zu f z.B. Josef, Stefan etc.
+    Johann zählt auch für Johannes, Andrä ist teilweise als Andreas gespeichert
+    Nachnamen eher mit der altdeutschen Variante z.B. Schießling, Weißbacher 
+    </p>
 </div>
 
 <div class="search-box">
