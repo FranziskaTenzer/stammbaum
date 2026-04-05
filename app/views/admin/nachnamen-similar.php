@@ -120,6 +120,61 @@ function getAvailableTraubuecher($pdo) {
     }
 }
 
+function getNonExactNachnamenCountByTraubuch($pdo) {
+    $counts = [];
+
+    try {
+        $stmt = $pdo->prepare(" 
+            SELECT DISTINCT e.traubuch, p.nachname
+            FROM person p
+            JOIN ehe e ON (p.id = e.mann_id OR p.id = e.frau_id)
+            WHERE p.nachname IS NOT NULL
+              AND p.nachname != ''
+              AND e.traubuch IS NOT NULL
+              AND e.traubuch != ''
+            ORDER BY e.traubuch, p.nachname
+        ");
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('DB Fehler in getNonExactNachnamenCountByTraubuch: ' . $e->getMessage());
+        return $counts;
+    }
+
+    $verifiedNamesSet = loadVerifiedNamesSet();
+    $tirolExactSetGlobal = loadTirolArchivExactNamesSetGlobal();
+    $seenByTraubuch = [];
+
+    foreach ($rows as $row) {
+        $traubuch = trim((string)($row['traubuch'] ?? ''));
+        if ($traubuch === '') {
+            continue;
+        }
+
+        $normalizedName = normalizeNachnameForExactMatch($row['nachname'] ?? '');
+        if ($normalizedName === '') {
+            continue;
+        }
+
+        // 100%-Exaktmatch in verifiedNames oder Tirol-Archiv: ausblenden.
+        if (isset($verifiedNamesSet[$normalizedName]) || isset($tirolExactSetGlobal[$normalizedName])) {
+            continue;
+        }
+
+        if (!isset($seenByTraubuch[$traubuch])) {
+            $seenByTraubuch[$traubuch] = [];
+            $counts[$traubuch] = 0;
+        }
+
+        if (!isset($seenByTraubuch[$traubuch][$normalizedName])) {
+            $seenByTraubuch[$traubuch][$normalizedName] = true;
+            $counts[$traubuch]++;
+        }
+    }
+
+    return $counts;
+}
+
 // Liefert Nachnamen ohne exakten (100%) Treffer im Tirol-Archiv (global) und verifiedNames.txt
 function getSimilarNachnamen($pdo, $selectedTraubuch = null) {
     if (empty($selectedTraubuch)) {
@@ -507,6 +562,7 @@ function renderNameGroup($groupNames, $pdo) {
     
     <?php
         $availableTraubuecher = getAvailableTraubuecher($pdo);
+        $traubuchCounts = getNonExactNachnamenCountByTraubuch($pdo);
         $selectedTraubuch = isset($_GET['traubuch']) ? trim((string)$_GET['traubuch']) : '';
 
         if (!in_array($selectedTraubuch, $availableTraubuecher, true)) {
@@ -519,7 +575,9 @@ function renderNameGroup($groupNames, $pdo) {
         echo '<option value="">Bitte auswählen...</option>';
         foreach ($availableTraubuecher as $traubuch) {
             $isSelected = ($traubuch === $selectedTraubuch) ? ' selected' : '';
-            echo '<option value="' . htmlspecialchars($traubuch, ENT_QUOTES) . '"' . $isSelected . '>' . htmlspecialchars($traubuch, ENT_QUOTES) . '</option>';
+            $count = (int)($traubuchCounts[$traubuch] ?? 0);
+            $label = $traubuch . ' (' . $count . ')';
+            echo '<option value="' . htmlspecialchars($traubuch, ENT_QUOTES) . '"' . $isSelected . '>' . htmlspecialchars($label, ENT_QUOTES) . '</option>';
         }
         echo '</select>';
         echo '<button type="submit" style="padding:8px 14px; border:0; border-radius:6px; background:#667eea; color:#fff; font-weight:bold; cursor:pointer;">Anzeigen</button>';

@@ -160,8 +160,39 @@ function parsePersonText($text, &$illegitimateParent = null) {
  PERSON DB - NORMAL
  ========================= */
 
+function ensureParentEheExistsThierbach($pdo, $vaterId, $mutterId) {
+    if ($vaterId === null || $mutterId === null) {
+        return null;
+    }
+
+    // Vater muss als mann_id und Mutter als frau_id in der Ehe vorhanden sein.
+    $stmt = $pdo->prepare("SELECT id FROM ehe WHERE mann_id = ? AND frau_id = ? LIMIT 1");
+    $stmt->execute([$vaterId, $mutterId]);
+    $eheId = $stmt->fetchColumn();
+
+    if ($eheId) {
+        return $eheId;
+    }
+
+    $stmt = $pdo->prepare(" 
+        INSERT INTO ehe (mann_id, frau_id, heiratsdatum, scheidungsdatum, traubuch)
+        VALUES (?, ?, NULL, NULL, NULL)
+    ");
+    $stmt->execute([$vaterId, $mutterId]);
+
+    return $pdo->lastInsertId();
+}
+
 function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
-    
+
+    // Unlesbare Namen ("???") werden nie gespeichert.
+    if (trim($data['vorname'] ?? '') === '???' && trim($data['nachname'] ?? '') === '???') {
+        return null;
+    }
+
+    // Wenn beide Eltern gesetzt sind, muss auch die passende Ehe existieren.
+    ensureParentEheExistsThierbach($pdo, $vaterId, $mutterId);
+
     // 1. Match über S-ID (stärkste Identität)
     if (!empty($data['referenz_ehe'])) {
         
@@ -203,13 +234,21 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
     ]);
     
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        
+
         if (!empty($data['geburtsdatum'])) {
+            // Geburtsdatum bekannt: nur bei exaktem Treffer wiederverwenden.
             if ($row['geburtsdatum'] === $data['geburtsdatum']) {
                 return $row['id'];
             }
-        } else {
+        } elseif ($vaterId !== null || $mutterId !== null) {
+            // Mindestens ein Elternteil bekannt: Treffer nehmen.
+            // Die WHERE-Klausel hat bereits beide Elternteile via <=> geprueft.
             return $row['id'];
+        } else {
+            // Weder Geburtsdatum noch ein bekannter Elternteil:
+            // Keine Wiederverwendung – neue Person anlegen.
+            // Verhindert Fehlzuordnungen (z.B. unmoeglich lange Lebensspannen).
+            break;
         }
     }
     
@@ -244,10 +283,15 @@ function getOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
  ========================= */
 
 function getOrCreatePersonIllegitimate($pdo, $data) {
-    
-    // Für uneheliche Fälle: Suche Person nur nach Vorname + Nachname
+
+    // Unlesbare Namen ("???") werden nie gespeichert.
+    if (trim($data['vorname'] ?? '') === '???' && trim($data['nachname'] ?? '') === '???') {
+        return null;
+    }
+
+    // Fuer uneheliche Faelle: Suche Person nur nach Vorname + Nachname.
     // Diese Funktion wird NICHT mit Parent-IDs aufgerufen!
-    
+
     // 1. Match über Geburtsdatum (falls vorhanden)
     if (!empty($data['geburtsdatum'])) {
         $stmt = $pdo->prepare("
@@ -268,23 +312,11 @@ function getOrCreatePersonIllegitimate($pdo, $data) {
         if ($id = $stmt->fetchColumn()) return $id;
     }
     
-    // 2. Match über Vorname + Nachname allein
-    $stmt = $pdo->prepare("
-        SELECT id
-        FROM person
-        WHERE vorname = ?
-        AND nachname = ?
-        LIMIT 1
-    ");
-    
-    $stmt->execute([
-        $data['vorname'],
-        $data['nachname']
-    ]);
-    
-    if ($id = $stmt->fetchColumn()) return $id;
-    
-    // 3. Insert (nur wenn nicht existiert)
+    // Hinweis: Ein reiner Name-Match (ohne Geburtsdatum und ohne Elternteile)
+    // wird bewusst NICHT gemacht, um Fehlzuordnungen verschiedener Personen
+    // mit gleichem Namen zu vermeiden. Stattdessen direkt neuen Eintrag anlegen.
+
+    // 2. Insert (nur wenn nicht existiert)
     $stmt = $pdo->prepare("
         INSERT INTO person (
             vorname, nachname,

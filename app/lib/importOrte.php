@@ -409,8 +409,108 @@ function mergeBemerkungValues($existing, $incoming) {
     return implode('; ', $parts);
 }
 
+function ensureParentEheExistsOrte($pdo, $vaterId, $mutterId) {
+    if ($vaterId === null || $mutterId === null) {
+        return null;
+    }
+
+    // Vater muss als mann_id und Mutter als frau_id in der Ehe vorhanden sein.
+    $stmt = $pdo->prepare("SELECT id FROM ehe WHERE mann_id = ? AND frau_id = ? LIMIT 1");
+    $stmt->execute([$vaterId, $mutterId]);
+    $eheId = $stmt->fetchColumn();
+
+    if ($eheId) {
+        return $eheId;
+    }
+
+    $stmt = $pdo->prepare(" 
+        INSERT INTO ehe (mann_id, frau_id, heiratsdatum, scheidungsdatum, traubuch)
+        VALUES (?, ?, NULL, NULL, NULL)
+    ");
+    $stmt->execute([$vaterId, $mutterId]);
+
+    return $pdo->lastInsertId();
+}
+
+function findExistingParentPairByTextsOrte($pdo, $vaterText, $mutterText) {
+    if (empty($vaterText) || empty($mutterText)) {
+        return null;
+    }
+
+    $vaterData = parsePerson($vaterText);
+    $mutterData = parsePerson($mutterText);
+
+    if (empty($vaterData['vorname']) || empty($vaterData['nachname']) || empty($mutterData['vorname']) || empty($mutterData['nachname'])) {
+        return null;
+    }
+
+    if (($vaterData['vorname'] === '???' && $vaterData['nachname'] === '???') || ($mutterData['vorname'] === '???' && $mutterData['nachname'] === '???')) {
+        return null;
+    }
+
+    $stmt = $pdo->prepare(" 
+        SELECT e.id AS ehe_id,
+               v.id AS vater_id,
+               v.geburtsdatum AS vater_geb,
+               m.id AS mutter_id,
+               m.geburtsdatum AS mutter_geb
+        FROM ehe e
+        JOIN person v ON v.id = e.mann_id
+        JOIN person m ON m.id = e.frau_id
+        WHERE v.vorname = ? AND v.nachname = ?
+          AND m.vorname = ? AND m.nachname = ?
+    ");
+
+    $stmt->execute([
+        $vaterData['vorname'],
+        $vaterData['nachname'],
+        $mutterData['vorname'],
+        $mutterData['nachname']
+    ]);
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (empty($rows)) {
+        return null;
+    }
+
+    foreach ($rows as $row) {
+        if (!empty($vaterData['geburtsdatum']) && $row['vater_geb'] !== $vaterData['geburtsdatum']) {
+            continue;
+        }
+        if (!empty($mutterData['geburtsdatum']) && $row['mutter_geb'] !== $mutterData['geburtsdatum']) {
+            continue;
+        }
+
+        return [
+            'vater_id' => (int)$row['vater_id'],
+            'mutter_id' => (int)$row['mutter_id'],
+            'ehe_id' => (int)$row['ehe_id'],
+        ];
+    }
+
+    // Fallback: erster Treffer, wenn keine genauere Datums-Selektion möglich ist.
+    return [
+        'vater_id' => (int)$rows[0]['vater_id'],
+        'mutter_id' => (int)$rows[0]['mutter_id'],
+        'ehe_id' => (int)$rows[0]['ehe_id'],
+    ];
+}
+
 function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
-    
+
+    // Unlesbare Namen ("???") werden nie gespeichert.
+    if (trim($data['vorname'] ?? '') === '???' && trim($data['nachname'] ?? '') === '???') {
+        return null;
+    }
+
+    // Einteilige Namen (z.B. nur "Ursula") nicht als Person speichern.
+    if (trim($data['vorname'] ?? '') === '' || trim($data['nachname'] ?? '') === '') {
+        return null;
+    }
+
+    // Wenn beide Eltern gesetzt sind, muss auch die passende Ehe existieren.
+    ensureParentEheExistsOrte($pdo, $vaterId, $mutterId);
+
     $stmt = $pdo->prepare(" 
         SELECT id, geburtsdatum, bemerkung, hof, ort FROM person
         WHERE vorname=? AND nachname=?
@@ -418,8 +518,30 @@ function findOrCreatePerson($pdo, $data, $vaterId = null, $mutterId = null) {
         AND (mutter_id <=> ?)
     ");
     $stmt->execute([$data['vorname'], $data['nachname'], $vaterId, $mutterId]);
-    
-    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $existing = null;
+
+    foreach ($rows as $row) {
+        if (!empty($data['geburtsdatum'])) {
+            // Geburtsdatum bekannt: nur exakten Treffer akzeptieren.
+            if ($row['geburtsdatum'] === $data['geburtsdatum']) {
+                $existing = $row;
+                break;
+            }
+        } elseif ($vaterId !== null || $mutterId !== null) {
+            // Mindestens ein Elternteil bekannt: ersten Treffer nehmen.
+            // Die WHERE-Klausel hat bereits beide Elternteile geprueft.
+            $existing = $row;
+            break;
+        } else {
+            // Weder Geburtsdatum noch ein bekannter Elternteil:
+            // Keine Wiederverwendung – neue Person anlegen.
+            // Verhindert Fehlzuordnungen (z.B. unmoeglich lange Lebensspannen).
+            break;
+        }
+    }
+
     $id = $existing['id'] ?? null;
     
     if ($id) {
@@ -486,17 +608,54 @@ function findOrCreatePersonFromText($pdo, $personText) {
     if (!$personText) return null;
     
     $personData = parsePerson($personText);
+
+    if (trim($personData['vorname'] ?? '') === '???' && trim($personData['nachname'] ?? '') === '???') {
+        return null;
+    }
+
+    // Einteilige Person-Texte (z.B. nur "Ursula") werden nicht als Person angelegt.
+    if (trim($personData['vorname'] ?? '') === '' || trim($personData['nachname'] ?? '') === '') {
+        return null;
+    }
     
     $vaterId = null;
     $mutterId = null;
-    
-    if ($personData['vater_text']) {
-        $vaterId = findOrCreatePersonFromText($pdo, $personData['vater_text']);
+
+    // Wenn beide Elterntexte vorhanden sind, zuerst bestehendes Eltern-Ehepaar
+    // anhand der Namenskombination wiederverwenden.
+    $canUsePairLookup = !empty($personData['vater_text'])
+        && !empty($personData['mutter_text'])
+        && empty($personData['nested_vater_text'])
+        && empty($personData['nested_mutter_text']);
+
+    if ($canUsePairLookup) {
+        $existingPair = findExistingParentPairByTextsOrte($pdo, $personData['vater_text'], $personData['mutter_text']);
+        if ($existingPair) {
+            $vaterId = $existingPair['vater_id'];
+            $mutterId = $existingPair['mutter_id'];
+        }
     }
     
-    if ($personData['mutter_text']) {
+    if ($personData['vater_text'] && $vaterId === null) {
+        $vaterData = parsePerson($personData['vater_text']);
+        if (trim($vaterData['vorname'] ?? '') === '' && trim($vaterData['nachname'] ?? '') !== '') {
+            // Unvollstaendiger Vatername nur als Bemerkung am Kind speichern.
+            $personData['bemerkung'] = mergeBemerkungValues($personData['bemerkung'] ?? '', 'Vater ' . trim($vaterData['nachname']));
+            $vaterId = null;
+        } else {
+            $vaterId = findOrCreatePersonFromText($pdo, $personData['vater_text']);
+        }
+    }
+    
+    if ($personData['mutter_text'] && $mutterId === null) {
+        $mutterData = parsePerson($personData['mutter_text']);
+        if (trim($mutterData['vorname'] ?? '') === '' && trim($mutterData['nachname'] ?? '') !== '') {
+            // Unvollstaendiger Muttername nur als Bemerkung am Kind speichern.
+            $personData['bemerkung'] = mergeBemerkungValues($personData['bemerkung'] ?? '', 'Mutter ' . trim($mutterData['nachname']));
+            $mutterId = null;
+        }
         // If the mother also has nested parents (grandparents), process them first
-        if ($personData['nested_vater_text'] || $personData['nested_mutter_text']) {
+        elseif ($personData['nested_vater_text'] || $personData['nested_mutter_text']) {
             $nested_vater_id = null;
             $nested_mutter_id = null;
             

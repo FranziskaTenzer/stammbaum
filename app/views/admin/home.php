@@ -52,9 +52,29 @@ if (!isAdmin()) {
         <ul>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
             <li>Stammbaum so erweitern, dass jeweils beide Linie angezeigt werden (da gestern stehen geblieben)</li>
+            <li>druckversion Stammbaum</li>
+            <li>Speichern für welchen Namen bezahlt wurde, dieser kann sich jeder zeit wieder angezeigt werden</li>
+            <li>Liebe siegt immer fragen wegen Zahlungsanbieter</li>
+            <li>TestAccount blur weg, dafür Kind x, Ehepartner x, Enkelkind x, Urenkel x etc.</li>
+            <li>Vergleiche fertig für: Thierbach, Auffach</li>
+            <li>Wenn vergleiche fertig sind, noch schauen was an ??? übrig ist</li>
+            <li>SUCHE anpassen: c/k, b/p, u/ü a/ä Varianten mit erlauben
+                Info: meist gängige Schreibweise von heute z.B. Flatscher (in den Büchern mehr als Flatschner )
+Christoph Christian 
+                Matthäus und Co => Matthias
+            </li>
+            <li>Profil: Checkbox ob Email versendet werden darf wenn neue Orte (Jahresbereiche dazu kamen)</li>
+            <li>Email Benachrichtung wenn neue Orte dazu gekommen sind, 
+                direkt mit Auswahl/Eingabe des Ortes auch in der Email den Namen hinzufügen</li>
+            
             <li><b>Für später:</b>
                 <ul>
                 	<li>e2e Tests, aktuell noch nicht nötig</li>
+                        <ul>
+                            <li>katharina Kostenzer (generelle Suche, stimmt genaue Anzahl?)</li>
+                            <li>10.01.1927 Alois Muther</li>
+                            <li>29.05.1848 Andreas Eder Bemerkung!</li>
+                        </ul>
                 	<li>paypal Anbindung bzw. Kreditkarte</li>
                 	<li>kompletten Stammbaum wenn 100€ bezahlt wurden</li>
                 	<li>Stammbaum inkl. Tanten und Onkel 200€</li>
