@@ -394,10 +394,29 @@ function renderPersonRecord($record, $recordId) {
     return $html;
 }
 
+function getTirolArchivUrlForLetterGroup($letterGroup) {
+    $letterGroup = strtoupper(trim((string)$letterGroup));
+
+    if ($letterGroup === 'SCH') {
+        return getTirolArchivUrl('sch');
+    }
+    if ($letterGroup === 'SP') {
+        return getTirolArchivUrl('sp');
+    }
+    if ($letterGroup === 'ST') {
+        return getTirolArchivUrl('st');
+    }
+
+    return getTirolArchivUrl(strtolower($letterGroup));
+}
+
 function renderNameGroup($groupNames, $pdo) {
+    $groupKey = 'nachname-group-' . md5(strtolower(implode('|', $groupNames)));
     $html = '<div class="name-group" style="background:#f9f9f9; padding:12px; margin:10px 0; border-left:4px solid #666; border-radius:3px;">';
+    $html .= '<label style="display:flex; align-items:center; gap:10px; cursor:pointer;">';
+    $html .= '<input type="checkbox" class="name-session-checkbox" data-session-key="' . htmlspecialchars($groupKey, ENT_QUOTES, 'UTF-8') . '">';
     $html .= '<strong style="color:#333;">' . htmlspecialchars(implode(', ', $groupNames), ENT_QUOTES, 'UTF-8') . '</strong>';
-    $html .= renderArchiveNamesBoxForGroup($groupNames);
+    $html .= '</label>';
     $html .= '</div>';
     return $html;
 }
@@ -544,6 +563,25 @@ function renderNameGroup($groupNames, $pdo) {
             icon.style.transform = 'rotate(0deg)';
         }
     }
+
+    function initSessionCheckboxes() {
+        const prefix = 'nachnamenSimilar:';
+        document.querySelectorAll('.name-session-checkbox').forEach(cb => {
+            const key = cb.dataset.sessionKey;
+            if (!key) {
+                return;
+            }
+
+            const stored = sessionStorage.getItem(prefix + key);
+            cb.checked = (stored === '1');
+
+            cb.addEventListener('change', () => {
+                sessionStorage.setItem(prefix + key, cb.checked ? '1' : '0');
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initSessionCheckboxes);
 </script>
 
 <div class="container">
@@ -605,10 +643,17 @@ function renderNameGroup($groupNames, $pdo) {
                 echo '<div id="letter-' . htmlspecialchars($letter, ENT_QUOTES) . '" class="letter-content">';
                 echo '<div class="letter-section">';
                 echo '<h3 style="color:#667eea; margin-top:0;">' . htmlspecialchars($selectedTraubuch, ENT_QUOTES) . ' - Nachnamen mit ' . htmlspecialchars($letter, ENT_QUOTES) . ' (' . count($groups) . ' Namen)</h3>';
+
+                $archiveUrl = getTirolArchivUrlForLetterGroup($letter);
+                echo '<div style="margin:8px 0 14px 0;">';
+                echo '<a href="' . htmlspecialchars($archiveUrl, ENT_QUOTES) . '" target="_blank" rel="noopener noreferrer" style="display:inline-block; background:#eef3ff; color:#2b4db4; padding:6px 10px; border-radius:6px; text-decoration:none; font-size:0.9em;">';
+                echo 'Tirol-Archiv für ' . htmlspecialchars($letter, ENT_QUOTES);
+                echo '</a>';
+                echo '</div>';
                 
                 foreach ($groups as $group) {
                     echo renderNameGroup($group, $pdo);
-                }
+                } 
                 
                 echo '</div>';
                 echo '</div>';

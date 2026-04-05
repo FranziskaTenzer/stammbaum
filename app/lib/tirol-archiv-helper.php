@@ -774,7 +774,7 @@ function renderArchiveNamesBoxForGroup($groupNames, $minSimilarity = TIROL_ARCHI
         
         $groupLabel = implode(', ', array_map('htmlspecialchars', $groupNames));
         
-        if (empty($similar)) {
+        if (empty($similar) && false) {
             // Debug-Modus: Zeige alle Namen mit ihrer Ähnlichkeit (>= 30%)
             $html = '<div style="background:#fff3cd; border-left:4px solid #ffc107; padding:14px; margin:12px 0; border-radius:3px; font-size:0.9em; color:#856404;">';
             $html .= '<strong>ℹ️ Tirol-Archiv:</strong> Keine Namen mit mind. ' . $minSimilarity . '% Ähnlichkeit für die Gruppe gefunden<br>';
