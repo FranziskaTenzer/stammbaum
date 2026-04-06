@@ -409,6 +409,91 @@ function mergeBemerkungValues($existing, $incoming) {
     return implode('; ', $parts);
 }
 
+function findExistingEheByDateAndNamesOrte($pdo, $heiratsdatum, $mannData, $frauData) {
+    if (empty($mannData['vorname']) || empty($mannData['nachname']) || empty($frauData['vorname']) || empty($frauData['nachname'])) {
+        return null;
+    }
+
+    $stmt = $pdo->prepare(" 
+        SELECT e.id, e.mann_id, e.frau_id
+        FROM ehe e
+        JOIN person mann ON mann.id = e.mann_id
+        JOIN person frau ON frau.id = e.frau_id
+        WHERE (e.heiratsdatum <=> ?)
+          AND mann.vorname = ?
+          AND mann.nachname = ?
+          AND frau.vorname = ?
+          AND frau.nachname = ?
+        LIMIT 1
+    ");
+
+    $stmt->execute([
+        $heiratsdatum,
+        $mannData['vorname'],
+        $mannData['nachname'],
+        $frauData['vorname'],
+        $frauData['nachname']
+    ]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+function syncPersonDetailsByIdOrte($pdo, $personId, $data) {
+    if (empty($personId) || !is_numeric($personId)) {
+        return;
+    }
+
+    $stmt = $pdo->prepare(" 
+        SELECT geburtsdatum, sterbedatum, geburtsort, sterbeort, hof, ort, bemerkung
+        FROM person
+        WHERE id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([(int)$personId]);
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$existing) {
+        return;
+    }
+
+    if (!empty($data['geburtsdatum']) && empty($existing['geburtsdatum'])) {
+        $pdo->prepare("UPDATE person SET geburtsdatum = ? WHERE id = ?")
+            ->execute([$data['geburtsdatum'], (int)$personId]);
+    }
+
+    if (!empty($data['sterbedatum']) && empty($existing['sterbedatum'])) {
+        $pdo->prepare("UPDATE person SET sterbedatum = ? WHERE id = ?")
+            ->execute([$data['sterbedatum'], (int)$personId]);
+    }
+
+    if (!empty($data['geburtsort']) && empty($existing['geburtsort'])) {
+        $pdo->prepare("UPDATE person SET geburtsort = ? WHERE id = ?")
+            ->execute([$data['geburtsort'], (int)$personId]);
+    }
+
+    if (!empty($data['sterbeort']) && empty($existing['sterbeort'])) {
+        $pdo->prepare("UPDATE person SET sterbeort = ? WHERE id = ?")
+            ->execute([$data['sterbeort'], (int)$personId]);
+    }
+
+    if (!empty($data['hof']) && empty($existing['hof'])) {
+        $pdo->prepare("UPDATE person SET hof = ? WHERE id = ?")
+            ->execute([$data['hof'], (int)$personId]);
+    }
+
+    if (!empty($data['ort']) && empty($existing['ort'])) {
+        $pdo->prepare("UPDATE person SET ort = ? WHERE id = ?")
+            ->execute([$data['ort'], (int)$personId]);
+    }
+
+    if (!empty($data['bemerkung'])) {
+        $mergedBemerkung = mergeBemerkungValues($existing['bemerkung'] ?? '', $data['bemerkung']);
+        $pdo->prepare("UPDATE person SET bemerkung = ? WHERE id = ?")
+            ->execute([$mergedBemerkung, (int)$personId]);
+    }
+}
+
 function ensureParentEheExistsOrte($pdo, $vaterId, $mutterId) {
     if ($vaterId === null || $mutterId === null) {
         return null;
@@ -730,6 +815,28 @@ function importFile($pdo, $filePath, $traubuch) {
             
             list($mannText, $frauText) = splitOutsideBrackets($line);
             if (!$mannText || !$frauText) continue;
+
+            $mannData = parsePerson($mannText);
+            $frauData = parsePerson($frauText);
+
+            // 1) Zuerst auf bestehende Ehe pruefen: Hochzeitsdatum + vollstaendige Partnernamen.
+            $existingEhe = findExistingEheByDateAndNamesOrte($pdo, $heiratsdatum, $mannData, $frauData);
+            if ($existingEhe) {
+                // Keine neue Ehe anlegen; nur zusaetzliche Personeninfos zusammenfuehren.
+                syncPersonDetailsByIdOrte($pdo, $existingEhe['mann_id'], $mannData);
+                syncPersonDetailsByIdOrte($pdo, $existingEhe['frau_id'], $frauData);
+
+                if (!empty($scheidungsdatum)) {
+                    $pdo->prepare(" 
+                        UPDATE ehe
+                        SET scheidungsdatum = COALESCE(scheidungsdatum, ?)
+                        WHERE id = ?
+                    ")->execute([$scheidungsdatum, $existingEhe['id']]);
+                }
+
+                $imported++;
+                continue;
+            }
             
             $mannId = findOrCreatePersonFromText($pdo, $mannText);
             $frauId = findOrCreatePersonFromText($pdo, $frauText);
@@ -804,6 +911,12 @@ function runOrteImport() {
         
         // Thierbach-komplett.txt ausschließen
         if (stripos($filename, 'thierbach-komplett') !== false) {
+            echo "<div style='color:#999;'>⏭️ <strong>$filename</strong> - übersprungen</div>";
+            continue;
+        }
+
+        // verifiedNames.txt ausschließen
+        if (stripos($filename, 'verifiedNames') !== false) {
             echo "<div style='color:#999;'>⏭️ <strong>$filename</strong> - übersprungen</div>";
             continue;
         }

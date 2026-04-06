@@ -36,6 +36,12 @@ if (!isAdmin()) {
     </div>
 
     <div class="content-card admin-card">
+        <h3>🧭 Ehen-Dubletten prüfen</h3>
+        <p>Dubletten anhand von Hochzeitsdatum + vollständigen Namen von Bräutigam und Braut</p>
+        <a href="ehen-dubletten.php" class="btn btn-primary">Dubletten anzeigen</a>
+    </div>
+
+    <div class="content-card admin-card">
         <h3>📚 Nachnamen Tirol (A-Z)</h3>
         <p>Alle vorhandenen Tirol-Archiv-Nachnamen alphabetisch gruppiert anzeigen</p>
         <a href="nachnamen-tirol.php" class="btn btn-primary">Gesamtliste öffnen</a>
@@ -63,6 +69,7 @@ if (!isAdmin()) {
 Christoph Christian 
                 Matthäus und Co => Matthias
             </li>
+            <li>Durch Thierbach extra, Prüfen ob es doppelte Einträge (Hochzeitsdatum und Ehepartner gibt)</li>
             <li>Profil: Checkbox ob Email versendet werden darf wenn neue Orte (Jahresbereiche dazu kamen)</li>
             <li>Email Benachrichtung wenn neue Orte dazu gekommen sind, 
                 direkt mit Auswahl/Eingabe des Ortes auch in der Email den Namen hinzufügen</li>
