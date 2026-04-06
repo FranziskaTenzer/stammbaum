@@ -115,7 +115,46 @@ function getCommonChildren($ehe, $childrenMap) {
 
 // ← GEÄNDERT: Gibt CSS-Klasse für Verschmieren zurück
 function getBlurClass($isTestAccount) {
-    return $isTestAccount ? 'blurred-text' : '';  // ← GEÄNDERT: Nur die Klasse ohne Attribute
+    return '';
+}
+
+function formatBirthDeathSuffix($geburtsdatum, $sterbedatum) {
+    $geb = !empty($geburtsdatum) ? " * " . formatDBDateOrNull($geburtsdatum) : "";
+    $tod = !empty($sterbedatum) ? " † " . formatDBDateOrNull($sterbedatum) : "";
+    return $geb . $tod;
+}
+
+function anonymizedDescendantLabel($depth, $index) {
+    if ($depth <= 1) {
+        return 'Kind ' . $index;
+    }
+    if ($depth === 2) {
+        return 'Enkel ' . $index;
+    }
+    return str_repeat('Ur', $depth - 2) . 'enkel ' . $index;
+}
+
+function anonymizedAncestorRole($isFather, $depth) {
+    if ($depth <= 1) {
+        return $isFather ? 'Vater' : 'Mutter';
+    }
+    if ($depth === 2) {
+        return $isFather ? 'Grossvater' : 'Grossmutter';
+    }
+    return str_repeat('Ur', $depth - 2) . ($isFather ? 'grossvater' : 'grossmutter');
+}
+
+function anonymizedAncestorSourceLabel($depth, $index, $person) {
+    if ($depth <= 1) {
+        return 'Kind ' . $index;
+    }
+
+    $isMale = (($person['geschlecht'] ?? '') === 'm');
+    return anonymizedAncestorRole($isMale, $depth - 1);
+}
+
+function anonymizedSpouseLabel($index) {
+    return 'Ehepartner ' . $index;
 }
 
 function formatSpouse($name, $geb, $tod) {
@@ -405,10 +444,12 @@ function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap
     // Kinder holen
     $children = $childrenMap[$personId] ?? [];
     
+    $childIndex = 0;
     foreach ($children as $child) {
         
         if (isset($visited[$child['id']])) continue;
         $visited[$child['id']] = true;
+        $childIndex++;
         
         $html .= "<li class='node open'>";
         
@@ -416,29 +457,32 @@ function renderDescendantsTree($personId, $personsById, $childrenMap, $spouseMap
         $blurClass = getBlurClass($isTestAccount);
         $classes = "person" . ($blurClass ? " " . $blurClass : "");
         
+        $childLabel = $isTestAccount
+            ? anonymizedDescendantLabel($depth + 1, $childIndex)
+            : trim($child['vorname'] . ' ' . $child['nachname']);
         $html .= "<div class='{$classes}' style='margin-left:".($depth * 20)."px'>
-                    👶 {$child['vorname']} {$child['nachname']}
-                    " . (!empty($child['geburtsdatum']) ? " * ".formatDBDateOrNull($child['geburtsdatum']) : "") . "
-                    " . (!empty($child['sterbedatum']) ? " † ".formatDBDateOrNull($child['sterbedatum']) : "") . "
+                    👶 {$childLabel}" . formatBirthDeathSuffix($child['geburtsdatum'] ?? null, $child['sterbedatum'] ?? null) . "
                  </div>";
         
         // Ehen des Kindes anzeigen
+        $spouseIndex = 0;
         foreach ($spouseMap[$child['id']] ?? [] as $ehe) {
+            $spouseIndex++;
             
-            if ($ehe['v_id'] == $child['id']) {
+            if ($isTestAccount) {
+                $partnerName = anonymizedSpouseLabel($spouseIndex);
+            } elseif ($ehe['v_id'] == $child['id']) {
                 $partnerName = formatSpouse(
                     $ehe['m_vorname'] . " " . $ehe['m_nachname'],
                     $ehe['m_geb'],
                     $ehe['m_sterb']
                     );
-                $partnerId = $ehe['m_id'];
             } else {
                 $partnerName = formatSpouse(
                     $ehe['v_vorname'] . " " . $ehe['v_nachname'],
                     $ehe['v_geb'],
                     $ehe['v_sterb']
                     );
-                $partnerId = $ehe['v_id'];
             }
             
             $eheInfo = formatMarriageDivorceInfo($ehe['heiratsdatum'] ?? null, $ehe['scheidungsdatum'] ?? null);
@@ -563,7 +607,24 @@ function collectAncestorUnitsByLevel($startId, $personsById, $maxDepth = 6) {
     return $levels;
 }
 
-function formatAncestorCoupleLine($fatherId, $motherId, $personsById) {
+function formatAncestorCoupleLine($fatherId, $motherId, $personsById, $depth = 1, $isTestAccount = false) {
+    if ($isTestAccount) {
+        $fatherLabel = $fatherId > 0 ? anonymizedAncestorRole(true, $depth) : '';
+        $motherLabel = $motherId > 0 ? anonymizedAncestorRole(false, $depth) : '';
+
+        if ($fatherLabel !== '' && $motherLabel !== '') {
+            return $fatherLabel . ' + ' . $motherLabel;
+        }
+        if ($fatherLabel !== '') {
+            return $fatherLabel;
+        }
+        if ($motherLabel !== '') {
+            return $motherLabel;
+        }
+
+        return 'Unbekannt';
+    }
+
     $fatherName = '';
     $motherName = '';
 
@@ -628,15 +689,19 @@ function renderAncestorUnits($levels, $personsById, $coupleEventMap, $isTestAcco
             $blurClass = getBlurClass($isTestAccount);
             $classes = "person" . ($blurClass ? " " . $blurClass : "");
 
-            $line = formatAncestorCoupleLine($fatherId, $motherId, $personsById);
+            $line = formatAncestorCoupleLine($fatherId, $motherId, $personsById, (int)$depth, $isTestAccount);
             $events = formatCoupleEventsForAncestors($fatherId, $motherId, $coupleEventMap);
 
             $fromIds = $unit['from_ids'] ?? [];
             $fromNames = [];
+            $fromIndex = 0;
             foreach ($fromIds as $fromId) {
+                $fromIndex++;
                 $fp = $personsById[(int)$fromId] ?? null;
                 if ($fp) {
-                    $fromNames[] = trim($fp['vorname'] . ' ' . $fp['nachname']);
+                    $fromNames[] = $isTestAccount
+                        ? anonymizedAncestorSourceLabel((int)$depth, $fromIndex, $fp)
+                        : trim($fp['vorname'] . ' ' . $fp['nachname']);
                 }
             }
             $fromNames = array_values(array_unique($fromNames));
@@ -694,7 +759,7 @@ $p = $personsById[$startId];
 
 <div class="column center">
 
-    <h2><?= $p['vorname'] . " " . $p['nachname'] ?></h2>
+    <h2><?= $isTestAccount ? 'Kind 1' : ($p['vorname'] . " " . $p['nachname']) ?></h2>
 
     <div style="margin-top:10px; color:#555;">
         <div>Geboren: <?= !empty($p['geburtsdatum']) ? formatDBDateOrNull($p['geburtsdatum']) : "-" ?></div>
@@ -708,7 +773,10 @@ $p = $personsById[$startId];
     <?php foreach ($spouseMap[$startId] ?? [] as $ehe): ?>
 
     <?php
-    if ($ehe['v_id'] == $startId) {
+    $spouseLoopIndex = ($spouseLoopIndex ?? 0) + 1;
+    if ($isTestAccount) {
+        $partnerName = anonymizedSpouseLabel($spouseLoopIndex);
+    } elseif ($ehe['v_id'] == $startId) {
         $partnerName = formatSpouse(
             $ehe['m_vorname'] . " " . $ehe['m_nachname'],
             $ehe['m_geb'],

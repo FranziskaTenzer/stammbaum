@@ -61,7 +61,6 @@ if (!isAdmin()) {
             <li>druckversion Stammbaum</li>
             <li>Speichern für welchen Namen bezahlt wurde, dieser kann sich jeder zeit wieder angezeigt werden</li>
             <li>Liebe siegt immer fragen wegen Zahlungsanbieter</li>
-            <li>TestAccount blur weg, dafür Kind x, Ehepartner x, Enkelkind x, Urenkel x etc.</li>
             <li>Vergleiche fertig für: Thierbach, Auffach</li>
             <li>Wenn vergleiche fertig sind, noch schauen was an ??? übrig ist</li>
             <li>SUCHE anpassen: c/k, b/p, u/ü a/ä Varianten mit erlauben
@@ -69,7 +68,6 @@ if (!isAdmin()) {
 Christoph Christian 
                 Matthäus und Co => Matthias
             </li>
-            <li>Durch Thierbach extra, Prüfen ob es doppelte Einträge (Hochzeitsdatum und Ehepartner gibt)</li>
             <li>Profil: Checkbox ob Email versendet werden darf wenn neue Orte (Jahresbereiche dazu kamen)</li>
             <li>Email Benachrichtung wenn neue Orte dazu gekommen sind, 
                 direkt mit Auswahl/Eingabe des Ortes auch in der Email den Namen hinzufügen</li>

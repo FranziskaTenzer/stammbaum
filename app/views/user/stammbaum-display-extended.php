@@ -181,7 +181,78 @@ function fetchPersonById(PDO $pdo, int $id): ?array
 
 function getBlurClass(bool $isTestAccount): string
 {
-    return $isTestAccount ? 'blurred-text' : '';
+    return '';
+}
+
+function formatBirthDeathSuffixForPerson(array $person): string
+{
+    $parts = [];
+    if (!empty($person['geburtsdatum'])) {
+        $parts[] = '* ' . formatDBDateOrNull($person['geburtsdatum']);
+    }
+    if (!empty($person['sterbedatum'])) {
+        $parts[] = '† ' . formatDBDateOrNull($person['sterbedatum']);
+    }
+    return !empty($parts) ? (' | ' . implode(' | ', $parts)) : '';
+}
+
+function anonymizedDescendantLabelExtended(int $depth, int $index): string
+{
+    if ($depth <= 1) {
+        return 'Kind ' . $index;
+    }
+    if ($depth === 2) {
+        return 'Enkel ' . $index;
+    }
+    return str_repeat('Ur', $depth - 2) . 'enkel ' . $index;
+}
+
+function anonymizedAncestorRoleExtended(bool $isFather, int $depth): string
+{
+    if ($depth <= 1) {
+        return $isFather ? 'Vater' : 'Mutter';
+    }
+    if ($depth === 2) {
+        return $isFather ? 'Grossvater' : 'Grossmutter';
+    }
+    return str_repeat('Ur', $depth - 2) . ($isFather ? 'grossvater' : 'grossmutter');
+}
+
+function anonymizedAncestorSourceLabelExtended(int $depth, int $index, ?array $person): string
+{
+    if ($depth <= 1) {
+        return 'Kind ' . $index;
+    }
+
+    $isMale = (($person['geschlecht'] ?? '') === 'm');
+    return anonymizedAncestorRoleExtended($isMale, $depth - 1);
+}
+
+function anonymizedSpouseSummaryExtended(int $personId, array $spouseMap): string
+{
+    if (empty($spouseMap[$personId])) {
+        return '';
+    }
+
+    $items = [];
+    $index = 0;
+    foreach ($spouseMap[$personId] as $entry) {
+        $index++;
+        $events = [];
+
+        if (!empty($entry['heiratsdatum'])) {
+            $events[] = '⚭ ' . formatDBDateOrNull($entry['heiratsdatum']);
+        }
+
+        if (!empty($entry['scheidungsdatum'])) {
+            $events[] = 'geschieden ' . formatDBDateOrNull($entry['scheidungsdatum']);
+        }
+
+        $label = 'Ehepartner ' . $index;
+        $items[] = !empty($events) ? ($label . ' (' . implode(' | ', $events) . ')') : $label;
+    }
+
+    return implode(', ', $items);
 }
 
 function collectRelevantIds(PDO $pdo, int $startId): array
@@ -374,15 +445,27 @@ function formatSpouseSummary(int $personId, array $spouseMap): string
     return implode(', ', $items);
 }
 
-function renderPersonCard(int $personId, array $personsById, array $spouseMap, string $relationLine = '', bool $isTestAccount = false): string
-{
+function renderPersonCard(
+    int $personId,
+    array $personsById,
+    array $spouseMap,
+    string $relationLine = '',
+    bool $isTestAccount = false,
+    int $depth = 1,
+    int $index = 1
+): string {
     if (!isset($personsById[$personId])) {
         return '';
     }
 
     $person = $personsById[$personId];
-    $line = htmlspecialchars(formatPersonLine($person), ENT_QUOTES, 'UTF-8');
-    $spouseSummary = formatSpouseSummary($personId, $spouseMap);
+    $personLineRaw = $isTestAccount
+        ? (anonymizedDescendantLabelExtended($depth, $index) . formatBirthDeathSuffixForPerson($person))
+        : formatPersonLine($person);
+    $line = htmlspecialchars($personLineRaw, ENT_QUOTES, 'UTF-8');
+    $spouseSummary = $isTestAccount
+        ? anonymizedSpouseSummaryExtended($personId, $spouseMap)
+        : formatSpouseSummary($personId, $spouseMap);
     $spouseLine = htmlspecialchars($spouseSummary !== '' ? $spouseSummary : '-', ENT_QUOTES, 'UTF-8');
     $blurClass = getBlurClass($isTestAccount);
     $lineClass = $blurClass !== '' ? ' class="person-line ' . $blurClass . '"' : ' class="person-line"';
@@ -648,11 +731,32 @@ function renderAncestorGenerationsWithEvents(array $levels, array $personsById, 
             $motherId = (int)($unit['mother_id'] ?? 0);
             $fromIds = $unit['from_ids'] ?? [];
 
-            $line1 = htmlspecialchars(formatCoupleLine($fatherId, $motherId, $personsById), ENT_QUOTES, 'UTF-8');
+            if ($isTestAccount) {
+                $fatherLabel = $fatherId > 0 ? anonymizedAncestorRoleExtended(true, $depth) : '';
+                $motherLabel = $motherId > 0 ? anonymizedAncestorRoleExtended(false, $depth) : '';
+                if ($fatherLabel !== '' && $motherLabel !== '') {
+                    $lineRaw = $fatherLabel . ' + ' . $motherLabel;
+                } elseif ($fatherLabel !== '') {
+                    $lineRaw = $fatherLabel;
+                } elseif ($motherLabel !== '') {
+                    $lineRaw = $motherLabel;
+                } else {
+                    $lineRaw = 'Unbekannt';
+                }
+            } else {
+                $lineRaw = formatCoupleLine($fatherId, $motherId, $personsById);
+            }
+            $line1 = htmlspecialchars($lineRaw, ENT_QUOTES, 'UTF-8');
 
             $originNames = [];
+            $originIndex = 0;
             foreach ($fromIds as $fromId) {
-                $originNames[] = personByIdShortName((int)$fromId, $personsById);
+                $originIndex++;
+                if ($isTestAccount) {
+                    $originNames[] = anonymizedAncestorSourceLabelExtended($depth, $originIndex, $personsById[(int)$fromId] ?? null);
+                } else {
+                    $originNames[] = personByIdShortName((int)$fromId, $personsById);
+                }
             }
             $originNames = array_values(array_unique($originNames));
             sort($originNames);
@@ -696,11 +800,24 @@ function renderDescendantGenerations(array $levels, array $personsById, array $s
         $html .= '<h4 class="generation-title">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h4>';
         $html .= '<div class="generation-row">';
 
+        $itemIndex = 0;
         foreach ($items as $item) {
+            $itemIndex++;
             $personId = (int)($item['id'] ?? 0);
             $fromId = (int)($item['from'] ?? 0);
-            $relation = $fromId > 0 ? ('Kind von: ' . personByIdShortName($fromId, $personsById)) : '';
-            $html .= renderPersonCard($personId, $personsById, $spouseMap, $relation, $isTestAccount);
+            if ($fromId > 0) {
+                if ($isTestAccount) {
+                    $fromLabel = $depth <= 1
+                        ? 'Kind 1'
+                        : anonymizedDescendantLabelExtended($depth - 1, $itemIndex);
+                    $relation = 'Kind von: ' . $fromLabel;
+                } else {
+                    $relation = 'Kind von: ' . personByIdShortName($fromId, $personsById);
+                }
+            } else {
+                $relation = '';
+            }
+            $html .= renderPersonCard($personId, $personsById, $spouseMap, $relation, $isTestAccount, $depth, $itemIndex);
         }
 
         $html .= '</div>';
@@ -723,10 +840,12 @@ list($personsById, $childrenMap, $spouseMap, $coupleEventMap) = loadTreeData($pd
 $ancestorLevels = collectAncestorUnitsByLevel($startId, $personsById, 12);
 $descendantLevels = collectDescendantLevels($startId, $personsById, $childrenMap, 12);
 
-$focusName = htmlspecialchars(trim(($focusPerson['vorname'] ?? '') . ' ' . ($focusPerson['nachname'] ?? '')), ENT_QUOTES, 'UTF-8');
+$focusNameRaw = $isTestAccount ? 'Kind 1' : trim(($focusPerson['vorname'] ?? '') . ' ' . ($focusPerson['nachname'] ?? ''));
+$focusName = htmlspecialchars($focusNameRaw, ENT_QUOTES, 'UTF-8');
 $focusBirth = !empty($focusPerson['geburtsdatum']) ? formatDBDateOrNull($focusPerson['geburtsdatum']) : '-';
 $focusDeath = !empty($focusPerson['sterbedatum']) ? formatDBDateOrNull($focusPerson['sterbedatum']) : '-';
-$focusSpouses = htmlspecialchars(formatSpouseSummary($startId, $spouseMap) ?: '-', ENT_QUOTES, 'UTF-8');
+$focusSpouseRaw = $isTestAccount ? (anonymizedSpouseSummaryExtended($startId, $spouseMap) ?: '-') : (formatSpouseSummary($startId, $spouseMap) ?: '-');
+$focusSpouses = htmlspecialchars($focusSpouseRaw, ENT_QUOTES, 'UTF-8');
 $focusNameClass = 'focus-name';
 $focusMetaClass = 'meta-line';
 $focusTextClass = 'subtle';
