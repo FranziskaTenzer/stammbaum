@@ -3,6 +3,49 @@ $pageTitle = "Personensuche";
 require_once '../../layout/header.php';
 require_once '../../lib/include.php';
 
+$nameVariantConfigPath = __DIR__ . '/../../lib/stammbaum-search-mappings.php';
+$nameVariantConfig = file_exists($nameVariantConfigPath) ? require $nameVariantConfigPath : ['vorname' => [], 'nachname' => []];
+
+function normalizeNameForVariantLookup(string $value): string
+{
+    return mb_strtolower(trim($value), 'UTF-8');
+}
+
+function expandNameVariants(string $input, array $groups): array
+{
+    $trimmed = trim($input);
+    if ($trimmed === '') {
+        return [];
+    }
+
+    $normalizedInput = normalizeNameForVariantLookup($trimmed);
+    $terms = [$trimmed => true];
+
+    foreach ($groups as $group) {
+        if (!is_array($group) || empty($group)) {
+            continue;
+        }
+
+        $normalizedGroup = array_map(
+            static fn($entry) => normalizeNameForVariantLookup((string)$entry),
+            $group
+        );
+
+        if (!in_array($normalizedInput, $normalizedGroup, true)) {
+            continue;
+        }
+
+        foreach ($group as $variant) {
+            $variant = trim((string)$variant);
+            if ($variant !== '') {
+                $terms[$variant] = true;
+            }
+        }
+    }
+
+    return array_keys($terms);
+}
+
 $pdo = getPDO();
 $results = [];
 
@@ -11,6 +54,28 @@ $nachname = $_GET['nachname'] ?? '';
 $geburtsdatum = $_GET['geburtsdatum'] ?? null;
 
 if (!empty($vorname) && !empty($nachname)) {
+    $vornameTerms = expandNameVariants($vorname, $nameVariantConfig['vorname'] ?? []);
+    $nachnameTerms = expandNameVariants($nachname, $nameVariantConfig['nachname'] ?? []);
+
+    $vornameConditions = [];
+    $nachnameConditions = [];
+    $params = [];
+
+    foreach ($vornameTerms as $index => $term) {
+        $key = ':vorname' . $index;
+        $vornameConditions[] = 'p.vorname LIKE ' . $key;
+        $params[$key] = '%' . $term . '%';
+    }
+
+    foreach ($nachnameTerms as $index => $term) {
+        $key = ':nachname' . $index;
+        $nachnameConditions[] = 'p.nachname LIKE ' . $key;
+        $params[$key] = '%' . $term . '%';
+    }
+
+    if (empty($vornameConditions) || empty($nachnameConditions)) {
+        $results = [];
+    } else {
     $sql = "
 SELECT
     p.id,
@@ -49,8 +114,8 @@ FROM person p
 LEFT JOIN person v ON v.id = p.vater_id
 LEFT JOIN person m ON m.id = p.mutter_id
         
-WHERE p.vorname LIKE :vorname
-AND p.nachname LIKE :nachname
+WHERE (" . implode(' OR ', $vornameConditions) . ")
+AND (" . implode(' OR ', $nachnameConditions) . ")
 ";
     
     if (!empty($geburtsdatum)) {
@@ -59,17 +124,13 @@ AND p.nachname LIKE :nachname
     
     $stmt = $pdo->prepare($sql);
     
-    $params = [
-        ':vorname' => '%' . $vorname . '%',
-        ':nachname' => '%' . $nachname . '%'
-    ];
-    
     if (!empty($geburtsdatum)) {
         $params[':geburtsdatum'] = $geburtsdatum;
     }
     
     $stmt->execute($params);
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
 
