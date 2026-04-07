@@ -920,6 +920,12 @@ function runOrteImport() {
             echo "<div style='color:#999;'>⏭️ <strong>$filename</strong> - übersprungen</div>";
             continue;
         }
+
+        // notVerifiedLastnames.txt ausschließen
+        if (stripos($filename, 'notVerifiedLastnames') !== false) {
+            echo "<div style='color:#999;'>⏭️ <strong>$filename</strong> - übersprungen</div>";
+            continue;
+        }
         
         // Traubuch-Name: nur Teil vor dem ersten "-" (z.B. Auffach-komplett -> Auffach)
         $filenameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);

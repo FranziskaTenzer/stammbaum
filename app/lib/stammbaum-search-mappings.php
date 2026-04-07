@@ -67,6 +67,7 @@ return [
         ['Ruegg', 'Rüegg'],
         ['Säggl', 'Saeggl'],
         ['Säuer', 'Saeuer'],
+        ['Schonner', 'Schoner'],
         ['Weissbacher', 'Weißbacher', 'Weisbacher'],
         ['Schiessling', 'Schießling'],
         ['Spötzenstatter', 'Spoetzenstatter'],
