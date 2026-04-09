@@ -30,14 +30,30 @@ $total = $total_stmt->fetch(PDO::FETCH_ASSOC)['count'];
 $total_pages = ceil($total / $per_page);
 
 // Benutzer laden
-$stmt = $pdo->query(
-    "SELECT id, username, email, email_verified, created_at
-     FROM user_profile
-     $where
-     ORDER BY created_at DESC
-     LIMIT $per_page OFFSET $offset"
+try {
+    $stmt = $pdo->query(
+        "SELECT id, username, email, email_verified, notifications_enabled, created_at
+         FROM user_profile
+         $where
+         ORDER BY created_at DESC
+         LIMIT $per_page OFFSET $offset"
     );
-$users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Fallback fuer Alt-DBs ohne notifications_enabled-Spalte
+    $stmt = $pdo->query(
+        "SELECT id, username, email, email_verified, created_at
+         FROM user_profile
+         $where
+         ORDER BY created_at DESC
+         LIMIT $per_page OFFSET $offset"
+    );
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($users as &$user) {
+        $user['notifications_enabled'] = 1;
+    }
+    unset($user);
+}
 
 $extraHead = '<style>
     .filter-buttons {
@@ -146,6 +162,16 @@ $extraHead = '<style>
         background: #fff3cd;
         color: #856404;
     }
+
+    .status-notify-on {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .status-notify-off {
+        background: #ffebee;
+        color: #c62828;
+    }
     
     .registration-time {
         color: #888;
@@ -233,6 +259,7 @@ $extraHead = '<style>
                     <th>👤 Benutzername</th>
                     <th>📧 E-Mail</th>
                     <th>✓ Status</th>
+                    <th>🔔 Benachrichtigung</th>
                     <th>📅 Registriert</th>
                 </tr>
             </thead>
@@ -246,6 +273,13 @@ $extraHead = '<style>
                                 <span class="status-badge status-verified">✅ Verifiziert</span>
                             <?php else: ?>
                                 <span class="status-badge status-unverified">⏳ Nicht verifiziert</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($user['notifications_enabled'])): ?>
+                                <span class="status-badge status-notify-on">🔔 Aktiviert</span>
+                            <?php else: ?>
+                                <span class="status-badge status-notify-off">🔕 Deaktiviert</span>
                             <?php endif; ?>
                         </td>
                         <td class="registration-time"><?= $user['created_at'] ? date('d.m.Y H:i', strtotime($user['created_at'])) : '—' ?></td>

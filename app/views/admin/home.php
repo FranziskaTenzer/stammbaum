@@ -116,9 +116,7 @@ if (!isAdmin()) {
 Christoph Christian 
                 Matthäus und Co => Matthias
             </li>
-           <li>Email Benachrichtung wenn neue Orte dazu gekommen sind, 
-                direkt mit Auswahl/Eingabe des Ortes auch in der Email den Namen hinzufügen</li>
-            <br /><br />
+           <br /><br />
             <li><b>Für später:</b>
                 <ul>
                     <li>
