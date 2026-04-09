@@ -16,9 +16,17 @@
 /logs/
 *.log
 
+# Playwright auth state
+/playwright/.auth/
+/test-results/
+/playwright-report/
+
+
 # ================================
 # IDE & EDITOR
 # ================================
+
+node_modules/*
 
 .vscode/
 .idea/

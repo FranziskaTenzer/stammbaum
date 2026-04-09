@@ -113,7 +113,6 @@ if (!isAdmin()) {
         <ul>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
             <li>Stammbaum so erweitern, dass jeweils beide Linie angezeigt werden (da gestern stehen geblieben)</li>
-            <li>druckversion Stammbaum</li>
             <li>Speichern für welchen Namen bezahlt wurde, dieser kann sich jeder zeit wieder angezeigt werden</li>
             <li>Liebe siegt immer fragen wegen Zahlungsanbieter</li>
             <li>Wenn vergleiche fertig sind, noch schauen was an ??? übrig ist</li>
@@ -125,15 +124,22 @@ Christoph Christian
            <br /><br />
             <li><b>Für später:</b>
                 <ul>
-                    <li>
-                        e2e Tests, aktuell noch nicht nötig
+                    <li>e2e Tests für
                         <ul>
                             <li>katharina Kostenzer (generelle Suche, stimmt genaue Anzahl?)</li>
                             <li>10.01.1927 Alois Muther</li>
                             <li>29.05.1848 Andreas Eder Bemerkung!</li>
                         </ul>
+                        
                     </li>
-                    <li>paypal Anbindung bzw. Kreditkarte</li>
+                    <li>e2e andere Funktionen:
+                        <ul>
+                            <li>Recherche-Anfrage stellen</li>
+                            <li>Nachricht schreiben</li>
+                            <li>Profil bearbeiten</li>
+                        </ul>
+                    </li>
+                    <li>paypal Anbindung bzw. Kreditkarte - Bezahlanbieter?</li>
                     <li>kompletten Stammbaum wenn 250€ bezahlt wurden</li>
                     <li>Stammbaum inkl. Tanten und Onkel 500€</li>
                     <li>Transkripbus für die Traubücher ohne Tabellenlayout in latein prüfen</li>

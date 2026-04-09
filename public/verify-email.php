@@ -62,6 +62,7 @@ if ($token === '') {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 30px 15px;
@@ -115,7 +116,7 @@ if ($token === '') {
     <?php endif; ?>
 </div>
 
-<footer style="text-align:center; padding:14px 20px; font-size:0.85em; color:#aaa; background:rgba(255,255,255,0.1); margin-top:20px;">
+<footer style="text-align:center; padding:14px 20px; font-size:0.85em; color:#888; background:rgba(255,255,255,0.15); margin-top:20px;">
     <a href="datenschutz.php" style="color:white; text-decoration:none; margin:0 8px;">Datenschutz</a>
     &middot;
     <a href="impressum.php" style="color:white; text-decoration:none; margin:0 8px;">Impressum</a>

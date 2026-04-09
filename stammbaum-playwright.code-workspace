@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "playwright.reuseBrowser": false,
+    "playwright.showTrace": false
+  }
+}
