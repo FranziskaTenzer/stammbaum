@@ -28,6 +28,12 @@ require_once '../../layout/header.php';
     </div>
 
     <div class="content-card">
+        <h3>🔎 Recherche-Anfrage</h3>
+        <p>Stelle eine Recherche-Anfrage an den Admin (mit Person-ID oder Name)</p>
+        <a href="recherche-anfrage.php" class="btn btn-primary">Zur Recherche-Anfrage</a>
+    </div>
+
+    <div class="content-card">
         <h3>👤 Profil</h3>
         <p>Verwalte dein Profil und ändere dein Passwort</p>
         <a href="profil.php" class="btn btn-primary">Zum Profil</a>

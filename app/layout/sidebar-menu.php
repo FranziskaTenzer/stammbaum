@@ -9,6 +9,7 @@ $_layoutUrl = isset($_layoutUrl) ? $_layoutUrl : '/stammbaum/app/layout';
 // Aktuelle Seite ermitteln
 $currentPage = basename($_SERVER['PHP_SELF']);
 $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
+$currentType = isset($_GET['typ']) ? $_GET['typ'] : 'Nachricht';
 ?>
 
 <!-- ← Header wird jetzt OBEN angezeigt (unter dem X) -->
@@ -45,6 +46,7 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
             <li><a href="<?= $_p ?>/app/views/user/stammbaum-search.php" <?= $currentPage === 'stammbaum-search.php' ? 'class="active"' : '' ?>>👤 Personensuche</a></li>
             <li><a href="<?= $_p ?>/app/views/user/traubuch-list.php" <?= $currentPage === 'traubuch-list.php' ? 'class="active"' : '' ?>>📚 Traubuch-Liste</a></li>
             <li><a href="<?= $_p ?>/app/views/user/nachrichten.php" <?= $currentPage === 'nachrichten.php' ? 'class="active"' : '' ?>>✉️ Nachrichten</a></li>
+            <li><a href="<?= $_p ?>/app/views/user/recherche-anfrage.php" <?= $currentPage === 'recherche-anfrage.php' ? 'class="active"' : '' ?>>🔎 Recherche-Anfrage</a></li>
         </ul>
     </div>
 
@@ -57,13 +59,22 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
     require_once '../../lib/include.php';
     $offen_count = 0;
     $style="";
+    $recherche_offen_count = 0;
+    $recherche_style = "";
     try {
         $pdo = getPDO();
-        $count_stmt = $pdo->query("SELECT COUNT(*) as count FROM nachrichten WHERE antwort IS NULL");
+        $count_stmt = $pdo->query("SELECT COUNT(*) as count FROM nachrichten WHERE antwort IS NULL AND typ = 'Nachricht'");
         $offen_count = $count_stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
+        $recherche_stmt = $pdo->query("SELECT COUNT(*) as count FROM nachrichten WHERE antwort IS NULL AND typ = 'Recherche'");
+        $recherche_offen_count = $recherche_stmt->fetch(PDO::FETCH_ASSOC)['count'];
         
         if ($offen_count > 0) {
             $style="style='color:red; font-weight:bold;'";
+        }
+
+        if ($recherche_offen_count > 0) {
+            $recherche_style="style='color:red; font-weight:bold;'";
         }
     } catch (Exception $e) {
         // Fehler ignorieren, falls Tabelle nicht existiert
@@ -87,8 +98,9 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
                     🛠️ Verwaltung
                 </span>
                 <ul class="nav-submenu">
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?> <?= $style; ?>>📬 offene Nachrichten</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen&typ=Nachricht" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' && $currentType !== 'Recherche' ? 'class="active"' : '' ?> <?= $style; ?>>📬 offene Nachrichten</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen&typ=Recherche" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' && $currentType === 'Recherche' ? 'class="active"' : '' ?> <?= $recherche_style; ?>>🔎 neue Recherche-Anfragen</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet&typ=Nachricht" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
                 	<li><a href="<?= $_p ?>/app/views/admin/benutzer-verwaltung.php" <?= $currentPage === 'benutzer-verwaltung.php' ? 'class="active"' : '' ?>>👥 Benutzer-Verwaltung</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/orte-verwaltung.php" <?= $currentPage === 'orte-verwaltung.php' ? 'class="active"' : '' ?>>📍 Ort einzeln importieren</a></li>
                 </ul>

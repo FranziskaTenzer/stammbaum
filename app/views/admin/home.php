@@ -93,7 +93,13 @@ if (!isAdmin()) {
         <div class="content-card admin-card">
             <h3>📬 Neue Nachrichten</h3>
             <p>Offene Anfragen der Benutzer prüfen und beantworten</p>
-            <a href="admin-nachrichten.php?filter=offen" class="btn btn-primary">Nachrichten öffnen</a>
+            <a href="admin-nachrichten.php?filter=offen&amp;typ=Nachricht" class="btn btn-primary">Nachrichten öffnen</a>
+        </div>
+
+        <div class="content-card admin-card">
+            <h3>🔎 Neue Recherche-Anfragen</h3>
+            <p>Offene Recherche-Anfragen mit Person-ID bzw. Person-Name bearbeiten</p>
+            <a href="admin-nachrichten.php?filter=offen&amp;typ=Recherche" class="btn btn-primary">Recherche-Anfragen öffnen</a>
         </div>
 
         <div class="content-card admin-card">

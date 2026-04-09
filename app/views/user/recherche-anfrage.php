@@ -1,5 +1,5 @@
 <?php
-$pageTitle = "Meine Nachrichten";
+$pageTitle = "Recherche-Anfrage";
 $extraHead = '<style>
     .nachrichten-list {
         display: flex;
@@ -27,11 +27,6 @@ $extraHead = '<style>
 
     .nachricht-header h4 {
         margin: 0;
-    }
-
-    .zeitstempel {
-        font-size: 0.85em;
-        opacity: 0.9;
     }
 
     .nachricht-body {
@@ -131,75 +126,100 @@ $extraHead = '<style>
 </style>';
 
 require_once '../../layout/header.php';
-
 require_once '../../lib/include.php';
 
 try {
     $pdo = getPDO();
 } catch (Exception $e) {
-    die("Datenbankverbindung nicht verfügbar: " . htmlspecialchars($e->getMessage()));
+    die("Datenbankverbindung nicht verfuegbar: " . htmlspecialchars($e->getMessage()));
 }
 
-// Tabelle erstellen falls noch nicht vorhanden
 ensureNachrichtenTable($pdo);
 
 $username = $_SESSION['username'];
 $message = '';
-$messageType = '';
+$messageType = 'warning';
 
-// Neue Nachricht senden
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
-    $betreff = trim($_POST['betreff']);
-    $nachricht = trim($_POST['nachricht']);
-    
-    if ($betreff === '' || $nachricht === '') {
-        $message = "Bitte Betreff und Nachricht ausfüllen.";
-        $messageType = 'warning';
-    } else {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_recherche'])) {
+    $personIdRaw = trim($_POST['person_id'] ?? '');
+    $personName = trim($_POST['person_name'] ?? '');
+    $nachricht = trim($_POST['nachricht'] ?? '');
+
+    $personId = null;
+    if ($personIdRaw !== '') {
+        if (ctype_digit($personIdRaw) && (int) $personIdRaw > 0) {
+            $personId = (int) $personIdRaw;
+        } else {
+            $message = "Bitte eine gueltige positive Person-ID eingeben.";
+        }
+    }
+
+    if ($message === '' && $personId === null && $personName === '') {
+        $message = "Bitte mindestens Person-ID oder Person-Name angeben.";
+    }
+
+    if ($message === '' && $nachricht === '') {
+        $message = "Bitte die Anfrage-Beschreibung ausfuellen.";
+    }
+
+    if ($message === '') {
+        $betreffTeile = [];
+        if ($personId !== null) {
+            $betreffTeile[] = 'ID ' . $personId;
+        }
+        if ($personName !== '') {
+            $betreffTeile[] = $personName;
+        }
+        $betreff = implode(' - ', $betreffTeile);
         $stmt = $pdo->prepare(
-            "INSERT INTO nachrichten (user, typ, betreff, nachricht) VALUES (?, 'Nachricht', ?, ?)"
-            );
-        $stmt->execute([$username, $betreff, $nachricht]);
-        $message = "Nachricht erfolgreich gesendet!";
+            "INSERT INTO nachrichten (user, typ, betreff, nachricht, person_id, person_name)
+             VALUES (?, 'Recherche', ?, ?, ?, ?)"
+        );
+        $stmt->execute([
+            $username,
+            $betreff,
+            $nachricht,
+            $personId,
+            $personName !== '' ? $personName : null,
+        ]);
+
+        $message = "Recherche-Anfrage erfolgreich gesendet!";
         $messageType = 'success';
+        $_POST = [];
     }
 }
 
-// Nachricht löschen
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_message'])) {
-    $id = (int) $_POST['nachricht_id'];
-    
-    // Verifizieren, dass die Nachricht dem aktuellen User gehört
-    $stmt = $pdo->prepare("SELECT user FROM nachrichten WHERE id = ?");
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_recherche'])) {
+    $id = (int) ($_POST['nachricht_id'] ?? 0);
+
+    $stmt = $pdo->prepare("SELECT user FROM nachrichten WHERE id = ? AND typ = 'Recherche'");
     $stmt->execute([$id]);
-    $msg = $stmt->fetch();
-    
-    if ($msg && $msg['user'] === $username) {
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($row && $row['user'] === $username) {
         $stmt = $pdo->prepare("DELETE FROM nachrichten WHERE id = ?");
         $stmt->execute([$id]);
-        $message = "Nachricht erfolgreich gelöscht!";
+        $message = "Recherche-Anfrage geloescht.";
         $messageType = 'success';
     } else {
-        $message = "Fehler: Nachricht konnte nicht gelöscht werden.";
+        $message = "Anfrage konnte nicht geloescht werden.";
         $messageType = 'warning';
     }
 }
 
-// Eigene Nachrichten laden
 $stmt = $pdo->prepare(
-    "SELECT id, betreff, nachricht, zeitstempel, antwort, antwort_zeitstempel
+    "SELECT id, betreff, nachricht, person_id, person_name, zeitstempel, antwort, antwort_zeitstempel
      FROM nachrichten
-     WHERE user = ? AND typ = 'Nachricht'
+     WHERE user = ? AND typ = 'Recherche'
      ORDER BY zeitstempel DESC"
-    );
+);
 $stmt->execute([$username]);
-$nachrichten = $stmt->fetchAll();
-
+$anfragen = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="page-header">
-    <h1>✉️ Meine Nachrichten</h1>
-    <p class="subtitle">Hier siehst du deine Nachrichten und Antworten vom Admin</p>
+    <h1>🔎 Recherche-Anfrage</h1>
+    <p class="subtitle">Sende eine Recherche-Anfrage an den Admin</p>
 </div>
 
 <?php if ($message !== ''): ?>
@@ -208,24 +228,27 @@ $nachrichten = $stmt->fetchAll();
     </div>
 <?php endif; ?>
 
-<!-- Neue Nachricht schreiben -->
 <div class="search-box">
-    <h2 style="margin-bottom:20px;">📝 Neue Nachricht an den Admin</h2>
-    <form method="post" class="neue-nachricht-form">
+    <h2 style="margin-bottom:20px;">📝 Neue Recherche-Anfrage</h2>
+    <form method="post" class="neue-nachricht-form" autocomplete="off">
         <div class="form-group">
-            <label for="betreff">Betreff:</label>
-            <input type="text" id="betreff" name="betreff" maxlength="255" required
-                   value="<?= isset($_POST['betreff']) ? htmlspecialchars($_POST['betreff']) : '' ?>">
+            <label for="person_id">Person-ID (Pflicht: ID oder Name):</label>
+            <input type="number" min="1" id="person_id" name="person_id" value="<?= htmlspecialchars($_POST['person_id'] ?? '') ?>">
         </div>
-
+        
         <div class="form-group">
-            <label for="nachricht">Nachricht:</label>
-            <textarea id="nachricht" name="nachricht" rows="5" required><?= isset($_POST['nachricht']) ? htmlspecialchars($_POST['nachricht']) : '' ?></textarea>
+            <label for="person_name">Person-Name (Pflicht: ID oder Name):</label>
+            <input type="text" id="person_name" name="person_name" maxlength="255" value="<?= htmlspecialchars($_POST['person_name'] ?? '') ?>">
         </div>
+        
+        <div class="form-group">
+            <label for="nachricht">Recherche-Anliegen:</label>
+            <textarea id="nachricht" name="nachricht" rows="6" required><?= htmlspecialchars($_POST['nachricht'] ?? '') ?></textarea>
+        </div>
+        
+        <p style="margin-top:-8px; margin-bottom:18px; color:#666;">Mindestens Person-ID oder Person-Name ist Pflicht.</p>
 
-        <button class="btn btn-primary" type="submit" name="send_message">
-            📤 Nachricht senden
-        </button>
+        <button class="btn btn-primary" type="submit" name="send_recherche">📤 Recherche senden</button>
     </form>
 </div>
 
@@ -233,22 +256,22 @@ $nachrichten = $stmt->fetchAll();
 <hr>
 <br>
 
-<!-- Eigene Nachrichten anzeigen -->
 <div class="search-box">
-    <h2 style="margin-bottom:20px;">📬 Meine gesendeten Nachrichten</h2>
-
-    <?php if (empty($nachrichten)): ?>
-        <p class="no-messages">Du hast noch keine Nachrichten gesendet.</p>
+    <h2 style="margin-bottom:20px;">📬 Meine Recherche-Anfragen</h2>
+    <?php if (empty($anfragen)): ?>
+        <p class="no-messages">Du hast noch keine Recherche-Anfragen gesendet.</p>
     <?php else: ?>
         <div class="nachrichten-list">
-            <?php foreach ($nachrichten as $n): ?>
+            <?php foreach ($anfragen as $n): ?>
                 <div class="nachricht-card">
                     <div class="nachricht-header">
-                        <h4>📌 <?= htmlspecialchars($n['betreff']) ?></h4>
+                        <h4>🔎 <?= htmlspecialchars($n['betreff']) ?></h4>
                         <span class="zeitstempel">🕐 <?= formatDatum($n['zeitstempel']); ?></span>
                     </div>
-
                     <div class="nachricht-body">
+                        <p><strong>Person-ID:</strong> <?= $n['person_id'] ? (int) $n['person_id'] : '—' ?></p>
+                        <p><strong>Person-Name:</strong> <?= $n['person_name'] ? htmlspecialchars($n['person_name']) : '—' ?></p>
+                        <br>
                         <p><?= htmlspecialchars($n['nachricht']) ?></p>
                     </div>
 
@@ -263,9 +286,9 @@ $nachrichten = $stmt->fetchAll();
                     <?php endif; ?>
 
                     <div class="nachricht-footer">
-                        <form method="post" onsubmit="return confirm('Möchtest du diese Nachricht wirklich löschen?');">
-                            <input type="hidden" name="nachricht_id" value="<?= $n['id'] ?>">
-                            <button type="submit" name="delete_message" class="delete-btn btn btn-primary">✖ Löschen</button>
+                        <form method="post" onsubmit="return confirm('Anfrage wirklich loeschen?');">
+                            <input type="hidden" name="nachricht_id" value="<?= (int) $n['id'] ?>">
+                            <button type="submit" name="delete_recherche" class="delete-btn btn btn-primary">✖ Loeschen</button>
                         </form>
                     </div>
                 </div>
@@ -274,7 +297,6 @@ $nachrichten = $stmt->fetchAll();
     <?php endif; ?>
 </div>
 
-<br>
 <br>
 <br>
 
