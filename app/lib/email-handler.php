@@ -46,7 +46,7 @@ function getBaseUrl(): string
 function sendEmail(string $recipientEmail, string $subject, string $htmlBody): bool
 {
     // TODO: Absender-E-Mail an die eigene Domain anpassen
-    $senderEmail = defined('STAMMBAUM_MAIL_FROM') ? STAMMBAUM_MAIL_FROM : 'noreply@stammbaum.example';
+    $senderEmail = defined('STAMMBAUM_MAIL_FROM') ? constant('STAMMBAUM_MAIL_FROM') : 'noreply@stammbaum.example';
     $headers = implode("\r\n", [
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=UTF-8',
@@ -113,5 +113,21 @@ function sendAccountDeleted(PDO $pdo, string $username, string $recipientEmail):
     $ok       = sendEmail($recipientEmail, $template['subject'], $template['body']);
     $status   = $ok ? 'sent' : 'failed';
     logEmail($pdo, 'account_deleted', $recipientEmail, $status, ['username' => $username]);
+    return $ok;
+}
+
+/**
+ * Sendet eine Benachrichtigung über ein neu eingepflegtes Traubuch.
+ */
+function sendNewTraubuchNotification(PDO $pdo, string $username, string $recipientEmail, string $traubuchName, string $ortName): bool
+{
+    $template = getNewTraubuchTemplate($username, $traubuchName, $ortName);
+    $ok       = sendEmail($recipientEmail, $template['subject'], $template['body']);
+    $status   = $ok ? 'sent' : 'failed';
+    logEmail($pdo, 'new_traubuch', $recipientEmail, $status, [
+        'username' => $username,
+        'traubuch' => $traubuchName,
+        'ort' => $ortName,
+    ]);
     return $ok;
 }

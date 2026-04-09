@@ -17,6 +17,7 @@ $isTestAccount = ($username === 'TestAccount');
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isTestAccount) {
     
     if (isset($_POST['update_profile'])) {
+        $notificationsEnabled = isset($_POST['notifications_enabled']) ? 1 : 0;
         $fields = [
             'email' => trim($_POST['email']) /*,
             'vorname' => trim($_POST['vorname']),
@@ -26,11 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isTestAccount) {
             'zahlungsinfo' => trim($_POST['zahlungsinfo']) */
         ];
         $stmt = $pdo->prepare(
-            "UPDATE user_profile SET email=? WHERE username=?"
+            "UPDATE user_profile SET email=?, notifications_enabled=? WHERE username=?"
             );
         // , vorname=?, nachname=?, adresse=?, zahlungstyp=?, zahlungsinfo=?
         // , $fields['vorname'], $fields['nachname'], $fields['adresse'], $fields['zahlungstyp'], $fields['zahlungsinfo']
-        $stmt->execute([$fields['email'], $username]);
+        $stmt->execute([$fields['email'], $notificationsEnabled, $username]);
         $message = "Profil erfolgreich gespeichert!";
     }
     // Passwort ändern
@@ -110,6 +111,35 @@ $extraHead = '<style>
     .form-group {
         display: flex;
         flex-direction: column;
+    }
+
+    .checkbox-group {
+        grid-column: 1 / -1;
+    }
+
+    .checkbox-label {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 0;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    .checkbox-text {
+        line-height: 1.4;
     }
     
     .form-group label {
@@ -265,6 +295,21 @@ $extraHead = '<style>
                 <div class="form-group">
                     <label for="email">E-Mail:</label>
                     <input type="email" required id="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+                </div><br />
+                <div class="form-group checkbox-group">
+                    <label for="notifications_enabled" class="checkbox-label">
+                        <input
+                            type="checkbox"
+                            id="notifications_enabled"
+                            name="notifications_enabled"
+                            value="1"
+                            <?= !isset($user['notifications_enabled']) || (int) $user['notifications_enabled'] === 1 ? 'checked' : '' ?>
+                            <?php echo $isTestAccount ? 'disabled' : ''; ?>
+                        >
+                        <span class="checkbox-text">
+                            Ich möchte E-Mail-Benachrichtigungen erhalten, wenn neue Traubücher eingepflegt wurden.
+                        </span>
+                    </label>
                 </div>
             </div>
             

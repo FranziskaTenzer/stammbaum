@@ -104,12 +104,19 @@ function ensureNachrichtenTable($pdo) {
 function ensureEmailLogTable($pdo) {
     $pdo->exec("CREATE TABLE IF NOT EXISTS email_log (
         id              INT AUTO_INCREMENT PRIMARY KEY,
-        email_type      ENUM('registration', 'password_reset', 'account_deleted') NOT NULL,
+        email_type      ENUM('registration', 'password_reset', 'account_deleted', 'new_traubuch') NOT NULL,
         recipient_email VARCHAR(255) NOT NULL,
         sent_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         status          ENUM('pending', 'sent', 'failed') NOT NULL DEFAULT 'pending',
         metadata        JSON NULL
     )");
+
+    // Keep enum in sync for existing installations where email_log already exists.
+    try {
+        $pdo->exec("ALTER TABLE email_log MODIFY COLUMN email_type ENUM('registration', 'password_reset', 'account_deleted', 'new_traubuch') NOT NULL");
+    } catch (PDOException $e) {
+        error_log('ensureEmailLogTable enum update failed: ' . $e->getMessage());
+    }
 }
 
 // Ensures that the email-verification and password-reset columns exist in user_profile.

@@ -87,20 +87,35 @@ $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : '';
                     🛠️ Verwaltung
                 </span>
                 <ul class="nav-submenu">
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?> <?= $style; ?>>📬 offene Nachrichten</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
+                	<li><a href="<?= $_p ?>/app/views/admin/benutzer-verwaltung.php" <?= $currentPage === 'benutzer-verwaltung.php' ? 'class="active"' : '' ?>>👥 Benutzer-Verwaltung</a></li>
+                    <li><a href="<?= $_p ?>/app/views/admin/orte-verwaltung.php" <?= $currentPage === 'orte-verwaltung.php' ? 'class="active"' : '' ?>>📍 Ort einzeln importieren</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <!-- Prüfung der Daten -->
+          <ul class="nav-menu">  
+            <li class="nav-subsection">
+                <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)" >
+                    <span class="subsection-icon">▶</span>
+                    🧐 Daten prüfen
+                </span>
+                <ul class="nav-submenu">
                     <li><a href="<?= $_p ?>/app/views/admin/vornamen-similar.php" <?= $currentPage === 'vornamen-similar.php' ? 'class="active"' : '' ?>>👨≈👨 Ähnliche Vornamen</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/nachnamen-similar.php" <?= $currentPage === 'nachnamen-similar.php' ? 'class="active"' : '' ?>>👤≈👤 Ähnliche Nachnamen</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/ehen-dubletten.php" <?= $currentPage === 'ehen-dubletten.php' ? 'class="active"' : '' ?>>💍 Ehe Dubletten anzeigen</a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/nachnamen-orte.php" <?= $currentPage === 'nachnamen-orte.php' ? 'class="active"' : '' ?>>🗺️ Ortsliste Nachnamen </a></li>
                     <li><a href="<?= $_p ?>/app/views/admin/nachnamen-tirol.php" <?= $currentPage === 'nachnamen-tirol.php' ? 'class="active"' : '' ?>>📚 Nachnamen Tirol (A-Z)</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=offen" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'offen' ? 'class="active"' : '' ?> <?= $style; ?>>📬 offene Nachrichten</a></li>
-                    <li><a href="<?= $_p ?>/app/views/admin/admin-nachrichten.php?filter=beantwortet" <?= $currentPage === 'admin-nachrichten.php' && $currentFilter === 'beantwortet' ? 'class="active"' : '' ?>>✅ beantwortete Nachrichten</a></li>
-                	<li><a href="<?= $_p ?>/app/views/admin/benutzer-verwaltung.php" <?= $currentPage === 'benutzer-verwaltung.php' ? 'class="active"' : '' ?>>👥 Benutzer-Verwaltung</a></li>
                 </ul>
-            </li>
-            
-            <!-- Datenbank verwalten -->
+            </li>   
+          </ul> 
+
+        <!-- Datenbank verwalten (komplett neu importen) -->            
+        <ul class="nav-menu">  
             <li class="nav-subsection">
-                <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)">
+                <span class="subsection-toggle collapsed" onclick="toggleSubsection(event)"  style='color:red; font-weight:bold;'>
                     <span class="subsection-icon">▶</span>
                     🗃️ Datenbank verwalten
                 </span>
