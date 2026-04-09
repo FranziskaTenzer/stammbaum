@@ -7,6 +7,21 @@ $extraHead = '<style>
     gap:20px;
     justify-content:center;
 }
+
+.action-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.action-bar .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    line-height: 1.2;
+}
     
 .column {
     width:30%;
@@ -67,6 +82,50 @@ ul { list-style:none; padding-left:20px; }
     text-shadow: 0 0 8px rgba(0,0,0,0.5);
     filter: blur(4px);
     user-select: none;
+}
+
+@media print {
+    @page {
+        size: auto;
+        margin: 12mm;
+    }
+
+    .sidebar,
+    .hamburger-menu,
+    .sidebar-overlay,
+    .sidebar-backdrop,
+    .action-bar {
+        display: none !important;
+    }
+
+    .main-content,
+    .content-wrapper {
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    .container {
+        display: block !important;
+    }
+
+    .column {
+        width: 100% !important;
+        box-shadow: none !important;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 12mm;
+        overflow: visible !important;
+        page-break-inside: avoid;
+    }
+
+    .node > ul {
+        display: block !important;
+    }
+
+    .person {
+        page-break-inside: avoid;
+    }
 }
 </style>
 <script>
@@ -740,8 +799,11 @@ $visitedDesc = [];
 $p = $personsById[$startId];
 
 ?>
-<a href="stammbaum-search.php?vorname=<?= $p['vorname']; ?>&nachname=<?= $p['nachname']?>" class="btn btn-primary">Zurück zur Übersicht</a>
-<a href="stammbaum-display-extended.php?id=<?= (int)$startId ?>" class="btn btn-primary">Stammbaum erweiterte Ansicht</a>
+<div class="action-bar">
+    <a href="stammbaum-search.php?vorname=<?= $p['vorname']; ?>&nachname=<?= $p['nachname']?>" class="btn btn-primary">Zurück zur Übersicht</a>
+    <a href="stammbaum-display-extended.php?id=<?= (int)$startId ?>" class="btn btn-primary">Stammbaum erweiterte Ansicht</a>
+    <button type="button" class="btn btn-primary" onclick="window.print()">🖨 Druckversion (PDF)</button>
+</div>
     
 <br />
 

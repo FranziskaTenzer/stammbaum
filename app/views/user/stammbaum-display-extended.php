@@ -13,6 +13,14 @@ $extraHead = '<style>
     flex-wrap: wrap;
 }
 
+.tree-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    line-height: 1.2;
+}
+
 .tree-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -153,6 +161,46 @@ $extraHead = '<style>
 
     .generation-row {
         grid-template-columns: 1fr;
+    }
+}
+
+@media print {
+    @page {
+        size: auto;
+        margin: 12mm;
+    }
+
+    .sidebar,
+    .hamburger-menu,
+    .sidebar-overlay,
+    .sidebar-backdrop,
+    .tree-actions {
+        display: none !important;
+    }
+
+    .main-content,
+    .content-wrapper {
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    .tree-grid {
+        display: block !important;
+    }
+
+    .tree-panel,
+    .focus-card {
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin-bottom: 10mm;
+    }
+
+    .generation,
+    .person-card {
+        page-break-inside: avoid;
     }
 }
 </style>';
@@ -855,6 +903,7 @@ $focusTextClass = 'subtle';
     <div class="tree-actions">
         <a href="stammbaum-search.php?vorname=<?= urlencode($focusPerson['vorname'] ?? '') ?>&nachname=<?= urlencode($focusPerson['nachname'] ?? '') ?>" class="btn btn-primary">Zur&uuml;ck zur Suche</a>
         <a href="stammbaum-display.php?id=<?= (int)$startId ?>" class="btn btn-primary">Standardansicht</a>
+        <button type="button" class="btn btn-primary" onclick="window.print()">🖨 Druckversion (PDF)</button>
     </div>
 
     <div class="tree-grid">
