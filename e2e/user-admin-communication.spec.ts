@@ -55,10 +55,11 @@ test('Recherche-Anfrage erscheint im Adminbereich', async ({ page }) => {
   await expect(openCard).toContainText('9464');
 });
 
-test('Nachricht erscheint in Admin-Nachrichten', async ({ page }) => {
+test('Nachricht wird beantwortet, Status geprueft und vom User geloescht', async ({ page }) => {
   const token = uniqueToken('e2e-nachricht');
   const subject = `E2E Nachricht ${token}`;
   const body = `Automatischer E2E Nachrichtentest: ${token}`;
+  const adminReply = `Admin-Antwort fuer ${token}`;
 
   await page.goto('/stammbaum/app/views/user/nachrichten.php');
 
@@ -79,5 +80,29 @@ test('Nachricht erscheint in Admin-Nachrichten', async ({ page }) => {
   await expect(detailCard).toBeVisible();
   await expect(detailCard).toContainText(body);
   await expect(detailCard).toContainText('e2eTest');
+
+  await detailCard.locator('textarea[name="antwort"]').fill(adminReply);
+  await detailCard.getByRole('button', { name: /Antwort speichern/i }).click();
+  await expect(page.locator('.alert-success')).toContainText(/Antwort erfolgreich gespeichert/i);
+
+  await page.goto('/stammbaum/app/views/admin/admin-nachrichten.php?filter=offen&typ=Nachricht');
+  await expect(page.locator('.overview-table tr', { hasText: subject })).toHaveCount(0);
+
+  await page.goto('/stammbaum/app/views/admin/admin-nachrichten.php?filter=beantwortet&typ=Nachricht');
+  const answeredRow = page.locator('.overview-table tr', { hasText: subject }).first();
+  await expect(answeredRow).toBeVisible();
+  await expect(answeredRow).toContainText('Beantwortet');
+  await answeredRow.click();
+  await expect(page.locator('.nachricht-card', { hasText: adminReply }).first()).toBeVisible();
+
+  await page.goto('/stammbaum/app/views/user/nachrichten.php');
+  const userCard = page.locator('.nachricht-card', { hasText: subject }).first();
+  await expect(userCard).toBeVisible();
+  await expect(userCard).toContainText(adminReply);
+
+  page.once('dialog', (dialog) => dialog.accept());
+  await userCard.getByRole('button', { name: /Loeschen|Löschen/i }).click();
+  await expect(page.locator('.alert-success')).toContainText(/erfolgreich geloescht|erfolgreich gelöscht/i);
+  await expect(page.locator('.nachricht-card', { hasText: subject })).toHaveCount(0);
 });
 
