@@ -926,6 +926,12 @@ function runOrteImport() {
             echo "<div style='color:#999;'>⏭️ <strong>$filename</strong> - übersprungen</div>";
             continue;
         }
+
+         // tmp.txt ausschließen
+        if (stripos($filename, 'tmp') !== false) {
+            echo "<div style='color:#999;'>⏭️ <strong>$filename</strong> - übersprungen</div>";
+            continue;
+        }
         
         // Traubuch-Name: nur Teil vor dem ersten "-" (z.B. Auffach-komplett -> Auffach)
         $filenameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);

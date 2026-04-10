@@ -119,6 +119,12 @@ if (!isAdmin()) {
 Christoph Christian 
                 Matthäus und Co => Matthias
             </li>
+            <li>Blau: Repräsentiert typischerweise die Linie des Großvaters väterlicherseits.
+Grün: Repräsentiert die Linie der Großmutter väterlicherseits.
+Rot: Repräsentiert die Linie des Großvaters mütterlicherseits.
+Gelb: Repräsentiert die Linie der Großmutter mütterlicherseits.
+Lila: Wird oft für die direkten Nachkommen verwendet.</li>
+            <li>import name "unbekannt" dann den Namen NICHT speichern in Person Tabelle sondern überspringen  </li>
            <br /><br />
             <li><b>Für später:</b>
                 <ul>
