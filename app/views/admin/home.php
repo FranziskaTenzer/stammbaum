@@ -116,6 +116,7 @@ if (!isAdmin()) {
             <li>Speichern für welchen Namen bezahlt wurde, dieser kann sich jeder zeit wieder angezeigt werden</li>
             <li>Liebe siegt immer fragen wegen Zahlungsanbieter</li>
             <li>Wenn vergleiche fertig sind, noch schauen was an ??? übrig ist</li>
+            <li>Super Admin anlegen für die Import sachen</li>
             <li>SUCHE anpassen: c/k, b/p, u/ü a/ä Varianten mit erlauben
                 Info: meist gängige Schreibweise von heute z.B. Flatscher (in den Büchern mehr als Flatschner )
 Christoph Christian 
@@ -131,13 +132,6 @@ Christoph Christian
                             <li>29.05.1848 Andreas Eder Bemerkung!</li>
                         </ul>
                         
-                    </li>
-                    <li>e2e andere Funktionen:
-                        <ul>
-                            <li>Recherche-Anfrage stellen</li>
-                            <li>Nachricht schreiben</li>
-                            <li>Profil bearbeiten</li>
-                        </ul>
                     </li>
                     <li>paypal Anbindung bzw. Kreditkarte - Bezahlanbieter?</li>
                     <li>kompletten Stammbaum wenn 250€ bezahlt wurden</li>

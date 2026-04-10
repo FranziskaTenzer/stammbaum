@@ -18,6 +18,6 @@ setup('create authenticated session for e2e user', async ({ page }) => {
 
   
   //await page.waitForURL('/stammbaum/app/views/user/index.php');
-  await expect(page).toHaveURL(/\/stammbaum\/app\/views\/user\/index\.php/);
+  await expect(page).toHaveURL(/stammbaum\/app\/views\/admin\/home\.php/);
 });
 
