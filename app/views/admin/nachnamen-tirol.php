@@ -47,7 +47,8 @@ function getAllTirolSurnames($forceRefresh = false) {
 
         $namesWithPlaces = getTirolArchivNamesWithPlaces($prefix);
         foreach ($namesWithPlaces as $surname => $places) {
-            $name = trim((string)$surname);
+            $name = preg_replace('/\s*:.*$/u', '', (string)$surname);
+            $name = trim((string)$name);
             if ($name === '') {
                 continue;
             }
@@ -64,17 +65,6 @@ function getAllTirolSurnames($forceRefresh = false) {
 $forceRefresh = isset($_GET['refresh']) && $_GET['refresh'] === '1';
 $allNames = getAllTirolSurnames($forceRefresh);
 $totalNames = count($allNames);
-
-$alphabeticGroups = [];
-foreach ($allNames as $name) {
-    $letter = surnameInitialForTirolList($name);
-    if (!isset($alphabeticGroups[$letter])) {
-        $alphabeticGroups[$letter] = [];
-    }
-    $alphabeticGroups[$letter][] = $name;
-}
-
-ksort($alphabeticGroups);
 ?>
 
 <style>
@@ -112,35 +102,36 @@ ksort($alphabeticGroups);
         margin: 14px 0;
         border-radius: 4px;
     }
-    .alphabet-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
-        margin-top: 16px;
-    }
-    .letter-card {
-        border: 1px solid #e4e4e4;
-        border-radius: 8px;
-        padding: 12px;
-        background: #fff;
-    }
-    .letter-card h3 {
-        margin: 0 0 10px 0;
-        color: #3f51b5;
-        border-bottom: 1px solid #efefef;
-        padding-bottom: 6px;
-    }
     .name-list {
         margin: 0;
-        padding-left: 18px;
-        max-height: 320px;
-        overflow: auto;
+        padding-left: 20px;
+        column-count: 4;
+        column-gap: 28px;
+    }
+    .name-list li {
+        break-inside: avoid;
+        margin: 0 0 5px;
+    }
+    @media (max-width: 1100px) {
+        .name-list {
+            column-count: 3;
+        }
+    }
+    @media (max-width: 800px) {
+        .name-list {
+            column-count: 2;
+        }
+    }
+    @media (max-width: 560px) {
+        .name-list {
+            column-count: 1;
+        }
     }
 </style>
 
 <div class="container">
     <h1>👤 Alle Nachnamen in Tirol (Tirol-Archiv)</h1><br />
-    <p>Gesamtliste aller im Tirol-Archiv gefundenen Familiennamen, alphabetisch gruppiert.</p>
+    <p>Gesamtliste aller im Tirol-Archiv gefundenen Familiennamen, alphabetisch sortiert.</p>
     <br />
 
     <div class="top-actions">
@@ -150,21 +141,14 @@ ksort($alphabeticGroups);
 
     <div class="summary">
         <strong>Nachnamen gesamt:</strong> <?= $totalNames ?>
-        <br><strong>Buchstaben-Gruppen:</strong> <?= count($alphabeticGroups) ?>
+        <br><strong>Darstellung:</strong> Alphabetische Liste in 4 Spalten
     </div>
 
-    <div class="alphabet-grid">
-        <?php foreach ($alphabeticGroups as $letter => $names): ?>
-            <section class="letter-card">
-                <h3><?= htmlspecialchars($letter, ENT_QUOTES, 'UTF-8') ?> (<?= count($names) ?>)</h3>
-                <ul class="name-list">
-                    <?php foreach ($names as $name): ?>
-                        <li><?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </section>
+    <ul class="name-list">
+        <?php foreach ($allNames as $name): ?>
+            <li><?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?></li>
         <?php endforeach; ?>
-    </div>
+    </ul>
 </div>
 
 <?php require_once '../../layout/footer.php'; ?>

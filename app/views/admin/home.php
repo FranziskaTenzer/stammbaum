@@ -130,9 +130,21 @@ Christoph Christian
                         </ul>
                         
                     </li>
-                    <li>copecard 4,9% plus 1€ pro Transaktion => 200€ => 9,80€ plus 1€ => 10,80€
-                        Damit bleibt bei mir 189,20€ 
-                        250€ => 12,25€ => 237,75€
+                    <li>Preisvergleiche:
+                        <ul>
+                            <li>copecard 4,9% plus 1€ pro Transaktion
+                                <ul>
+                                    <li>200€ => 9,80€ plus 1€ => 10,80€ damit bleibt bei mir 189,20€ </li>
+                                    <li>250€ => 12,25€ => 237,75€ </li>
+                                </ul>
+                            </li>
+                             <li>xxx 4,9% plus 1€ pro Transaktion
+                                <ul>
+                                    <li>200€ => € </li>
+                                    <li>250€ => € </li>
+                                </ul>
+                            </li>
+                        </ul>
                     </li>
                     <li>paypal Anbindung bzw. Kreditkarte - Bezahlanbieter?</li>
                     <li>kompletten Stammbaum wenn 250€ bezahlt wurden</li>
