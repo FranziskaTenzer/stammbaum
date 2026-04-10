@@ -112,11 +112,8 @@ if (!isAdmin()) {
         <h3>To Do List:</h3>
         <ul>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
-            <li>Stammbaum so erweitern, dass jeweils beide Linie angezeigt werden (da gestern stehen geblieben)</li>
             <li>Speichern für welchen Namen bezahlt wurde, dieser kann sich jeder zeit wieder angezeigt werden</li>
-            <li>Liebe siegt immer fragen wegen Zahlungsanbieter</li>
             <li>Wenn vergleiche fertig sind, noch schauen was an ??? übrig ist</li>
-            <li>Super Admin anlegen für die Import sachen</li>
             <li>SUCHE anpassen: c/k, b/p, u/ü a/ä Varianten mit erlauben
                 Info: meist gängige Schreibweise von heute z.B. Flatscher (in den Büchern mehr als Flatschner )
 Christoph Christian 
@@ -132,6 +129,10 @@ Christoph Christian
                             <li>29.05.1848 Andreas Eder Bemerkung!</li>
                         </ul>
                         
+                    </li>
+                    <li>copecard 4,9% plus 1€ pro Transaktion => 200€ => 9,80€ plus 1€ => 10,80€
+                        Damit bleibt bei mir 189,20€ 
+                        250€ => 12,25€ => 237,75€
                     </li>
                     <li>paypal Anbindung bzw. Kreditkarte - Bezahlanbieter?</li>
                     <li>kompletten Stammbaum wenn 250€ bezahlt wurden</li>

@@ -186,7 +186,8 @@ AND (" . implode(' OR ', $nachnameConditions) . ")
                         <th>Hof</th>
                         <th>Ort</th>
                         <th>Bemerkung</th>
-                        <th>Aktion</th>
+                        <th>Stammbaum Ansicht</th>
+                        <th>Komplettansicht</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -205,8 +206,12 @@ AND (" . implode(' OR ', $nachnameConditions) . ")
                         <td><?= htmlspecialchars($row['ort'] ?? '') ?></td>
                         <td><?= htmlspecialchars(substr($row['bemerkung'] ?? '', 0, 30)) ?></td>
                         <td>
-                            <a href="stammbaum-display.php?id=<?= $row['id'] ?>" class="btn btn-small btn-link">Stammbaum</a>
-                            <a href="stammbaum-display-extended.php?id=<?= $row['id'] ?>" class="btn btn-small btn-link">Stammbaum komplett</a>
+                            <a href="stammbaum-display.php?id=<?= $row['id'] ?>" class="btn btn-small btn-link">horizontale Darstellung</a>
+                            <a href="stammbaum-display-extended.php?id=<?= $row['id'] ?>" class="btn btn-small btn-link">vertikale Darstellung</a>
+                        </td>
+                        <td>
+                            <a href="stammbaum-display-horizontal-complete.php?id=<?= $row['id'] ?>" class="btn btn-small btn-link">Horizontal komplett</a>
+                            <a href="stammbaum-display-complete.php?id=<?= $row['id'] ?>" class="btn btn-small btn-link">Vertikal komplett</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>

@@ -1,5 +1,5 @@
 <?php
-$pageTitle = "Stammbaum Uebersicht";
+$pageTitle = "Stammbaum Komplette Ansicht";
 $extraHead = '<style>
 .tree-page {
     display: grid;
@@ -644,6 +644,146 @@ function collectAncestorUnitsByLevel(int $startId, array $personsById, int $maxD
     return $levels;
 }
 
+function collectAncestorPeopleByLevel(int $startId, array $personsById, int $maxDepth = 12): array
+{
+    if (!isset($personsById[$startId])) {
+        return [];
+    }
+
+    $rootUnit = parentUnitForPerson($startId, $personsById);
+    if (!$rootUnit) {
+        return [];
+    }
+
+    $currentLevel = [];
+    if (!empty($rootUnit['father_id'])) {
+        $currentLevel[(int)$rootUnit['father_id']] = true;
+    }
+    if (!empty($rootUnit['mother_id'])) {
+        $currentLevel[(int)$rootUnit['mother_id']] = true;
+    }
+
+    $levels = [];
+    $visited = [$startId => true];
+    $depth = 1;
+
+    while (!empty($currentLevel) && $depth <= $maxDepth) {
+        $ids = array_map('intval', array_keys($currentLevel));
+        sort($ids);
+        $levels[$depth] = $ids;
+
+        $nextLevel = [];
+        foreach ($ids as $personId) {
+            $visited[$personId] = true;
+            $parentUnit = parentUnitForPerson($personId, $personsById);
+            if (!$parentUnit) {
+                continue;
+            }
+
+            $fatherId = (int)($parentUnit['father_id'] ?? 0);
+            $motherId = (int)($parentUnit['mother_id'] ?? 0);
+
+            if ($fatherId > 0 && !isset($visited[$fatherId])) {
+                $nextLevel[$fatherId] = true;
+            }
+            if ($motherId > 0 && !isset($visited[$motherId])) {
+                $nextLevel[$motherId] = true;
+            }
+        }
+
+        $currentLevel = $nextLevel;
+        $depth++;
+    }
+
+    return $levels;
+}
+
+function collectSiblingIds(int $personId, array $personsById, array $childrenMap): array
+{
+    if (!isset($personsById[$personId])) {
+        return [];
+    }
+
+    $person = $personsById[$personId];
+    $fatherId = !empty($person['vater_id']) ? (int)$person['vater_id'] : 0;
+    $motherId = !empty($person['mutter_id']) ? (int)$person['mutter_id'] : 0;
+
+    if ($fatherId <= 0 && $motherId <= 0) {
+        return [];
+    }
+
+    $candidateIds = [];
+    if ($fatherId > 0 && $motherId > 0) {
+        $fatherChildren = array_map('intval', $childrenMap[$fatherId] ?? []);
+        $motherChildren = array_map('intval', $childrenMap[$motherId] ?? []);
+        $candidateIds = array_values(array_intersect($fatherChildren, $motherChildren));
+    } elseif ($fatherId > 0) {
+        $candidateIds = array_map('intval', $childrenMap[$fatherId] ?? []);
+    } else {
+        $candidateIds = array_map('intval', $childrenMap[$motherId] ?? []);
+    }
+
+    $result = [];
+    foreach ($candidateIds as $candidateId) {
+        $candidateId = (int)$candidateId;
+        if ($candidateId > 0 && $candidateId !== $personId && isset($personsById[$candidateId])) {
+            $result[$candidateId] = true;
+        }
+    }
+
+    $ids = array_map('intval', array_keys($result));
+    sort($ids);
+    return $ids;
+}
+
+function collectCollateralAncestorsByLevel(array $ancestorPeopleByLevel, array $personsById, array $childrenMap): array
+{
+    $collateral = [];
+
+    foreach ($ancestorPeopleByLevel as $depth => $personIds) {
+        $entriesById = [];
+
+        foreach ($personIds as $personId) {
+            $siblings = collectSiblingIds((int)$personId, $personsById, $childrenMap);
+            if (empty($siblings)) {
+                continue;
+            }
+
+            $originName = personByIdShortName((int)$personId, $personsById);
+            foreach ($siblings as $siblingId) {
+                if (!isset($entriesById[$siblingId])) {
+                    $entriesById[$siblingId] = [
+                        'id' => (int)$siblingId,
+                        'origin_names' => []
+                    ];
+                }
+                $entriesById[$siblingId]['origin_names'][$originName] = true;
+            }
+        }
+
+        if (!empty($entriesById)) {
+            $items = [];
+            foreach ($entriesById as $entry) {
+                $names = array_keys($entry['origin_names']);
+                sort($names);
+                $entry['origin_names'] = $names;
+                $items[] = $entry;
+            }
+
+            usort($items, static function (array $a, array $b) use ($personsById): int {
+                return strcmp(
+                    personByIdShortName((int)$a['id'], $personsById),
+                    personByIdShortName((int)$b['id'], $personsById)
+                );
+            });
+
+            $collateral[(int)$depth] = $items;
+        }
+    }
+
+    return $collateral;
+}
+
 function collectDescendantLevels(int $startId, array $personsById, array $childrenMap, int $maxDepth = 12): array
 {
     if (!isset($personsById[$startId])) {
@@ -833,6 +973,112 @@ function renderAncestorGenerationsWithEvents(array $levels, array $personsById, 
     return $html;
 }
 
+function renderAncestorGenerationsComplete(
+    array $directLevels,
+    array $collateralLevels,
+    array $personsById,
+    array $spouseMap,
+    array $coupleEventMap,
+    bool $isTestAccount = false
+): string {
+    if (empty($directLevels)) {
+        return '<p class="subtle">Keine Eintraege vorhanden.</p>';
+    }
+
+    krsort($directLevels);
+
+    $html = '<div class="generation-list">';
+    foreach ($directLevels as $depth => $units) {
+        $depth = (int)$depth;
+        $title = ancestorLabelByDepth($depth);
+
+        $html .= '<section class="generation">';
+        $html .= '<h4 class="generation-title">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h4>';
+        $html .= '<div class="generation-row">';
+
+        foreach ($units as $unit) {
+            $fatherId = (int)($unit['father_id'] ?? 0);
+            $motherId = (int)($unit['mother_id'] ?? 0);
+            $fromIds = $unit['from_ids'] ?? [];
+
+            if ($isTestAccount) {
+                $fatherLabel = $fatherId > 0 ? anonymizedAncestorRoleExtended(true, $depth) : '';
+                $motherLabel = $motherId > 0 ? anonymizedAncestorRoleExtended(false, $depth) : '';
+                if ($fatherLabel !== '' && $motherLabel !== '') {
+                    $lineRaw = $fatherLabel . ' + ' . $motherLabel;
+                } elseif ($fatherLabel !== '') {
+                    $lineRaw = $fatherLabel;
+                } elseif ($motherLabel !== '') {
+                    $lineRaw = $motherLabel;
+                } else {
+                    $lineRaw = 'Unbekannt';
+                }
+            } else {
+                $lineRaw = formatCoupleLine($fatherId, $motherId, $personsById);
+            }
+            $line1 = htmlspecialchars($lineRaw, ENT_QUOTES, 'UTF-8');
+
+            $originNames = [];
+            $originIndex = 0;
+            foreach ($fromIds as $fromId) {
+                $originIndex++;
+                if ($isTestAccount) {
+                    $originNames[] = anonymizedAncestorSourceLabelExtended($depth, $originIndex, $personsById[(int)$fromId] ?? null);
+                } else {
+                    $originNames[] = personByIdShortName((int)$fromId, $personsById);
+                }
+            }
+            $originNames = array_values(array_unique($originNames));
+            sort($originNames);
+            $relation = 'Eltern von: ' . (!empty($originNames) ? implode(', ', $originNames) : '-');
+
+            $events = formatCoupleEvents($fatherId, $motherId, $coupleEventMap);
+            $blurClass = getBlurClass($isTestAccount);
+            $lineClass = $blurClass !== '' ? ' class="person-line ' . $blurClass . '"' : ' class="person-line"';
+            $eventClass = $blurClass !== '' ? ' class="subtle person-spouse ' . $blurClass . '"' : ' class="subtle person-spouse"';
+            $relationClass = $blurClass !== '' ? ' class="subtle person-relation ' . $blurClass . '"' : ' class="subtle person-relation"';
+
+            $html .= '<article class="person-card">';
+            $html .= '<p' . $lineClass . '>' . $line1 . '</p>';
+            if ($events !== '') {
+                $html .= '<p' . $eventClass . '>Ehe: ' . htmlspecialchars($events, ENT_QUOTES, 'UTF-8') . '</p>';
+            }
+            $html .= '<p' . $relationClass . '>' . htmlspecialchars($relation, ENT_QUOTES, 'UTF-8') . '</p>';
+            $html .= '</article>';
+        }
+
+        $html .= '</div>';
+
+        $sideItems = $collateralLevels[$depth] ?? [];
+        if (!empty($sideItems)) {
+            $html .= '<h5 class="generation-title" style="margin-top:10px;">Seitenlinie (Tanten/Onkel dieser Generation)</h5>';
+            $html .= '<div class="generation-row">';
+
+            $itemIndex = 0;
+            foreach ($sideItems as $item) {
+                $itemIndex++;
+                $personId = (int)($item['id'] ?? 0);
+                if (!isset($personsById[$personId])) {
+                    continue;
+                }
+
+                $originNames = $item['origin_names'] ?? [];
+                $relation = $isTestAccount
+                    ? 'Seitenlinie dieser Generation'
+                    : ('Geschwister von: ' . (!empty($originNames) ? implode(', ', $originNames) : '-'));
+                $html .= renderPersonCard($personId, $personsById, $spouseMap, $relation, $isTestAccount, $depth + 1, $itemIndex);
+            }
+
+            $html .= '</div>';
+        }
+
+        $html .= '</section>';
+    }
+    $html .= '</div>';
+
+    return $html;
+}
+
 function renderDescendantGenerations(array $levels, array $personsById, array $spouseMap, bool $isTestAccount = false): string
 {
     if (empty($levels)) {
@@ -886,6 +1132,8 @@ if (!$focusPerson) {
 list($personsById, $childrenMap, $spouseMap, $coupleEventMap) = loadTreeData($pdo, $startId);
 
 $ancestorLevels = collectAncestorUnitsByLevel($startId, $personsById, 12);
+$ancestorPeopleByLevel = collectAncestorPeopleByLevel($startId, $personsById, 12);
+$collateralAncestorLevels = collectCollateralAncestorsByLevel($ancestorPeopleByLevel, $personsById, $childrenMap);
 $descendantLevels = collectDescendantLevels($startId, $personsById, $childrenMap, 12);
 
 $focusNameRaw = $isTestAccount ? 'Kind 1' : trim(($focusPerson['vorname'] ?? '') . ' ' . ($focusPerson['nachname'] ?? ''));
@@ -904,14 +1152,14 @@ $focusTextClass = 'subtle';
         <a href="stammbaum-search.php?vorname=<?= urlencode($focusPerson['vorname'] ?? '') ?>&nachname=<?= urlencode($focusPerson['nachname'] ?? '') ?>" class="btn btn-primary">Zur&uuml;ck zur Suche</a>
         <a href="stammbaum-display.php?id=<?= (int)$startId ?>" class="btn btn-primary">horizontale Ansicht</a>
         <a href="stammbaum-display-horizontal-complete.php?id=<?= (int)$startId ?>" class="btn btn-primary">horizontale Ansicht komplett</a>
-        <a href="stammbaum-display-complete.php?id=<?= (int)$startId ?>" class="btn btn-primary">Stammbaum vertikal komplett (inkl. Tanten und Onkel)</a>
+        <a href="stammbaum-display-extended.php?id=<?= (int)$startId ?>" class="btn btn-primary">vertikale Ansicht</a>
         <button type="button" class="btn btn-primary" onclick="window.print()">🖨 Druckversion (PDF)</button>
     </div>
 
     <div class="tree-grid">
         <section class="tree-panel ancestors">
-            <h3>Vorfahren (komplett aus DB)</h3>
-            <?= renderAncestorGenerationsWithEvents($ancestorLevels, $personsById, $coupleEventMap, $isTestAccount) ?>
+            <h3>Vorfahren inkl. Seitenlinien (komplett aus DB)</h3>
+            <?= renderAncestorGenerationsComplete($ancestorLevels, $collateralAncestorLevels, $personsById, $spouseMap, $coupleEventMap, $isTestAccount) ?>
         </section>
 
         <section class="focus-card">
@@ -919,7 +1167,7 @@ $focusTextClass = 'subtle';
             <p class="<?= htmlspecialchars($focusMetaClass, ENT_QUOTES, 'UTF-8') ?>">Geboren: <?= htmlspecialchars($focusBirth, ENT_QUOTES, 'UTF-8') ?></p>
             <p class="<?= htmlspecialchars($focusMetaClass, ENT_QUOTES, 'UTF-8') ?>">Gestorben: <?= htmlspecialchars($focusDeath, ENT_QUOTES, 'UTF-8') ?></p>
             <p class="<?= htmlspecialchars($focusMetaClass, ENT_QUOTES, 'UTF-8') ?>">Ehepartner: <?= $focusSpouses ?></p>
-            <p class="<?= htmlspecialchars($focusTextClass, ENT_QUOTES, 'UTF-8') ?>">Diese Ansicht zeigt Vorfahren und Nachkommen so tief, wie sie in der Datenbank verf&uuml;gbar sind.</p>
+            <p class="<?= htmlspecialchars($focusTextClass, ENT_QUOTES, 'UTF-8') ?>">Diese Ansicht zeigt Vorfahren inkl. Seitenlinien (z.B. Tanten/Onkel) und Nachkommen so tief, wie sie in der Datenbank verf&uuml;gbar sind.</p>
         </section>
 
         <section class="tree-panel descendants">
