@@ -179,6 +179,7 @@ Christoph Christian
     </div>
 </div>
 
+<?php if (isSuperAdmin()): ?>
 <div class="admin-group">
     <h2 class="admin-group-title warning">3) Datenbank verwalten</h2>
     <div class="admin-group-grid">
@@ -209,5 +210,6 @@ Christoph Christian
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <?php require_once '../../layout/footer.php'; ?>

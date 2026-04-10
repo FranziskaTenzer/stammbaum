@@ -14,22 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Ensure required columns exist (safe one-time migration)
     ensureEmailVerificationColumns($pdo);
-
-    // Ensure is_admin column exists in user_profile (safe one-time migration)
-    try {
-        $colCheck = $pdo->query(
-            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'user_profile'
-               AND COLUMN_NAME = 'is_admin'"
-        );
-        if ($colCheck->fetchColumn() == 0) {
-            $pdo->exec("ALTER TABLE user_profile ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0");
-        }
-    } catch (PDOException $e) {
-        // Table may not exist yet – proceed normally
-        error_log('login.php migration check failed: ' . $e->getMessage());
-    }
+    ensureAdminRoleColumn($pdo);
 
     $stmt = $pdo->prepare("SELECT username, password_hash, is_admin, email_verified FROM user_profile WHERE username = ?");
     $stmt->execute([$username]);
@@ -42,12 +27,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$user['email_verified']) {
             $error = '❌ Bitte bestätige zuerst deine E-Mail-Adresse. Prüfe dein Postfach (auch Spam-Ordner).';
         } else {
+            $adminRole = (int)($user['is_admin'] ?? 0);
+            if ($adminRole < 0) {
+                $adminRole = 0;
+            }
+            if ($adminRole > 2) {
+                $adminRole = 2;
+            }
+
             $_SESSION['logged_in'] = true;
             $_SESSION['username'] = $user['username'];
-            $_SESSION['is_admin'] = (bool)$user['is_admin'];
+            $_SESSION['is_admin'] = $adminRole;
             $_SESSION['login_time'] = time();
 
-            if ($user['is_admin']) {
+            if ($adminRole >= 1) {
                 header('Location: ' . $projectUrl . '/stammbaum/app/views/admin/home.php');
             } else {
                 header('Location: ' . $projectUrl . '/stammbaum/app/views/user/index.php');

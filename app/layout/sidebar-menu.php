@@ -124,6 +124,7 @@ $currentType = isset($_GET['typ']) ? $_GET['typ'] : 'Nachricht';
             </li>   
           </ul> 
 
+        <?php if (isSuperAdmin()): ?>
         <!-- Datenbank verwalten (komplett neu importen) -->            
         <ul class="nav-menu">  
             <li class="nav-subsection">
@@ -142,10 +143,8 @@ $currentType = isset($_GET['typ']) ? $_GET['typ'] : 'Nachricht';
                     </li>
                 </ul>
             </li>
-
-            
-            
         </ul>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
     

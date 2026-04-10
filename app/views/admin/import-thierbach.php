@@ -3,8 +3,8 @@ $pageTitle = "Thierbach Importieren";
 require_once '../../layout/header.php';
 require_once '../../lib/include.php';
 
-if (!isAdmin()) {
-    die('❌ Zugriff verweigert! Nur für Administratoren.');
+if (!isSuperAdmin()) {
+    die('❌ Zugriff verweigert! Nur für Super-Administratoren.');
 }
 
 $pdo = getPDO();

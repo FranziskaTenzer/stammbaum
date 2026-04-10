@@ -10,12 +10,41 @@ if (session_status() === PHP_SESSION_NONE) {
 // ===========================
 
 define('ADMIN_PASSWORD', 'admin123');  // ⚠️ ÄNDERN SIE DIESES PASSWORT!
+define('ROLE_USER', 0);
+define('ROLE_ADMIN', 1);
+define('ROLE_SUPER_ADMIN', 2);
 
 /**
  * Prüft ob Benutzer angemeldet ist
  */
 function isLoggedIn() {
     return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+}
+
+/**
+ * Liefert die Admin-Rolle als Integer (0=User, 1=Admin, 2=Super Admin)
+ */
+function getAdminRole() {
+    if (!isset($_SESSION['is_admin'])) {
+        return ROLE_USER;
+    }
+
+    $rawRole = $_SESSION['is_admin'];
+    if ($rawRole === true) {
+        return ROLE_ADMIN;
+    }
+    if ($rawRole === false || $rawRole === null) {
+        return ROLE_USER;
+    }
+
+    $role = (int) $rawRole;
+    if ($role < ROLE_USER) {
+        return ROLE_USER;
+    }
+    if ($role > ROLE_SUPER_ADMIN) {
+        return ROLE_SUPER_ADMIN;
+    }
+    return $role;
 }
 
 /**
@@ -43,7 +72,14 @@ function getCurrentUser() {
  * Prüft ob Admin-Rechte vorhanden sind
  */
 function isAdmin() {
-    return isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true;
+    return getAdminRole() >= ROLE_ADMIN;
+}
+
+/**
+ * Prüft ob Super-Admin-Rechte vorhanden sind
+ */
+function isSuperAdmin() {
+    return getAdminRole() >= ROLE_SUPER_ADMIN;
 }
 
 /**
@@ -67,5 +103,14 @@ function loginUser($username) {
  */
 function loginAsAdmin($username) {
     loginUser($username);
-    $_SESSION['is_admin'] = true;
+    $_SESSION['is_admin'] = ROLE_ADMIN;
+}
+
+/**
+ * Erzwingt Super-Admin-Rechte
+ */
+function requireSuperAdmin() {
+    if (!isSuperAdmin()) {
+        die('❌ Zugriff verweigert! Nur für Super-Administratoren.');
+    }
 }

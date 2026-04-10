@@ -6,8 +6,8 @@ ob_start();
 
 require_once '../../layout/header.php';
 
-if (!isAdmin()) {
-    die('❌ Zugriff verweigert! Nur für Administratoren.');
+if (!isSuperAdmin()) {
+    die('❌ Zugriff verweigert! Nur für Super-Administratoren.');
 }
 
 if (!function_exists('getPDO')) {

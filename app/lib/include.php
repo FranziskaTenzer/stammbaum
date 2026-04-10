@@ -158,4 +158,25 @@ function ensureEmailVerificationColumns($pdo) {
     }
 }
 
+// Ensures the admin role column supports role levels:
+// 0 = user, 1 = admin, 2 = super admin
+function ensureAdminRoleColumn($pdo) {
+    try {
+        $colCheck = $pdo->query(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'user_profile'
+               AND COLUMN_NAME = 'is_admin'"
+        );
+
+        if ($colCheck->fetchColumn() == 0) {
+            $pdo->exec("ALTER TABLE user_profile ADD COLUMN is_admin TINYINT UNSIGNED NOT NULL DEFAULT 0");
+        } else {
+            $pdo->exec("ALTER TABLE user_profile MODIFY COLUMN is_admin TINYINT UNSIGNED NOT NULL DEFAULT 0");
+        }
+    } catch (PDOException $e) {
+        error_log('ensureAdminRoleColumn failed: ' . $e->getMessage());
+    }
+}
+
 // Other helper functions can be added here
