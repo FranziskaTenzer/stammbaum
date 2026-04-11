@@ -1,6 +1,25 @@
 <?php
 $pageTitle = "Stammbaum Startseite";
 require_once '../../layout/header.php';
+require_once '../../lib/include.php';
+
+// Check for unread admin-replies
+$unreadCount = 0;
+$headerMessage = '✉️ Nachrichten ';
+$headerSubtitle = 'Deine Nachrichten und Antworten vom Admin';
+
+if (isLoggedIn()) {
+    try {
+        $pdo = getPDO();
+        $unreadCount = getUnreadAdminRepliesCount($pdo, $_SESSION['username']);
+        if ($unreadCount > 0) {
+            $headerMessage = '📬 Du hast neue Nachrichten!';
+            $headerSubtitle = $unreadCount === 1 ? 'Der Admin hat 1 Nachricht beantwortet.' : 'Der Admin hat ' . $unreadCount . ' Nachrichten beantwortet.';
+        }
+    } catch (Exception $e) {
+        // Fehler ignorieren
+    }
+}
 ?>
 
 <div class="page-header">
@@ -22,8 +41,8 @@ require_once '../../layout/header.php';
     </div>
     
     <div class="content-card">
-        <h3>✉️ Nachrichten</h3>
-        <p>Deine Nachrichten und Antworten vom Admin</p>
+        <h3><?= htmlspecialchars($headerMessage); ?></h3>
+        <p><?= htmlspecialchars($headerSubtitle); ?></p>
         <a href="nachrichten.php" class="btn btn-primary">Zu deinen Nachrichten</a>
     </div>
 

@@ -140,6 +140,9 @@ $username = $_SESSION['username'];
 $message = '';
 $messageType = 'warning';
 
+// Mark all admin replies as read when user visits this page (user "actually reads" them)
+markAllRepliesAsRead($pdo, $username);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_recherche'])) {
     $personIdRaw = trim($_POST['person_id'] ?? '');
     $personName = trim($_POST['person_name'] ?? '');

@@ -106,3 +106,70 @@ test('Nachricht wird beantwortet, Status geprueft und vom User geloescht', async
   await expect(page.locator('.nachricht-card', { hasText: subject })).toHaveCount(0);
 });
 
+test('Ungelesene Admin-Antworten zeigen "neue Nachrichten" im Sidemenü und Index', async ({ page }) => {
+  const token = uniqueToken('e2e-unread');
+  const subject = `E2E Ungelesen Test ${token}`;
+  const body = `Test für ungelesene Nachrichten: ${token}`;
+  const adminReply = `Ungelesene Admin-Antwort für ${token}`;
+
+  // User sendet eine Nachricht
+  await page.goto('/stammbaum/app/views/user/nachrichten.php');
+  await page.fill('#betreff', subject);
+  await page.fill('#nachricht', body);
+  await page.getByRole('button', { name: /Nachricht senden/i }).click();
+  await expect(page.locator('.alert-success')).toContainText(/erfolgreich gesendet/i);
+
+  // Admin antwortet
+  await page.goto('/stammbaum/app/views/admin/admin-nachrichten.php?filter=offen&typ=Nachricht');
+  const row = page.locator('.overview-table tr', { hasText: subject }).first();
+  await row.click();
+
+  const card = page.locator('.nachricht-card', { hasText: subject }).first();
+  await card.locator('textarea[name="antwort"]').fill(adminReply);
+  await card.getByRole('button', { name: /Antwort speichern/i }).click();
+  await expect(page.locator('.alert-success')).toContainText(/Antwort erfolgreich gespeichert/i);
+
+  // User hat die Nachricht noch nicht gelesen - aber ist trotzdem im System
+  // Wir müssen sicherstellen, dass is_read_by_user = 0 gesetzt bleibt
+
+  // ** WICHTIG: Hier verlassen wir bewusst die nachrichten.php, um die Nachricht
+  //    als ungelesen zu halten (is_read_by_user = 0)
+  // Navigiere zu einer anderen Seite (z.B. Stammbaum-Search)
+  await page.goto('/stammbaum/app/views/user/stammbaum-search.php');
+
+  // Jetzt: Index-Seite prüfen - sollte "neue Nachrichten" Message zeigen
+  await page.goto('/stammbaum/app/views/user/index.php');
+  const heading = page.locator('.page-header h1');
+  await expect(heading).toContainText(/neue Nachrichten|neue Nachrichten/i);
+
+  // Sidebar prüfen - sollte "neue Nachrichten" (bold) zeigen, nicht "Nachrichten"
+  const nacrichtenLink = page.locator(
+    '.sidebar-nav a:has-text("✉️ Neue Nachrichten"), .sidebar-nav a:has-text("✉️") >> nth=1'
+  ).first();
+  
+  // Alt: Via CSS-Selektor mit gehighlighteter Nachricht suchen
+  const sidebarLink = page.locator('.sidebar-nav').locator('text=/Neue Nachrichten|Nachrichten/');
+  
+  // Verprüfen dass "Neue Nachrichten" (mit <strong> tags) sichtbar ist
+  await expect(page.locator('.sidebar-nav >> text=Neue Nachrichten').first()).toBeVisible();
+
+  // User besucht jetzt nachrichten.php und liest die Nachricht
+  await page.goto('/stammbaum/app/views/user/nachrichten.php');
+  await expect(page.locator('.nachricht-card', { hasText: subject })).toBeVisible();
+  await expect(page.locator('.nachricht-card', { hasText: adminReply })).toBeVisible();
+
+  // Nach dem Lesen: Navigation zurück zu Index
+  await page.goto('/stammbaum/app/views/user/index.php');
+  
+  // Jetzt sollte die Nachricht als gelesen markiert sein
+  // Index header sollte wieder normal sein (nicht "neue Nachrichten")
+  const normalHeading = page.locator('.page-header h1');
+  await expect(normalHeading).toContainText('Willkommen zum Stammbaum');
+  
+  // Sidebar sollte wieder "Nachrichten" zeigen (nicht bold/nicht "neue")
+  // Verprüfen dass NICHT "Neue Nachrichten" sichtbar ist in der Sidebar
+  await expect(
+    page.locator('.sidebar-nav >> text=Neue Nachrichten')
+  ).toHaveCount(0);
+});
+

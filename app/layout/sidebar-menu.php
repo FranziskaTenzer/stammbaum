@@ -45,7 +45,24 @@ $currentType = isset($_GET['typ']) ? $_GET['typ'] : 'Nachricht';
         <ul class="nav-menu" style="display:block;">
             <li><a href="<?= $_p ?>/app/views/user/stammbaum-search.php" <?= $currentPage === 'stammbaum-search.php' ? 'class="active"' : '' ?>>👤 Personensuche</a></li>
             <li><a href="<?= $_p ?>/app/views/user/traubuch-list.php" <?= $currentPage === 'traubuch-list.php' ? 'class="active"' : '' ?>>📚 Traubuch-Liste</a></li>
-            <li><a href="<?= $_p ?>/app/views/user/nachrichten.php" <?= $currentPage === 'nachrichten.php' ? 'class="active"' : '' ?>>✉️ Nachrichten</a></li>
+            <?php 
+            // Ungelesene Admin-Antworten für den User anzeigen
+            $unreadCount = 0;
+            $unreadStyle = '';
+            if (isLoggedIn()) {
+                require_once __DIR__ . '/../lib/include.php';
+                try {
+                    $pdo = getPDO();
+                    $unreadCount = getUnreadAdminRepliesCount($pdo, $_SESSION['username']);
+                    if ($unreadCount > 0) {
+                        $unreadStyle = ' style="color: black; font-weight: bold;"';
+                    }
+                } catch (Exception $e) {
+                    // Fehler ignorieren
+                }
+            }
+            ?>
+            <li><a href="<?= $_p ?>/app/views/user/nachrichten.php" <?= $currentPage === 'nachrichten.php' ? 'class="active"' : '' ?><?= $unreadStyle; ?>>✉️ <?= $unreadCount > 0 ? '<strong>Neue Nachrichten</strong>' : 'Nachrichten'; ?></a></li>
             <li><a href="<?= $_p ?>/app/views/user/recherche-anfrage.php" <?= $currentPage === 'recherche-anfrage.php' ? 'class="active"' : '' ?>>🔎 Recherche-Anfrage</a></li>
         </ul>
     </div>

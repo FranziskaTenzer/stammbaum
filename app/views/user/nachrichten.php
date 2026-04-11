@@ -147,6 +147,9 @@ $username = $_SESSION['username'];
 $message = '';
 $messageType = '';
 
+// Mark all admin replies as read when user visits this page (user "actually reads" them)
+markAllRepliesAsRead($pdo, $username);
+
 // Neue Nachricht senden
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
     $betreff = trim($_POST['betreff']);

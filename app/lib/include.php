@@ -179,4 +179,37 @@ function ensureAdminRoleColumn($pdo) {
     }
 }
 
+// Get count of unread admin-replies for a user
+function getUnreadAdminRepliesCount($pdo, $username) {
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM nachrichten
+             WHERE user = ? 
+               AND antwort IS NOT NULL 
+               AND is_read_by_user = 0"
+        );
+        $stmt->execute([$username]);
+        return (int) $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        error_log('getUnreadAdminRepliesCount failed: ' . $e->getMessage());
+        return 0;
+    }
+}
+
+// Mark all admin-replies as read for a user
+function markAllRepliesAsRead($pdo, $username) {
+    try {
+        $stmt = $pdo->prepare(
+            "UPDATE nachrichten 
+             SET is_read_by_user = 1
+             WHERE user = ? AND antwort IS NOT NULL"
+        );
+        $stmt->execute([$username]);
+        return true;
+    } catch (PDOException $e) {
+        error_log('markAllRepliesAsRead failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
 // Other helper functions can be added here
