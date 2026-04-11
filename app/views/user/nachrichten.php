@@ -211,14 +211,14 @@ $nachrichten = $stmt->fetchAll();
     </div>
 <?php endif; ?>
 
-<!-- Neue Nachricht schreiben -->
+<!-- Ne&uuml; Nachricht schreiben -->
 <div class="search-box">
-    <h2 style="margin-bottom:20px;">📝 Neue Nachricht an den Admin</h2>
-    <form method="post" class="neue-nachricht-form">
+    <h2 style="margin-bottom:20px;">📝 Ne&uuml; Nachricht an den Admin</h2>
+    <form method="post" class="ne&uuml;-nachricht-form">
         <div class="form-group">
             <label for="betreff">Betreff:</label>
             <input type="text" id="betreff" name="betreff" maxlength="255" required
-                   value="<?= isset($_POST['betreff']) ? htmlspecialchars($_POST['betreff']) : '' ?>">
+                   val&uuml;="<?= isset($_POST['betreff']) ? htmlspecialchars($_POST['betreff']) : '' ?>">
         </div>
 
         <div class="form-group">
@@ -267,7 +267,7 @@ $nachrichten = $stmt->fetchAll();
 
                     <div class="nachricht-footer">
                         <form method="post" onsubmit="return confirm('Möchtest du diese Nachricht wirklich löschen?');">
-                            <input type="hidden" name="nachricht_id" value="<?= $n['id'] ?>">
+                            <input type="hidden" name="nachricht_id" val&uuml;="<?= $n['id'] ?>">
                             <button type="submit" name="delete_message" class="delete-btn btn btn-primary">✖ Löschen</button>
                         </form>
                     </div>

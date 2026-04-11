@@ -27,7 +27,7 @@ function normalizeNachnameForExactMatch($name) {
     }
 
     // Tirol-Archiv liefert teils Schluessel wie "Nachname: Ort1, Ort2".
-    // Fuer den Exaktabgleich nur den eigentlichen Nachnamen verwenden.
+    // F&uuml;r den Exaktabgleich nur den eigentlichen Nachnamen verwenden.
     $name = preg_replace('/\s*:\s*.*$/u', '', $name);
 
     if (function_exists('mb_strtolower')) {
@@ -592,7 +592,7 @@ function renderNameGroup($groupNames, $pdo) {
         Diese Seite zeigt Nachnamen aus dem Stammbaum, die weder im Tirol-Archiv
         noch in <strong>verifiedNames.txt</strong> einen exakten 100%-Treffer haben.
         <br>
-        <strong>Wählen Sie zuerst ein Traubuch:</strong> Danach erfolgt der Abgleich nur für diesen Bestand und bleibt nach Buchstaben gegliedert.
+        <strong>Wählen Sie z&uuml;rst ein Traubuch:</strong> Danach erfolgt der Abgleich nur für diesen Bestand und bleibt nach Buchstaben gegliedert.
     </p>
     
     <!-- BUCHSTABEN-FILTER -->

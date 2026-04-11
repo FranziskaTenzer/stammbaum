@@ -140,12 +140,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST" action="">
             <input type="hidden" name="csrf_token"
-                   value="<?= htmlspecialchars($_SESSION['csrf_token_forgot']) ?>">
+                   val&uuml;="<?= htmlspecialchars($_SESSION['csrf_token_forgot']) ?>">
 
             <div class="form-group">
                 <label for="email">E-Mail-Adresse:</label>
                 <input type="email" id="email" name="email" required autofocus
-                       value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                       val&uuml;="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                        placeholder="beispiel@domain.de">
             </div>
 

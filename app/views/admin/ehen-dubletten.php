@@ -99,11 +99,11 @@ foreach ($rows as $row) {
             'braut_vorname' => $row['braut_vorname'],
             'braut_nachname' => $row['braut_nachname'],
             'duplikat_anzahl' => (int)$row['duplikat_anzahl'],
-            'eintraege' => [],
+            'eintr&auml;ge' => [],
         ];
     }
 
-    $grouped[$key]['eintraege'][] = [
+    $grouped[$key]['eintr&auml;ge'][] = [
         'ehe_id' => (int)$row['ehe_id'],
         'traubuch' => (string)($row['traubuch'] ?? ''),
     ];
@@ -131,7 +131,7 @@ foreach ($rows as $row) {
             <?php foreach ($grouped as $group): ?>
                 <div style="border:1px solid #e1e5ef; border-radius:8px; padding:14px; margin-bottom:12px; background:#fafbff;">
                     <div style="font-weight:bold; margin-bottom:8px;">
-                        <?= htmlspecialchars($group['braeutigam_vorname'] . ' ' . $group['braeutigam_nachname'], ENT_QUOTES, 'UTF-8') ?>
+                        <?= htmlspecialchars($group['br&auml;utigam_vorname'] . ' ' . $group['br&auml;utigam_nachname'], ENT_QUOTES, 'UTF-8') ?>
                         &amp;
                         <?= htmlspecialchars($group['braut_vorname'] . ' ' . $group['braut_nachname'], ENT_QUOTES, 'UTF-8') ?>
                     </div>
@@ -142,7 +142,7 @@ foreach ($rows as $row) {
                     </div>
 
                     <ul style="margin:0; padding-left:18px;">
-                        <?php foreach ($group['eintraege'] as $entry): ?>
+                        <?php foreach ($group['eintr&auml;ge'] as $entry): ?>
                             <li>
                                 Ehe-ID <?= (int)$entry['ehe_id'] ?>
                                 | Traubuch: <strong><?= htmlspecialchars($entry['traubuch'] !== '' ? $entry['traubuch'] : '—', ENT_QUOTES, 'UTF-8') ?></strong>

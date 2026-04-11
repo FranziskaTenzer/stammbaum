@@ -113,7 +113,7 @@ if (!isAdmin()) {
         <ul>
             <li>Impressum und Datenschutz - von mir überarbeiten</li>
             <li>Speichern für welchen Namen bezahlt wurde, dieser kann sich jeder zeit wieder angezeigt werden</li>
-            <li>Wenn vergleiche fertig sind, noch schauen was an ??? übrig ist</li>
+            <li>Wenn vergleiche fertig sind, noch scha&uuml;n was an ??? übrig ist</li>
             <li>SUCHE anpassen: c/k, b/p, u/ü a/ä Varianten mit erlauben
                 Info: meist gängige Schreibweise von heute z.B. Flatscher (in den Büchern mehr als Flatschner )
 Christoph Christian 
@@ -130,7 +130,7 @@ Lila: Wird oft für die direkten Nachkommen verwendet.</li>
                 <ul>
                     <li>e2e Tests für
                         <ul>
-                            <li>katharina Kostenzer (generelle Suche, stimmt genaue Anzahl?)</li>
+                            <li>katharina Kostenzer (generelle Suche, stimmt gena&uuml; Anzahl?)</li>
                             <li>10.01.1927 Alois Muther</li>
                             <li>29.05.1848 Andreas Eder Bemerkung!</li>
                         </ul>
@@ -215,7 +215,7 @@ Lila: Wird oft für die direkten Nachkommen verwendet.</li>
         </div>
 
         <div class="content-card admin-card">
-        <h3>📝 Neue Orte importieren</h3>
+        <h3>📝 Ne&uuml; Orte importieren</h3>
         <p>Die Daten von allen anderen Orten werden importiert</p>
         <a href="import-orte.php" onclick="return confirm('⚠️ WARNUNG: Alle Orte-Daten werden importiert. Möchten Sie fortfahren?');" class="btn btn-warning">Orte importieren</a>
         </div>

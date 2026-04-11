@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $token !== '') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neues Passwort setzen – Stammbaum</title>
+    <title>Ne&uuml;s Passwort setzen – Stammbaum</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $token !== '') {
 <body>
 <div class="box">
     <h1>🌳 Stammbaum</h1>
-    <p class="subtitle">Neues Passwort festlegen</p>
+    <p class="subtitle">Ne&uuml;s Passwort festlegen</p>
 
     <?php if (!empty($error)): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
@@ -173,12 +173,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $token !== '') {
     <?php else: ?>
         <form method="POST" action="">
             <input type="hidden" name="csrf_token"
-                   value="<?= htmlspecialchars($_SESSION['csrf_token_reset']) ?>">
+                   val&uuml;="<?= htmlspecialchars($_SESSION['csrf_token_reset']) ?>">
             <input type="hidden" name="token"
-                   value="<?= htmlspecialchars($token) ?>">
+                   val&uuml;="<?= htmlspecialchars($token) ?>">
 
             <div class="form-group">
-                <label for="password1">Neues Passwort: *</label>
+                <label for="password1">Ne&uuml;s Passwort: *</label>
                 <input type="password" id="password1" name="password1" required
                        minlength="6" placeholder="min. 6 Zeichen"
                        autocomplete="new-password">

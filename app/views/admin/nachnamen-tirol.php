@@ -136,7 +136,7 @@ $totalNames = count($allNames);
 
     <div class="top-actions">
         <a href="home.php" class="btn-small">← Zurück zur Admin-Startseite</a>
-        <a href="nachnamen-tirol.php?refresh=1" class="btn-small" onclick="return confirm('Archiv-Cache neu laden? Das kann kurz dauern.');">↻ Tirol-Archiv Cache neu laden</a>
+        <a href="nachnamen-tirol.php?refresh=1" class="btn-small" onclick="return confirm('Archiv-Cache neu laden? Das kann kurz da&uuml;rn.');">↻ Tirol-Archiv Cache neu laden</a>
     </div>
 
     <div class="summary">

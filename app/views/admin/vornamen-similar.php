@@ -429,7 +429,7 @@ function renderNameGroup($groupNames, $groupType, $pdo) {
     </p>
     
     <!-- FRAUEN VORNAMEN -->
-    <h2>👩 Frauen Vornamen</h2>
+    <h2>👩 Fra&uuml;n Vornamen</h2>
     <?php
         $mutterGroups = getSimilarMutterNamen($pdo);
         if (count($mutterGroups) > 0) {

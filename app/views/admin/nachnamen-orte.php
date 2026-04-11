@@ -219,7 +219,7 @@ if ($selectedPlace) {
     <br />
     <div class="top-actions">
         <a href="home.php" class="btn-small">← Zurück zur Admin-Startseite</a>
-        <a href="nachnamen-orte.php?refresh=1" class="btn-small" onclick="return confirm('Archiv-Cache neu laden? Das kann kurz dauern.');">↻ Tirol-Archiv Cache neu laden</a>
+        <a href="nachnamen-orte.php?refresh=1" class="btn-small" onclick="return confirm('Archiv-Cache neu laden? Das kann kurz da&uuml;rn.');">↻ Tirol-Archiv Cache neu laden</a>
     </div>
 
     <div class="summary">
@@ -233,9 +233,9 @@ if ($selectedPlace) {
     <form method="get" class="filter-box">
         <label for="ort">Ort auswählen</label>
         <select name="ort" id="ort" onchange="this.form.submit()">
-            <option value="">-- Bitte Ort wählen --</option>
+            <option val&uuml;="">-- Bitte Ort wählen --</option>
             <?php foreach ($placesData as $key => $row): ?>
-                <option value="<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>" <?= $selectedOrtKey === $key ? 'selected' : '' ?>>
+                <option val&uuml;="<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>" <?= $selectedOrtKey === $key ? 'selected' : '' ?>>
                     <?= htmlspecialchars($row['ort'], ENT_QUOTES, 'UTF-8') ?> (<?= count($row['names']) ?>)
                 </option>
             <?php endforeach; ?>

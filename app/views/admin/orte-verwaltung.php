@@ -196,9 +196,9 @@ $extraHead = '<style>
             <div class="form-group">
                 <label for="file">Datei aus stammbaum-daten:</label>
                 <select id="file" name="file" required>
-                    <option value="">-- Bitte Datei wählen --</option>
+                    <option val&uuml;="">-- Bitte Datei wählen --</option>
                     <?php foreach ($allowedFiles as $file): ?>
-                        <option value="<?= htmlspecialchars($file) ?>" <?= $fileIsUsed[$file] ? 'disabled' : '' ?>>
+                        <option val&uuml;="<?= htmlspecialchars($file) ?>" <?= $fileIsUsed[$file] ? 'disabled' : '' ?>>
                             <?= htmlspecialchars($file) ?>
                             <?= $fileIsUsed[$file] ? ' (bereits hinterlegt)' : '' ?>
                         </option>

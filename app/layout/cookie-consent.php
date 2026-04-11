@@ -1,6 +1,6 @@
 <!-- Cookie Consent Banner -->
 <div id="cookie-consent-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999;
-     background:#2c2c2c; color:#fff; padding:16px 24px; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+     background:#2c2c2c; color:#fff; padding:16px 24px; font-family:'Seg&ouml; UI',Tahoma,Geneva,Verdana,sans-serif;
      font-size:0.9em; box-shadow:0 -2px 12px rgba(0,0,0,0.3);">
     <div style="max-width:900px; margin:0 auto; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
         <span style="flex:1; min-width:200px;">

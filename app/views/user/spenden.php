@@ -22,7 +22,7 @@ require_once __DIR__ . '/../../layout/header.php';
     <div style="background:white; border-radius:10px; padding:32px; box-shadow:0 2px 12px rgba(0,0,0,0.08); margin-bottom:24px;">
         <h2 style="color:#764ba2; margin-bottom:18px;">💳 PayPal</h2>
         <p style="color:#555; line-height:1.7; margin-bottom:18px;">
-            Du kannst eine Spende bequem über PayPal senden. Klicke auf den Button oder sende den Betrag direkt an:
+            Du kannst eine Spende beq&uuml;m über PayPal senden. Klicke auf den Button oder sende den Betrag direkt an:
         </p>
         <div style="background:#f3f0f8; border-radius:8px; padding:16px 20px; margin-bottom:18px; font-family:monospace; font-size:1.05em; color:#333; word-break:break-all;">
             franziskatenzer@hotmail.com
@@ -66,8 +66,8 @@ require_once __DIR__ . '/../../layout/header.php';
     </div>
 
     <div style="background:#f3f0f8; border-radius:10px; padding:20px 24px; color:#555; font-size:0.9em; line-height:1.6; margin-bottom:24px;">
-        <strong>Hinweis:</strong> Spenden an das Stammbaum-Projekt sind freiwillige Zuwendungen und berechtigen nicht zu steuerlichen Absetzungen.
-        Jede Unterstützung hilft dabei, die Anwendung weiterzuentwickeln und zu verbessern. ❤️
+        <strong>Hinweis:</strong> Spenden an das Stammbaum-Projekt sind freiwillige Zuwendungen und berechtigen nicht zu ste&uuml;rlichen Absetzungen.
+        Jede Unterstützung hilft dabei, die Anwendung weiterz&uuml;ntwickeln und zu verbessern. ❤️
     </div>
 
 </div>

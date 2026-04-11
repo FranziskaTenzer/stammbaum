@@ -499,7 +499,7 @@ function adminNachrichtenPreview(string $text, int $limit = 90): string
                     <?php endif; ?>
 
                     <form method="post" class="reply-form">
-                        <input type="hidden" name="nachricht_id" value="<?= (int) $selectedNachricht['id'] ?>">
+                        <input type="hidden" name="nachricht_id" val&uuml;="<?= (int) $selectedNachricht['id'] ?>">
                         <label for="antwort_<?= (int) $selectedNachricht['id'] ?>">
                             <?php if ($selectedNachricht['antwort'] !== null): ?>
                                 ✏️ Antwort bearbeiten:

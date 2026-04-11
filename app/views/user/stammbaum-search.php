@@ -149,17 +149,17 @@ AND (" . implode(' OR ', $nachnameConditions) . ")
     <form method="GET" class="search-form">
         <div class="form-group">
             <label for="vorname">Vorname:</label>
-            <input type="text" id="vorname" name="vorname" placeholder="z.B. Maria" value="<?= htmlspecialchars($vorname) ?>">
+            <input type="text" id="vorname" name="vorname" placeholder="z.B. Maria" val&uuml;="<?= htmlspecialchars($vorname) ?>">
         </div>
         
         <div class="form-group">
             <label for="nachname">Nachname:</label>
-            <input type="text" id="nachname" name="nachname" placeholder="z.B. Müller" value="<?= htmlspecialchars($nachname) ?>" required>
+            <input type="text" id="nachname" name="nachname" placeholder="z.B. Müller" val&uuml;="<?= htmlspecialchars($nachname) ?>" required>
         </div>
         
         <div class="form-group">
             <label for="geburtsdatum">Geburtsdatum (optional):</label>
-      		<input type="text" id="geburtsdatum" name="geburtsdatum" placeholder="z.B. 25.12.1982 oder xx.12.1982" value="<?= htmlspecialchars($geburtsdatum ?? '') ?>">  </div>
+      		<input type="text" id="geburtsdatum" name="geburtsdatum" placeholder="z.B. 25.12.1982 oder xx.12.1982" val&uuml;="<?= htmlspecialchars($geburtsdatum ?? '') ?>">  </div>
         
         <button type="submit" class="btn btn-primary">🔍 Suchen</button>
     </form>

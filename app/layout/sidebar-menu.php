@@ -29,6 +29,7 @@ $currentType = isset($_GET['typ']) ? $_GET['typ'] : 'Nachricht';
         </h3>
         <ul class="nav-menu" style="display:block;">
             <li><a href="<?= $_p ?>/app/views/user/index.php" <?= $currentPage === 'index.php' ? 'class="active"' : '' ?>>🏠 Startseite</a></li>
+            <li><a href="<?= $_p ?>/app/views/user/preisliste.php" <?= $currentPage === 'preisliste.php' ? 'class="active"' : '' ?>>💶 Preisliste</a></li>
             <li><a href="<?= $_p ?>/app/views/user/profil.php" <?= $currentPage === 'profil.php' ? 'class="active"' : '' ?>>👤 Profil</a></li>
             <li><a href="<?= $_p ?>/public/logout.php" <?= $currentPage === 'logout.php' ? 'class="active"' : '' ?>>🚪 Abmelden</a></li>
         </ul>

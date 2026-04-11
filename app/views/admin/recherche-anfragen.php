@@ -103,13 +103,13 @@ require_once '../../layout/header.php';
 require_once '../../lib/include.php';
 
 if (!isAdmin()) {
-    die('❌ Zugriff verweigert! Nur fuer Administratoren.');
+    die('❌ Zugriff verweigert! Nur f&uuml;r Administratoren.');
 }
 
 try {
     $pdo = getPDO();
 } catch (Exception $e) {
-    die("Datenbankverbindung nicht verfuegbar: " . htmlspecialchars($e->getMessage()));
+    die("Datenbankverbindung nicht verf&uuml;gbar: " . htmlspecialchars($e->getMessage()));
 }
 
 ensureNachrichtenTable($pdo);
@@ -145,7 +145,7 @@ $anfragen = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="page-header">
-    <h1>🔎 Neue Recherche-Anfragen</h1>
+    <h1>🔎 Ne&uuml; Recherche-Anfragen</h1>
     <p class="subtitle">Offene Recherche-Anfragen der Benutzer</p>
 </div>
 
@@ -157,7 +157,7 @@ $anfragen = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="search-box">
     <?php if (empty($anfragen)): ?>
-        <p class="no-messages">Aktuell gibt es keine offenen Recherche-Anfragen.</p>
+        <p class="no-messages">Akt&uuml;ll gibt es keine offenen Recherche-Anfragen.</p>
     <?php else: ?>
         <div class="nachrichten-list">
             <?php foreach ($anfragen as $n): ?>
@@ -177,7 +177,7 @@ $anfragen = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="nachricht-antwort-bereich">
                         <form method="post" class="reply-form">
-                            <input type="hidden" name="nachricht_id" value="<?= (int) $n['id'] ?>">
+                            <input type="hidden" name="nachricht_id" val&uuml;="<?= (int) $n['id'] ?>">
                             <label for="antwort_<?= (int) $n['id'] ?>">💬 Antwort schreiben:</label>
                             <textarea id="antwort_<?= (int) $n['id'] ?>" rows="6" name="antwort" placeholder="Antwort eingeben..."></textarea>
                             <div style="margin-top: 10px;">

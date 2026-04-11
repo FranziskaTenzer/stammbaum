@@ -40,7 +40,7 @@ try {
     );
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    // Fallback fuer Alt-DBs ohne notifications_enabled-Spalte
+    // Fallback f&uuml;r Alt-DBs ohne notifications_enabled-Spalte
     $stmt = $pdo->query(
         "SELECT id, username, email, email_verified, created_at
          FROM user_profile

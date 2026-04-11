@@ -289,12 +289,12 @@ $extraHead = '<style>
             <div class="profile-search-form">
                 <div class="form-group">
                     <label for="username">Benutzername:</label>
-                    <input type="text" id="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" readonly>
+                    <input type="text" id="username" name="username" val&uuml;="<?= htmlspecialchars($user['username']) ?>" readonly>
                 </div>
                 <br>
                 <div class="form-group">
                     <label for="email">E-Mail:</label>
-                    <input type="email" required id="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
+                    <input type="email" required id="email" name="email" val&uuml;="<?= htmlspecialchars($user['email']) ?>" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
                 </div><br />
                 <div class="form-group checkbox-group">
                     <label for="notifications_enabled" class="checkbox-label">
@@ -302,12 +302,12 @@ $extraHead = '<style>
                             type="checkbox"
                             id="notifications_enabled"
                             name="notifications_enabled"
-                            value="1"
+                            val&uuml;="1"
                             <?= !isset($user['notifications_enabled']) || (int) $user['notifications_enabled'] === 1 ? 'checked' : '' ?>
                             <?php echo $isTestAccount ? 'disabled' : ''; ?>
                         >
                         <span class="checkbox-text">
-                            Ich möchte E-Mail-Benachrichtigungen erhalten, wenn neue Traubücher eingepflegt wurden.
+                            Ich möchte E-Mail-Benachrichtigungen erhalten, wenn ne&uuml; Traubücher eingepflegt wurden.
                         </span>
                     </label>
                 </div>
@@ -341,7 +341,7 @@ $extraHead = '<style>
         <form method="post" autocomplete="off" class="profile-form">
             <div class="profile-search-form">
                 <div class="form-group">
-                    <label for="new_password1">Neues Passwort:</label>
+                    <label for="new_password1">Ne&uuml;s Passwort:</label>
                     <input type="password" id="new_password1" name="new_password1" autocomplete="new-password" <?php echo $isTestAccount ? 'disabled' : ''; ?>>
                 </div>
                 <br>

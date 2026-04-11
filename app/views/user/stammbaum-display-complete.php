@@ -214,7 +214,7 @@ $username = $_SESSION['username'] ?? '';
 $isTestAccount = ($username === 'TestAccount');
 
 if ($startId <= 0) {
-    echo '<div class="alert alert-warning">Keine gueltige Personen-ID uebergeben.</div>';
+    echo '<div class="alert alert-warning">Keine g&uuml;ltige Personen-ID &uuml;bergeben.</div>';
     require_once '../../layout/footer.php';
     exit;
 }
@@ -832,7 +832,7 @@ function collectDescendantLevels(int $startId, array $personsById, array $childr
 function renderAncestorGenerations(array $levels, array $personsById): string
 {
     if (empty($levels)) {
-        return '<p class="subtle">Keine Eintraege vorhanden.</p>';
+        return '<p class="subtle">Keine Eintr&auml;ge vorhanden.</p>';
     }
 
     krsort($levels);
@@ -900,7 +900,7 @@ function formatCoupleEvents(int $personAId, int $personBId, array $coupleEventMa
 function renderAncestorGenerationsWithEvents(array $levels, array $personsById, array $coupleEventMap, bool $isTestAccount = false): string
 {
     if (empty($levels)) {
-        return '<p class="subtle">Keine Eintraege vorhanden.</p>';
+        return '<p class="subtle">Keine Eintr&auml;ge vorhanden.</p>';
     }
 
     krsort($levels);
@@ -982,7 +982,7 @@ function renderAncestorGenerationsComplete(
     bool $isTestAccount = false
 ): string {
     if (empty($directLevels)) {
-        return '<p class="subtle">Keine Eintraege vorhanden.</p>';
+        return '<p class="subtle">Keine Eintr&auml;ge vorhanden.</p>';
     }
 
     krsort($directLevels);
@@ -1082,7 +1082,7 @@ function renderAncestorGenerationsComplete(
 function renderDescendantGenerations(array $levels, array $personsById, array $spouseMap, bool $isTestAccount = false): string
 {
     if (empty($levels)) {
-        return '<p class="subtle">Keine Eintraege vorhanden.</p>';
+        return '<p class="subtle">Keine Eintr&auml;ge vorhanden.</p>';
     }
 
     $html = '<div class="generation-list">';

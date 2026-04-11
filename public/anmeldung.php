@@ -264,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php else: ?>
 <div class="register-container">
     <h1>🌳 Stammbaum</h1>
-    <p class="subtitle">Neuen Account erstellen</p>
+    <p class="subtitle">Ne&uuml;n Account erstellen</p>
 
     <?php if (!empty($error)): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
@@ -277,14 +277,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-group">
             <label for="username">Benutzername: *</label>
             <input type="text" id="username" name="username" required
-                   value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
+                   val&uuml;="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
                    minlength="3" maxlength="50" placeholder="min. 3 Zeichen">
         </div>
 
         <div class="form-group">
             <label for="email">E-Mail-Adresse: *</label>
             <input type="email" id="email" name="email" required
-                   value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                   val&uuml;="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                    placeholder="beispiel@domain.de">
         </div>
 
@@ -305,14 +305,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-group">
             <label for="vorname">Vorname:</label>
             <input type="text" id="vorname" name="vorname"
-                   value="<?= htmlspecialchars($_POST['vorname'] ?? '') ?>"
+                   val&uuml;="<?= htmlspecialchars($_POST['vorname'] ?? '') ?>"
                    placeholder="Vorname">
         </div>
 
         <div class="form-group">
             <label for="nachname">Nachname:</label>
             <input type="text" id="nachname" name="nachname"
-                   value="<?= htmlspecialchars($_POST['nachname'] ?? '') ?>"
+                   val&uuml;="<?= htmlspecialchars($_POST['nachname'] ?? '') ?>"
                    placeholder="Nachname">
         </div>
 
@@ -327,15 +327,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-group">
             <label for="zahlungstyp">Zahlungsart: *</label>
             <select name="zahlungstyp" id="zahlungstyp" onchange="switchPaymentFields()" required>
-                <option value="KREDITKARTE" <?= (($_POST['zahlungstyp'] ?? '') === 'KREDITKARTE' ? 'selected' : '') ?>>Kreditkarte</option>
-                <option value="PAYPAL" <?= (($_POST['zahlungstyp'] ?? '') === 'PAYPAL' ? 'selected' : '') ?>>PayPal</option>
+                <option val&uuml;="KREDITKARTE" <?= (($_POST['zahlungstyp'] ?? '') === 'KREDITKARTE' ? 'selected' : '') ?>>Kreditkarte</option>
+                <option val&uuml;="PAYPAL" <?= (($_POST['zahlungstyp'] ?? '') === 'PAYPAL' ? 'selected' : '') ?>>PayPal</option>
             </select>
         </div>
 
         <div class="form-group">
             <label for="zahlungsinfo" id="zahlungsinfo-label">Kreditkartennummer: *</label>
             <input type="text" id="zahlungsinfo" name="zahlungsinfo" required
-                   value="<?= htmlspecialchars($_POST['zahlungsinfo'] ?? '') ?>"
+                   val&uuml;="<?= htmlspecialchars($_POST['zahlungsinfo'] ?? '') ?>"
                    placeholder="1234 5678 9012 3456">
         </div>
  -->

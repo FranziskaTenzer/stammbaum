@@ -131,7 +131,7 @@ require_once '../../lib/include.php';
 try {
     $pdo = getPDO();
 } catch (Exception $e) {
-    die("Datenbankverbindung nicht verfuegbar: " . htmlspecialchars($e->getMessage()));
+    die("Datenbankverbindung nicht verf&uuml;gbar: " . htmlspecialchars($e->getMessage()));
 }
 
 ensureNachrichtenTable($pdo);
@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_recherche'])) {
         if (ctype_digit($personIdRaw) && (int) $personIdRaw > 0) {
             $personId = (int) $personIdRaw;
         } else {
-            $message = "Bitte eine gueltige positive Person-ID eingeben.";
+            $message = "Bitte eine g&uuml;ltige positive Person-ID eingeben.";
         }
     }
 
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_recherche'])) {
     }
 
     if ($message === '' && $nachricht === '') {
-        $message = "Bitte die Anfrage-Beschreibung ausfuellen.";
+        $message = "Bitte die Anfrage-Beschreibung ausf&uuml;llen.";
     }
 
     if ($message === '') {
@@ -202,10 +202,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_recherche'])) 
     if ($row && $row['user'] === $username) {
         $stmt = $pdo->prepare("DELETE FROM nachrichten WHERE id = ?");
         $stmt->execute([$id]);
-        $message = "Recherche-Anfrage geloescht.";
+        $message = "Recherche-Anfrage gel&ouml;scht.";
         $messageType = 'success';
     } else {
-        $message = "Anfrage konnte nicht geloescht werden.";
+        $message = "Anfrage konnte nicht gel&ouml;scht werden.";
         $messageType = 'warning';
     }
 }
@@ -232,16 +232,16 @@ $anfragen = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <?php endif; ?>
 
 <div class="search-box">
-    <h2 style="margin-bottom:20px;">📝 Neue Recherche-Anfrage</h2>
-    <form method="post" class="neue-nachricht-form" autocomplete="off">
+    <h2 style="margin-bottom:20px;">📝 Ne&uuml; Recherche-Anfrage</h2>
+    <form method="post" class="ne&uuml;-nachricht-form" autocomplete="off">
         <div class="form-group">
             <label for="person_id">Person-ID (Pflicht: ID oder Name):</label>
-            <input type="number" min="1" id="person_id" name="person_id" value="<?= htmlspecialchars($_POST['person_id'] ?? '') ?>">
+            <input type="number" min="1" id="person_id" name="person_id" val&uuml;="<?= htmlspecialchars($_POST['person_id'] ?? '') ?>">
         </div>
         
         <div class="form-group">
             <label for="person_name">Person-Name (Pflicht: ID oder Name):</label>
-            <input type="text" id="person_name" name="person_name" maxlength="255" value="<?= htmlspecialchars($_POST['person_name'] ?? '') ?>">
+            <input type="text" id="person_name" name="person_name" maxlength="255" val&uuml;="<?= htmlspecialchars($_POST['person_name'] ?? '') ?>">
         </div>
         
         <div class="form-group">
@@ -289,9 +289,9 @@ $anfragen = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php endif; ?>
 
                     <div class="nachricht-footer">
-                        <form method="post" onsubmit="return confirm('Anfrage wirklich loeschen?');">
-                            <input type="hidden" name="nachricht_id" value="<?= (int) $n['id'] ?>">
-                            <button type="submit" name="delete_recherche" class="delete-btn btn btn-primary">✖ Loeschen</button>
+                        <form method="post" onsubmit="return confirm('Anfrage wirklich l&ouml;schen?');">
+                            <input type="hidden" name="nachricht_id" val&uuml;="<?= (int) $n['id'] ?>">
+                            <button type="submit" name="delete_recherche" class="delete-btn btn btn-primary">✖ L&ouml;schen</button>
                         </form>
                     </div>
                 </div>
